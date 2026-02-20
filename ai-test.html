@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DoseGuide AI Test</title>
+
+<style>
+body{
+  font-family: Arial;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+.card{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:20px;
+  margin-bottom:20px;
+}
+label{
+  display:block;
+  margin-top:15px;
+  font-weight:bold;
+}
+input, textarea{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+textarea{
+  min-height:120px;
+}
+button{
+  margin-top:15px;
+  padding:10px 20px;
+  border:none;
+  border-radius:8px;
+  background:#0E6F8E;
+  color:white;
+  cursor:pointer;
+}
+pre{
+  background:#111;
+  color:#0f0;
+  padding:15px;
+  border-radius:10px;
+  white-space:pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🧠 DoseGuide AI – Test Page</h2>
+
+<div class="card">
+  <label>Drug key (مثل ما هو في vectorstores.json)</label>
+  <input id="drugInput" placeholder="vancomycin">
+
+  <label>Question</label>
+  <textarea id="questionInput" placeholder="What is the loading dose?"></textarea>
+
+  <button onclick="askDrug()">Ask</button>
+</div>
+
+<div class="card">
+  <h3>Result</h3>
+  <pre id="answerBox">Waiting...</pre>
+</div>
+
+<script>
+async function askDrug(){
+
+  const drug = document.getElementById("drugInput").value.trim();
+  const question = document.getElementById("questionInput").value.trim();
+  const box = document.getElementById("answerBox");
+
+  if(!drug || !question){
+    box.textContent = "Enter drug and question.";
+    return;
+  }
+
+  box.textContent = "Searching...";
+
+  try{
+    const res = await fetch("/.netlify/functions/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ drug, question })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      box.textContent = data.error || "Error occurred.";
+      return;
+    }
+
+    box.textContent = data.answer || "No answer returned.";
+
+  }catch(e){
+    box.textContent = "Connection failed.";
+  }
+}
+</script>
+
+</body>
+</html>
