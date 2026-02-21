@@ -1,163 +1,171 @@
 // netlify/functions/ask.mjs
-import fs from "fs/promises";
-import path from "path";
+// Protocol-Locked engine: answers ONLY from the selected drug PDF (vector store).
+// If the answer isn't in the PDF context => returns "Not found in protocol".
 
-function isArabic(text = "") {
-  return /[\u0600-\u06FF]/.test(text);
+import fs from "node:fs/promises";
+import path from "node:path";
+
+function json(body, statusCode = 200) {
+  return {
+    statusCode,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "content-type",
+      "access-control-allow-methods": "POST,OPTIONS",
+    },
+    body: JSON.stringify(body),
+  };
 }
 
-function safeJsonParse(str, fallback = null) {
-  try { return JSON.parse(str); } catch { return fallback; }
-}
+function getTextFromResponsesAPI(resp) {
+  // Robust extraction across response shapes
+  // 1) Some SDKs provide output_text; raw API returns output array with message content items.
+  if (typeof resp?.output_text === "string" && resp.output_text.trim()) return resp.output_text;
 
-function pickOutputText(resp) {
-  // Responses API غالبًا يرجع output_text
-  if (typeof resp?.output_text === "string" && resp.output_text.trim()) return resp.output_text.trim();
-
-  // fallback: حاول تجمع أي نصوص
   const out = resp?.output;
-  if (Array.isArray(out)) {
-    let all = "";
-    for (const item of out) {
-      const content = item?.content;
-      if (Array.isArray(content)) {
-        for (const c of content) {
-          if (c?.type === "output_text" && typeof c?.text === "string") all += c.text;
-          if (c?.type === "text" && typeof c?.text === "string") all += c.text;
-        }
-      }
-    }
-    if (all.trim()) return all.trim();
-  }
-  return "";
-}
+  if (!Array.isArray(out)) return "";
 
-async function loadVectorstoresMap() {
-  // function path عادة: /var/task/netlify/functions
-  const root = path.resolve(process.cwd()); // Netlify sets cwd to repo root غالبًا
-  const p1 = path.join(root, "vectorstores.json");
-  const raw = await fs.readFile(p1, "utf8");
-  const json = JSON.parse(raw);
-
-  // نتوقع شكلين محتملين:
-  // 1) { "vancomycin": "vs_..." , "ciprofloxacin": "vs_..." }
-  // 2) { "stores": { "vancomycin": { "id":"vs_..." } } }
-  const map = {};
-
-  if (json && typeof json === "object") {
-    for (const [k, v] of Object.entries(json)) {
-      if (typeof v === "string") map[k.toLowerCase()] = v;
-    }
-    if (json.stores && typeof json.stores === "object") {
-      for (const [k, v] of Object.entries(json.stores)) {
-        if (typeof v === "string") map[k.toLowerCase()] = v;
-        if (v && typeof v === "object" && typeof v.id === "string") map[k.toLowerCase()] = v.id;
+  let text = "";
+  for (const item of out) {
+    if (item?.type === "message" && item?.role === "assistant" && Array.isArray(item?.content)) {
+      for (const c of item.content) {
+        // common: {type:"output_text", text:"..."} or {type:"text", text:"..."}
+        if (typeof c?.text === "string") text += c.text;
+        if (typeof c?.content === "string") text += c.content;
       }
     }
   }
-  return map;
+  return text.trim();
 }
 
 export async function handler(event) {
+  if (event.httpMethod === "OPTIONS") return json({ ok: true }, 200);
+  if (event.httpMethod !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  if (!OPENAI_API_KEY) {
+    return json({ error: "Missing OPENAI_API_KEY in Netlify environment variables" }, 500);
+  }
+
+  let payload;
   try {
-    if (event.httpMethod !== "POST") {
-      return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
-    }
+    payload = JSON.parse(event.body || "{}");
+  } catch {
+    return json({ error: "Invalid JSON body" }, 400);
+  }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ error: "Missing OPENAI_API_KEY in Netlify environment variables" }) };
-    }
+  const drugKey = String(payload.drugKey || "").trim().toLowerCase();
+  const question = String(payload.question || "").trim();
+  const lang = String(payload.lang || "auto").trim().toLowerCase(); // auto|ar|en|hi|tl|am
+  const answerMode = String(payload.answerMode || "recommended").trim().toLowerCase(); // recommended|detailed|bullet
 
-    const body = safeJsonParse(event.body, {});
-    const drugKeyRaw = (body.drugKey || "").toString().trim();
-    const questionRaw = (body.question || "").toString().trim();
-    const mode = (body.mode || "brief").toString(); // brief | detailed
-    const lang = (body.lang || "auto").toString();  // auto | ar | en
+  if (!drugKey) return json({ error: "drugKey is required" }, 400);
+  if (!question) return json({ error: "question is required" }, 400);
 
-    if (!drugKeyRaw || !questionRaw) {
-      return { statusCode: 400, body: JSON.stringify({ error: "drugKey and question are required" }) };
-    }
+  // Load manifests from functions bundle
+  const dataDir = path.join(process.cwd(), "netlify", "functions", "data");
+  const refsPath = path.join(dataDir, "refs.manifest.json");
 
-    const drugKey = drugKeyRaw.toLowerCase();
-    const question = questionRaw;
+  let refs;
+  try {
+    refs = JSON.parse(await fs.readFile(refsPath, "utf8"));
+  } catch (e) {
+    return json({ error: "Cannot read refs.manifest.json", details: String(e?.message || e) }, 500);
+  }
 
-    const vsMap = await loadVectorstoresMap();
-    const vectorStoreId = vsMap[drugKey];
+  const entry = refs?.[drugKey];
+  const vectorStoreId = entry?.vector_store_id;
 
-    // ✅ قفل الدواء: لو مو موجود بالقائمة — ممنوع
-    if (!vectorStoreId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          error: "Drug not supported (not in vectorstores.json)",
-          supportedDrugKeys: Object.keys(vsMap).sort(),
-        }),
-      };
-    }
+  if (!vectorStoreId) {
+    // Protocol-locked behavior: reject unknown drug (not in your list)
+    return json({
+      ok: true,
+      reply:
+        "هذا الدواء غير موجود ضمن القائمة المتاحة في النظام (لا يوجد PDF/VectorStore مرتبط به).",
+      locked: true,
+      drugKey,
+    });
+  }
 
-    // تحديد لغة الرد
-    const finalLang =
-      lang === "ar" ? "ar" :
-      lang === "en" ? "en" :
-      (isArabic(question) ? "ar" : "en");
+  const langHintMap = {
+    auto: "اكتب بنفس لغة السؤال تلقائياً (Auto).",
+    ar: "اكتب الإجابة باللغة العربية فقط.",
+    en: "Write the answer in English only.",
+    hi: "उत्तर केवल हिंदी में लिखें।",
+    tl: "Isulat ang sagot sa Filipino/Tagalog lamang.",
+    am: "መልሱን በአማርኛ ብቻ ጻፍ።",
+  };
 
-    const system = finalLang === "ar"
-      ? `أنت مساعد صيدلة سريرية "مقيد بالبروتوكول" بالكامل.
-- يجب أن تعتمد فقط على المعلومات التي تأتيك من أداة file_search المرتبطة بهذا الدواء.
-- ممنوع استخدام معرفة عامة أو تخمين.
-- إذا لم تجد معلومة كافية داخل البروتوكول: قل حرفيًا "غير موجود في البروتوكول" ثم اطلب ما يلزم (مثل indication/renal function) بدون اختراع.
-- اجعل الإجابة ${mode === "detailed" ? "تفصيلية" : "مختصرة"} وواضحة.`
-      : `You are a protocol-locked clinical pharmacy assistant.
-- You MUST rely ONLY on information returned by the file_search tool for this drug.
-- Do NOT use general medical knowledge or guess.
-- If the protocol does not contain enough info, reply exactly: "Not found in protocol" and ask what’s missing (e.g., indication/renal function), without inventing.
-- Keep the answer ${mode === "detailed" ? "detailed" : "brief"} and clear.`;
+  const styleHint =
+    answerMode === "detailed"
+      ? "قدّم شرحاً مفصلاً لكن بدون حشو."
+      : answerMode === "bullet"
+      ? "أجب بنقاط قصيرة وواضحة."
+      : "أجب بإجابة مختصرة عملية (Recommended).";
 
-    const user = finalLang === "ar"
-      ? `Drug key: ${drugKey}\nالسؤال: ${question}`
-      : `Drug key: ${drugKey}\nQuestion: ${question}`;
+  const system = `
+أنت مساعد صيدلي سريري "Protocol-Locked".
+قواعد صارمة جداً:
+1) يجب أن تعتمد فقط على محتوى PDF/البروتوكول المُتاح عبر file_search لنفس الدواء المختار.
+2) ممنوع استخدام أي معرفة خارجية أو تخمين أو إرشادات عامة غير موجودة في الـPDF.
+3) إذا لم تجد المعلومة حرفياً/معنوياً داخل الـPDF، قل بوضوح: "غير موجود في بروتوكول/ملف PDF هذا الدواء" واقترح على المستخدم أن يراجع المصدر أو يرفع نسخة أحدث.
+4) لا تغيّر الدواء: لا تجيب عن دواء آخر غير الدواء المختار.
+5) ${langHintMap[lang] || langHintMap.auto}
+6) أسلوب الإجابة: ${styleHint}
+`;
 
-    // ✅ Responses API + File Search على نفس الـ vector store
-    // (حسب توثيق OpenAI: Responses API + أدوات مثل file_search عبر vector_store_ids) :contentReference[oaicite:0]{index=0}
-    const resp = await fetch("https://api.openai.com/v1/responses", {
+  const user = `
+Drug key: ${drugKey}
+Question: ${question}
+مهم: التزم بالـPDF فقط. إذا لا يوجد دليل داخل الـPDF => قل غير موجود.
+`;
+
+  // Call OpenAI Responses API with file_search restricted to this vector store
+  const model = process.env.OPENAI_MODEL || "gpt-5.2"; // you can change in Netlify env
+  const url = "https://api.openai.com/v1/responses";
+
+  const reqBody = {
+    model,
+    input: [
+      { role: "system", content: [{ type: "text", text: system.trim() }] },
+      { role: "user", content: [{ type: "text", text: user.trim() }] },
+    ],
+    tools: [{ type: "file_search" }],
+    tool_resources: {
+      file_search: { vector_store_ids: [vectorStoreId] },
+    },
+    // Keep it deterministic-ish
+    temperature: 0.2,
+    max_output_tokens: 650,
+  };
+
+  try {
+    const r = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+        authorization: `Bearer ${OPENAI_API_KEY}`,
+        "content-type": "application/json",
       },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        tools: [
-          { type: "file_search", vector_store_ids: [vectorStoreId] },
-        ],
-        temperature: 0.2,
-        max_output_tokens: mode === "detailed" ? 900 : 450,
-      }),
+      body: JSON.stringify(reqBody),
     });
 
-    const data = await resp.json();
-    if (!resp.ok) {
-      return { statusCode: resp.status, body: JSON.stringify({ error: data?.error || data }) };
+    const resp = await r.json();
+    if (!r.ok) {
+      return json({ error: "OpenAI API error", details: resp }, 500);
     }
 
-    const reply = pickOutputText(data) || (finalLang === "ar" ? "غير موجود في البروتوكول" : "Not found in protocol");
+    const reply = getTextFromResponsesAPI(resp) || "غير موجود في بروتوكول/ملف PDF هذا الدواء.";
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        ok: true,
-        drugKey,
-        lang: finalLang,
-        mode,
-        reply,
-      }),
-    };
+    return json({
+      ok: true,
+      locked: true,
+      drugKey,
+      vector_store_id: vectorStoreId,
+      reply,
+    });
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: e?.message || String(e) }) };
+    return json({ error: "Request failed", details: String(e?.message || e) }, 500);
   }
 }
