@@ -34,7 +34,6 @@
     font-size:13px;color:#1d4ed8;background:#eaf2ff;border:1px solid #d7e6ff;
     padding:8px 12px;border-radius:999px;font-weight:700;
   }
-
   .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;}
   .card{
     background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
@@ -43,7 +42,6 @@
   .card h3{margin:0 0 12px;font-size:18px;}
   .row{display:flex;gap:10px;flex-wrap:wrap;}
   .row > *{flex:1; min-width: 180px;}
-
   select, textarea, input{
     width:100%;border:1px solid var(--border);border-radius:14px;
     padding:12px 14px;font-size:14px;outline:none;background:#fff;
@@ -53,7 +51,6 @@
     border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.14);
   }
   textarea{min-height:180px;resize:vertical;line-height:1.35;}
-
   .actions{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;}
   button{
     border:0;border-radius:14px;padding:12px 16px;font-weight:800;
@@ -77,12 +74,10 @@
   }
 
   .hint{margin-top:10px;color:var(--muted);font-size:12.5px;}
-
   .result{
     border:1px solid var(--border);border-radius:14px;padding:14px;background:#fbfcff;
     white-space:pre-wrap;min-height:220px;overflow:auto;font-size:14px;line-height:1.4;
   }
-
   .meta{
     margin-top:10px;
     display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
@@ -107,7 +102,6 @@
     font-size:13px;
     white-space:pre-wrap;
   }
-
   .evidenceTitle{
     margin:14px 0 8px;
     font-weight:900;
@@ -125,11 +119,9 @@
     max-height:240px;
     overflow:auto;
   }
-
   .status{margin-top:10px;font-size:12.5px;color:var(--muted);}
   .okText{color:var(--ok);font-weight:800;}
   .badText{color:var(--bad);font-weight:800;}
-
   @media (max-width: 980px){
     .grid{grid-template-columns:1fr;}
   }
@@ -190,7 +182,7 @@
         </div>
 
         <div class="hint">
-          Answers are restricted to the selected drug PDF protocol only. No evidence → Not found.
+          Worker-compatible UI: works with old (<code>answer</code>) and new (<code>reply/result</code>) responses.
         </div>
       </div>
 
@@ -215,10 +207,8 @@
   </div>
 
 <script>
-  // ✅ Netlify Functions endpoint (recommended). If you still use a worker, point to it.
-  // Example Netlify:
-  // const API_ENDPOINT = "/.netlify/functions/ask";
-  const API_ENDPOINT = "/.netlify/functions/ask";
+  // ✅ Cloudflare Worker endpoint (your current)
+  const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mxmx9669.workers.dev";
 
   let selectedMode = "hybrid";
 
@@ -297,6 +287,28 @@
     });
   }
 
+  // --- Flexible response mapping (old worker vs new strict engine) ---
+  function mapResponse(data, resOk){
+    // New format (Netlify strict): { reply, result:{ verdict, verbatim, source_hint }, locked }
+    if (data && typeof data === "object") {
+      const reply = data.reply ?? data.answer ?? data.text ?? null;
+
+      const verdict = data?.result?.verdict
+        ? String(data.result.verdict)
+        : (reply && typeof reply === "string" && /not found|غير موجود/i.test(reply))
+          ? "NOT_FOUND"
+          : "UNKNOWN";
+
+      const verbatim = Array.isArray(data?.result?.verbatim) ? data.result.verbatim : [];
+      const source_hint = typeof data?.result?.source_hint === "string" ? data.result.source_hint : "";
+
+      const locked = (typeof data.locked === "boolean") ? data.locked : resOk;
+
+      return { reply: reply ?? "No response returned.", verdict, verbatim, source_hint, locked };
+    }
+    return { reply: "No response returned.", verdict: "UNKNOWN", verbatim: [], source_hint: "", locked: resOk };
+  }
+
   async function ask(){
     const drugKey = document.getElementById("drugSelect").value;
     const question = document.getElementById("question").value.trim();
@@ -322,40 +334,40 @@
     renderSource("—");
     renderEvidence([]);
 
+    // ✅ Send BOTH styles so either backend can understand
+    const payload = {
+      // old worker keys
+      drug: drugKey,
+      question,
+
+      // new strict keys
+      drugKey,
+      lang,
+      answerMode,
+      mode: selectedMode
+    };
+
     try{
       const res = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
-        body: JSON.stringify({
-          drugKey,
-          question,
-          lang,
-          answerMode,
-          mode: selectedMode
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json().catch(()=> ({}));
+      const mapped = mapResponse(data, res.ok);
 
-      // Primary UI text: reply
-      resultBox.textContent = (data && data.reply) ? String(data.reply) : "No response returned.";
-
-      // Verdict & details
-      const verdict = data?.result?.verdict || "UNKNOWN";
-      setBadge(verdict);
-
-      setLockedInfo(Boolean(data?.locked));
+      resultBox.textContent = String(mapped.reply);
+      setBadge(mapped.verdict);
+      setLockedInfo(Boolean(mapped.locked));
       setStatus(res.ok ? "OK" : "Error", res.ok);
 
-      // Source + evidence
-      renderSource(data?.result?.source_hint || "");
-      renderEvidence(data?.result?.verbatim || []);
+      renderSource(mapped.source_hint);
+      renderEvidence(mapped.verbatim);
 
-      // If mode is short, you may want to hide evidence visually (optional):
-      if(selectedMode === "short"){
-        // keep evidence but subtle
-        // (or you can clear it: renderEvidence([]))
-      }
+      // Optional UI behavior:
+      // - If user chose "verbatim", and backend didn't return evidence, keep reply only.
+      // - If "short", we still show evidence box (you can hide it if you want).
 
     }catch(err){
       console.error(err);
