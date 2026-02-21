@@ -1,410 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DoseGuide AI</title>
-
-<style>
-  :root{
-    --pri:#2563eb;
-    --bg:#f6f8fc;
-    --card:#ffffff;
-    --border:#e5eaf3;
-    --text:#0f172a;
-    --muted:#64748b;
-    --radius:18px;
-    --shadow:0 12px 28px rgba(15, 23, 42, .08);
-    --ok:#16a34a;
-    --bad:#dc2626;
-    --warn:#b45309;
-  }
-  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
-  body{margin:0;background:var(--bg);color:var(--text);}
-  .wrap{max-width:1120px;margin:0 auto;padding:34px 18px 60px;}
-  .top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;}
-  .brand{display:flex;align-items:center;gap:12px;}
-  .mark{
-    width:42px;height:42px;border-radius:14px;
-    background:linear-gradient(135deg, #60a5fa, #2563eb);
-    box-shadow:var(--shadow);
-  }
-  .title{font-size:28px;font-weight:800;letter-spacing:.2px;color:#1d4ed8;}
-  .pill{
-    font-size:13px;color:#1d4ed8;background:#eaf2ff;border:1px solid #d7e6ff;
-    padding:8px 12px;border-radius:999px;font-weight:700;
-  }
-  .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;}
-  .card{
-    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-    box-shadow:var(--shadow);padding:18px;
-  }
-  .card h3{margin:0 0 12px;font-size:18px;}
-  .row{display:flex;gap:10px;flex-wrap:wrap;}
-  .row > *{flex:1; min-width: 180px;}
-  select, textarea, input{
-    width:100%;border:1px solid var(--border);border-radius:14px;
-    padding:12px 14px;font-size:14px;outline:none;background:#fff;
-    transition:border .15s, box-shadow .15s;
-  }
-  select:focus, textarea:focus, input:focus{
-    border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.14);
-  }
-  textarea{min-height:180px;resize:vertical;line-height:1.35;}
-  .actions{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;}
-  button{
-    border:0;border-radius:14px;padding:12px 16px;font-weight:800;
-    cursor:pointer;font-size:14px;
-  }
-  .btn-primary{background:var(--pri);color:#fff;}
-  .btn-primary:hover{filter:brightness(.98);}
-  .btn-ghost{background:#eef2ff;color:#1e3a8a;}
-  .btn-ghost:hover{filter:brightness(.98);}
-
-  .seg{
-    display:flex; gap:8px; flex-wrap:wrap;
-    padding:10px; border:1px solid var(--border); border-radius:14px; background:#fbfcff;
-  }
-  .seg button{
-    padding:10px 12px; border-radius:12px; font-weight:800;
-    background:#eef2ff; color:#1e3a8a;
-  }
-  .seg button.active{
-    background:var(--pri); color:#fff;
-  }
-
-  .hint{margin-top:10px;color:var(--muted);font-size:12.5px;}
-  .result{
-    border:1px solid var(--border);border-radius:14px;padding:14px;background:#fbfcff;
-    white-space:pre-wrap;min-height:220px;overflow:auto;font-size:14px;line-height:1.4;
-  }
-  .meta{
-    margin-top:10px;
-    display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
-  }
-  .badge{
-    display:inline-flex; align-items:center; gap:8px;
-    font-size:12px; font-weight:900;
-    padding:7px 10px; border-radius:999px; border:1px solid var(--border);
-    background:#fff;
-  }
-  .badge.ok{ color:var(--ok); border-color:#bbf7d0; background:#f0fdf4;}
-  .badge.bad{ color:var(--bad); border-color:#fecaca; background:#fef2f2;}
-  .badge.warn{ color:var(--warn); border-color:#fed7aa; background:#fff7ed;}
-
-  .source{
-    width:100%;
-    border:1px dashed #dbe3f3;
-    background:#ffffff;
-    border-radius:14px;
-    padding:10px 12px;
-    color:#334155;
-    font-size:13px;
-    white-space:pre-wrap;
-  }
-  .evidenceTitle{
-    margin:14px 0 8px;
-    font-weight:900;
-    font-size:13px;
-    color:#1e3a8a;
-  }
-  .evidence{
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:12px;
-    background:#ffffff;
-    white-space:pre-wrap;
-    font-size:13px;
-    line-height:1.45;
-    max-height:240px;
-    overflow:auto;
-  }
-  .status{margin-top:10px;font-size:12.5px;color:var(--muted);}
-  .okText{color:var(--ok);font-weight:800;}
-  .badText{color:var(--bad);font-weight:800;}
-  @media (max-width: 980px){
-    .grid{grid-template-columns:1fr;}
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DoseGuide AI – Adult Antimicrobial Guidelines</title>
+  <style>
+    :root{
+      --bg:#0B1220; --card:#0F1A2E; --card2:#0D172A;
+      --line:#20304B; --text:#E6EEF9; --muted:#9FB0C6;
+      --pri:#4DA3FF; --pri2:#7CC7FF; --ok:#2DD4BF; --bad:#FB7185; --warn:#FBBF24;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --r:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background: radial-gradient(1100px 700px at 20% 0%, rgba(77,163,255,.22), transparent 60%),
+                         radial-gradient(900px 600px at 90% 20%, rgba(45,212,191,.14), transparent 55%),
+                         var(--bg);
+      color:var(--text); font-family:var(--sans);
+    }
+    .wrap{max-width:1100px; margin:28px auto; padding:0 18px;}
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      margin-bottom:16px;
+    }
+    .brand{display:flex; align-items:center; gap:12px;}
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(77,163,255,1), rgba(124,199,255,1));
+      box-shadow: 0 12px 30px rgba(77,163,255,.22);
+    }
+    .title h1{margin:0; font-size:22px; letter-spacing:.2px}
+    .title p{margin:3px 0 0; color:var(--muted); font-size:13px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(124,199,255,.35);
+      background: rgba(15,26,46,.75);
+      color:var(--pri2); font-size:12px;
+    }
+    .grid{display:grid; grid-template-columns: 1.05fr .95fr; gap:16px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
+    .card{
+      background: rgba(15,26,46,.72);
+      border:1px solid rgba(32,48,75,.85);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px; border-bottom:1px solid rgba(32,48,75,.85);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .card .hd b{font-size:14px}
+    .card .bd{padding:16px}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    textarea{
+      width:100%; min-height:140px; resize:vertical;
+      background: rgba(13,23,42,.9);
+      border:1px solid rgba(32,48,75,.9);
+      border-radius: 14px;
+      color: var(--text);
+      padding:12px 12px;
+      font-size:14px; line-height:1.55;
+      outline:none;
+    }
+    textarea:focus{border-color: rgba(124,199,255,.55); box-shadow: 0 0 0 4px rgba(77,163,255,.12);}
+    .btn{
+      border:1px solid rgba(77,163,255,.45);
+      background: linear-gradient(180deg, rgba(77,163,255,.25), rgba(77,163,255,.12));
+      color: var(--text);
+      padding:10px 14px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight:600;
+      transition:.15s transform, .15s opacity;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn:active{transform: translateY(0px); opacity:.9}
+    .btn.secondary{
+      border:1px solid rgba(32,48,75,.85);
+      background: rgba(13,23,42,.85);
+      color: var(--muted);
+    }
+    .seg{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .seg button{
+      border:1px solid rgba(32,48,75,.85);
+      background: rgba(13,23,42,.85);
+      color: var(--muted);
+      padding:8px 10px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .seg button.active{
+      border-color: rgba(124,199,255,.55);
+      color: var(--pri2);
+      background: rgba(77,163,255,.12);
+    }
+    .meta{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      font-size:12px; color:var(--muted);
+    }
+    .badge{
+      font-family:var(--mono);
+      border:1px solid rgba(32,48,75,.85);
+      background: rgba(13,23,42,.7);
+      padding:6px 10px; border-radius:999px;
+      display:inline-flex; gap:8px; align-items:center;
+    }
+    .dot{width:8px; height:8px; border-radius:999px; background: var(--warn);}
+    .dot.ok{background: var(--ok)}
+    .dot.bad{background: var(--bad)}
+    .out{
+      background: rgba(13,23,42,.9);
+      border:1px solid rgba(32,48,75,.9);
+      border-radius: 14px;
+      padding:12px 12px;
+      min-height: 220px;
+      white-space: pre-wrap;
+      line-height:1.6;
+      font-size:14px;
+    }
+    .small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+    }
+    .foot{
+      margin-top:14px;
+      color: rgba(159,176,198,.9);
+      font-size:12px;
+    }
+    a{color: var(--pri2); text-decoration:none}
+    a:hover{text-decoration:underline}
+  </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="mark"></div>
-        <div class="title">DoseGuide AI</div>
+        <div class="logo"></div>
+        <div class="title">
+          <h1>DoseGuide AI</h1>
+          <p>Adult Antimicrobial Guidelines — Protocol-Locked Q&amp;A</p>
+        </div>
       </div>
-      <div class="pill">Protocol Locked</div>
+      <div class="pill">🔒 Locked to: Antimicrobial PDF</div>
     </div>
 
     <div class="grid">
+      <!-- Left: Ask -->
       <div class="card">
-        <h3>Ask a Clinical Question</h3>
-
-        <div class="row">
-          <select id="drugSelect" aria-label="Drug">
-            <option value="">Select drug</option>
-          </select>
-
-          <select id="langSelect" aria-label="Language">
-            <option value="auto">Auto</option>
-            <option value="en">English</option>
-            <option value="ar">Arabic</option>
-          </select>
-
-          <select id="answerMode" aria-label="Answer style">
-            <option value="recommended">Recommended</option>
-            <option value="bullet">Bullet</option>
-            <option value="detailed">Detailed</option>
-          </select>
+        <div class="hd">
+          <b>Ask a clinical question</b>
+          <div class="seg" id="modeSeg">
+            <button data-mode="hybrid" class="active" title="Best balance">Hybrid</button>
+            <button data-mode="short" title="Just the answer">Short</button>
+            <button data-mode="source" title="Only evidence">Source</button>
+          </div>
         </div>
+        <div class="bd">
+          <textarea id="q" placeholder="Example:
+• Empiric therapy for community-acquired pneumonia?
+• Dose adjustment in renal impairment for ...?
+• Duration of therapy for ...?"></textarea>
 
-        <div class="hint" style="margin-top:10px;margin-bottom:8px;">
-          Output mode:
-        </div>
-        <div class="seg" id="modeSeg">
-          <button type="button" data-mode="hybrid" class="active">Hybrid</button>
-          <button type="button" data-mode="short">Short</button>
-          <button type="button" data-mode="verbatim">Verbatim</button>
-          <button type="button" data-mode="link">Source</button>
-        </div>
+          <div class="row" style="margin-top:12px; align-items:center; justify-content:space-between;">
+            <div class="row" style="gap:8px;">
+              <button class="btn" id="askBtn">Ask</button>
+              <button class="btn secondary" id="clearBtn">Clear</button>
+            </div>
+            <div class="meta">
+              <span class="badge"><span class="dot" id="statusDot"></span><span id="statusTxt">Idle</span></span>
+              <span class="badge">Locked: <b style="color:var(--pri2)">YES</b></span>
+            </div>
+          </div>
 
-        <textarea
-          id="question"
-          placeholder="Type your clinical question..."
-          spellcheck="true"
-          autocomplete="on"
-        ></textarea>
-
-        <div class="actions">
-          <button class="btn-primary" id="askBtn">Ask</button>
-          <button class="btn-ghost" id="clearBtn" type="button">Clear</button>
-        </div>
-
-        <div class="hint">
-          Worker-compatible UI: works with old (<code>answer</code>) and new (<code>reply/result</code>) responses.
+          <div class="foot">
+            This tool answers only from the uploaded guideline (vector store). If not found, it returns <span style="font-family:var(--mono)">Not found in protocol</span>.
+          </div>
         </div>
       </div>
 
+      <!-- Right: Result -->
       <div class="card">
-        <h3>Result</h3>
-
-        <div id="result" class="result">Ready.</div>
-
-        <div class="meta">
-          <div id="badge" class="badge warn">VERDICT: IDLE</div>
-          <div id="status" class="status">Status: <span class="okText">Idle</span></div>
-          <div id="lockedInfo" class="status">Locked: <span class="okText">—</span></div>
+        <div class="hd">
+          <b>Result</b>
+          <div class="meta">
+            <span class="badge">Verdict: <b id="verdict" style="color:var(--warn)">—</b></span>
+          </div>
         </div>
-
-        <div class="evidenceTitle">Source</div>
-        <div id="source" class="source">—</div>
-
-        <div class="evidenceTitle">Evidence (verbatim)</div>
-        <div id="evidence" class="evidence">—</div>
+        <div class="bd">
+          <div class="out" id="answer">—</div>
+          <div class="small" style="margin-top:10px;">
+            Tip: ask specific (indication + patient factors). Example: “Adult, CrCl 25 mL/min, suspected pyelonephritis — recommended empiric antibiotics?”
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-<script>
-  // ✅ Cloudflare Worker endpoint (your current)
-  const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mxmx9669.workers.dev";
+  <script>
+    const q = document.getElementById("q");
+    const askBtn = document.getElementById("askBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const answerEl = document.getElementById("answer");
+    const verdictEl = document.getElementById("verdict");
+    const statusDot = document.getElementById("statusDot");
+    const statusTxt = document.getElementById("statusTxt");
+    const modeSeg = document.getElementById("modeSeg");
 
-  let selectedMode = "hybrid";
+    let mode = "hybrid";
 
-  async function loadDrugs(){
-    try{
-      const res = await fetch("./vectorstores.json", { cache: "no-store" });
-      if(!res.ok) throw new Error("vectorstores.json not reachable");
-      const data = await res.json();
+    function setStatus(state, text) {
+      statusTxt.textContent = text || state;
+      statusDot.classList.remove("ok", "bad");
+      if (state === "ok") statusDot.classList.add("ok");
+      else if (state === "bad") statusDot.classList.add("bad");
+    }
 
-      const select = document.getElementById("drugSelect");
-      const keys = Object.keys(data).sort((a,b)=>a.localeCompare(b));
-      for(const k of keys){
-        const o = document.createElement("option");
-        o.value = k;         // drugKey
-        o.textContent = k;
-        select.appendChild(o);
-      }
-    }catch(e){
-      console.warn("Drug list not loaded:", e);
-      const select = document.getElementById("drugSelect");
-      ["Ciprofloxacin","Levofloxacin","Meropenem","Vancomycin"].forEach(k=>{
-        const o=document.createElement("option");
-        o.value=k; o.textContent=k;
-        select.appendChild(o);
+    function setMode(m){
+      mode = m;
+      [...modeSeg.querySelectorAll("button")].forEach(b=>{
+        b.classList.toggle("active", b.dataset.mode === m);
       });
     }
-  }
 
-  function setStatus(text, ok=true){
-    const el = document.getElementById("status");
-    el.innerHTML = `Status: <span class="${ok ? "okText":"badText"}">${text}</span>`;
-  }
-
-  function setBadge(verdict){
-    const b = document.getElementById("badge");
-    if(verdict === "FOUND"){
-      b.className = "badge ok";
-      b.textContent = "VERDICT: FOUND";
-    }else if(verdict === "NOT_FOUND"){
-      b.className = "badge bad";
-      b.textContent = "VERDICT: NOT_FOUND";
-    }else{
-      b.className = "badge warn";
-      b.textContent = "VERDICT: " + (verdict || "IDLE");
-    }
-  }
-
-  function setLockedInfo(locked){
-    const el = document.getElementById("lockedInfo");
-    el.innerHTML = `Locked: <span class="${locked ? "okText":"badText"}">${locked ? "YES" : "NO"}</span>`;
-  }
-
-  function renderEvidence(verbatimArr){
-    const box = document.getElementById("evidence");
-    if(!Array.isArray(verbatimArr) || verbatimArr.length === 0){
-      box.textContent = "—";
-      return;
-    }
-    box.textContent = verbatimArr.map((e, i) => {
-      const q = e.quote || "";
-      const sec = e.section_hint ? ` [${e.section_hint}]` : "";
-      const pg = e.page_hint ? ` ${e.page_hint}` : "";
-      return `${i+1}) ${q}${sec}${pg}`;
-    }).join("\n\n");
-  }
-
-  function renderSource(sourceHint){
-    const box = document.getElementById("source");
-    box.textContent = sourceHint && String(sourceHint).trim() ? String(sourceHint).trim() : "—";
-  }
-
-  function setModeUI(mode){
-    selectedMode = mode;
-    document.querySelectorAll("#modeSeg button").forEach(btn=>{
-      btn.classList.toggle("active", btn.dataset.mode === mode);
+    modeSeg.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-mode]");
+      if (!btn) return;
+      setMode(btn.dataset.mode);
     });
-  }
 
-  // --- Flexible response mapping (old worker vs new strict engine) ---
-  function mapResponse(data, resOk){
-    // New format (Netlify strict): { reply, result:{ verdict, verbatim, source_hint }, locked }
-    if (data && typeof data === "object") {
-      const reply = data.reply ?? data.answer ?? data.text ?? null;
+    clearBtn.addEventListener("click", () => {
+      q.value = "";
+      answerEl.textContent = "—";
+      verdictEl.textContent = "—";
+      verdictEl.style.color = "var(--warn)";
+      setStatus("idle", "Idle");
+      q.focus();
+    });
 
-      const verdict = data?.result?.verdict
-        ? String(data.result.verdict)
-        : (reply && typeof reply === "string" && /not found|غير موجود/i.test(reply))
-          ? "NOT_FOUND"
-          : "UNKNOWN";
+    async function ask() {
+      const question = q.value.trim();
+      if (!question) return;
 
-      const verbatim = Array.isArray(data?.result?.verbatim) ? data.result.verbatim : [];
-      const source_hint = typeof data?.result?.source_hint === "string" ? data.result.source_hint : "";
+      askBtn.disabled = true;
+      setStatus("idle", "Working…");
+      answerEl.textContent = "Thinking…";
+      verdictEl.textContent = "—";
+      verdictEl.style.color = "var(--warn)";
 
-      const locked = (typeof data.locked === "boolean") ? data.locked : resOk;
+      try {
+        // We can influence style by prefixing the user question (server remains locked).
+        let prompt = question;
+        if (mode === "short") prompt = "Answer briefly.\n\n" + question;
+        if (mode === "source") prompt = "Return only the Evidence quotes.\n\n" + question;
 
-      return { reply: reply ?? "No response returned.", verdict, verbatim, source_hint, locked };
+        const r = await fetch("/.netlify/functions/ask", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ question: prompt })
+        });
+
+        const data = await r.json();
+        if (!r.ok || !data?.ok) throw new Error(data?.error || "Request failed");
+
+        const ans = (data.answer || "").trim();
+        answerEl.textContent = ans || "Not found in protocol";
+
+        const verdict = data.verdict || (ans === "Not found in protocol" ? "NOT_FOUND" : "FOUND");
+        verdictEl.textContent = verdict;
+
+        if (verdict === "FOUND") {
+          verdictEl.style.color = "var(--ok)";
+          setStatus("ok", "OK");
+        } else {
+          verdictEl.style.color = "var(--bad)";
+          setStatus("bad", "NOT FOUND");
+        }
+      } catch (e) {
+        answerEl.textContent = "Error: " + (e?.message || e);
+        verdictEl.textContent = "ERROR";
+        verdictEl.style.color = "var(--bad)";
+        setStatus("bad", "Error");
+      } finally {
+        askBtn.disabled = false;
+      }
     }
-    return { reply: "No response returned.", verdict: "UNKNOWN", verbatim: [], source_hint: "", locked: resOk };
-  }
 
-  async function ask(){
-    const drugKey = document.getElementById("drugSelect").value;
-    const question = document.getElementById("question").value.trim();
-    const lang = document.getElementById("langSelect").value;
-    const answerMode = document.getElementById("answerMode").value;
+    askBtn.addEventListener("click", ask);
+    q.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
+    });
 
-    const resultBox = document.getElementById("result");
-
-    if(!drugKey || !question){
-      resultBox.textContent = "Please select a drug and enter a question.";
-      setStatus("Missing input", false);
-      setBadge("IDLE");
-      setLockedInfo(false);
-      renderSource("");
-      renderEvidence([]);
-      return;
-    }
-
-    resultBox.textContent = "Processing...";
-    setStatus("Connecting...", true);
-    setBadge("RUNNING");
-    setLockedInfo(true);
-    renderSource("—");
-    renderEvidence([]);
-
-    // ✅ Send BOTH styles so either backend can understand
-    const payload = {
-      // old worker keys
-      drug: drugKey,
-      question,
-
-      // new strict keys
-      drugKey,
-      lang,
-      answerMode,
-      mode: selectedMode
-    };
-
-    try{
-      const res = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json().catch(()=> ({}));
-      const mapped = mapResponse(data, res.ok);
-
-      resultBox.textContent = String(mapped.reply);
-      setBadge(mapped.verdict);
-      setLockedInfo(Boolean(mapped.locked));
-      setStatus(res.ok ? "OK" : "Error", res.ok);
-
-      renderSource(mapped.source_hint);
-      renderEvidence(mapped.verbatim);
-
-      // Optional UI behavior:
-      // - If user chose "verbatim", and backend didn't return evidence, keep reply only.
-      // - If "short", we still show evidence box (you can hide it if you want).
-
-    }catch(err){
-      console.error(err);
-      resultBox.textContent = "Error connecting to server.";
-      setStatus("Network error", false);
-      setBadge("ERROR");
-      setLockedInfo(false);
-      renderSource("");
-      renderEvidence([]);
-    }
-  }
-
-  function clearAll(){
-    document.getElementById("question").value = "";
-    document.getElementById("result").textContent = "Ready.";
-    setStatus("Idle", true);
-    setBadge("IDLE");
-    setLockedInfo(true);
-    renderSource("");
-    renderEvidence([]);
-  }
-
-  document.getElementById("askBtn").addEventListener("click", ask);
-  document.getElementById("clearBtn").addEventListener("click", clearAll);
-
-  document.getElementById("question").addEventListener("keydown", (e)=>{
-    if((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
-  });
-
-  document.getElementById("modeSeg").addEventListener("click", (e)=>{
-    const btn = e.target.closest("button[data-mode]");
-    if(!btn) return;
-    setModeUI(btn.dataset.mode);
-  });
-
-  loadDrugs();
-  setModeUI("hybrid");
-</script>
+    setStatus("idle", "Idle");
+  </script>
 </body>
 </html>
