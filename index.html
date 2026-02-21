@@ -4,176 +4,165 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DoseGuide AI</title>
+
 <style>
   :root{
-    --primary:#2563eb;
+    --pri:#2563eb;
     --bg:#f6f8fc;
     --card:#ffffff;
-    --border:#e5eaf2;
+    --border:#e5eaf3;
     --text:#0f172a;
     --muted:#64748b;
     --radius:18px;
+    --shadow:0 12px 28px rgba(15, 23, 42, .08);
   }
-  *{ box-sizing:border-box; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-  body{ margin:0; background:var(--bg); color:var(--text); }
-  .container{ max-width:1100px; margin:auto; padding:34px 18px; }
-  .header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:12px; }
-  .logo{ font-size:26px; font-weight:800; letter-spacing:.2px; color:var(--primary); }
-  .badge{ background:#e8f2ff; color:#1d4ed8; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:700; }
-  .sub{ color:var(--muted); margin-top:6px; font-size:13px; }
-  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
+  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  body{margin:0;background:var(--bg);color:var(--text);}
+  .wrap{max-width:1120px;margin:0 auto;padding:34px 18px 60px;}
+  .top{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .mark{
+    width:42px;height:42px;border-radius:14px;
+    background:linear-gradient(135deg, #60a5fa, #2563eb);
+    box-shadow:var(--shadow);
+  }
+  .title{font-size:28px;font-weight:800;letter-spacing:.2px;color:#1d4ed8;}
+  .pill{
+    font-size:13px;color:#1d4ed8;background:#eaf2ff;border:1px solid #d7e6ff;
+    padding:8px 12px;border-radius:999px;font-weight:700;
+  }
+  .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;}
   .card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:18px;
-    box-shadow: 0 10px 26px rgba(15,23,42,.06);
-    display:flex; flex-direction:column;
-    min-height: 420px;
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;
   }
-  h3{ margin:0 0 12px; font-size:16px; }
-  label{ font-size:12px; color:var(--muted); margin:10px 0 6px; }
-  select, textarea{
-    width:100%;
-    padding:12px 12px;
-    border-radius:14px;
-    border:1px solid var(--border);
-    font-size:14px;
-    outline:none;
-    transition:.15s;
-    background:#fff;
+  .card h3{margin:0 0 12px;font-size:18px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  select, textarea, input{
+    width:100%;border:1px solid var(--border);border-radius:14px;
+    padding:14px 14px;font-size:14px;outline:none;background:#fff;
+    transition:border .15s, box-shadow .15s;
   }
-  select:focus, textarea:focus{ border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.12); }
-  textarea{ min-height:170px; resize:vertical; line-height:1.45; }
-  .row{ display:flex; gap:10px; margin-top:12px; }
+  select:focus, textarea:focus, input:focus{
+    border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.14);
+  }
+  textarea{min-height:180px;resize:vertical;line-height:1.35;}
+  .actions{display:flex;gap:10px;align-items:center;margin-top:12px;}
   button{
-    border:none; cursor:pointer;
-    border-radius:14px;
-    padding:12px 14px;
-    font-weight:800;
-    font-size:14px;
+    border:0;border-radius:14px;padding:12px 16px;font-weight:800;
+    cursor:pointer;font-size:14px;
   }
-  .primary{ background:var(--primary); color:#fff; flex:1; }
-  .primary:hover{ opacity:.95; }
-  .ghost{ background:#eef2ff; color:#1e40af; }
+  .btn-primary{background:var(--pri);color:#fff;}
+  .btn-primary:hover{filter:brightness(.98);}
+  .btn-ghost{background:#eef2ff;color:#1e3a8a;}
+  .btn-ghost:hover{filter:brightness(.98);}
+  .hint{margin-top:10px;color:var(--muted);font-size:12.5px;}
   .result{
-    flex:1;
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:14px;
-    background:#fbfdff;
-    white-space:pre-wrap;
-    overflow:auto;
-    font-size:14px;
-    line-height:1.55;
+    border:1px solid var(--border);border-radius:14px;padding:14px;background:#fbfcff;
+    white-space:pre-wrap;min-height:260px;overflow:auto;font-size:14px;line-height:1.4;
   }
-  .hint{ margin-top:10px; font-size:12px; color:var(--muted); }
-  .ok{ color:#16a34a; font-weight:700; }
-  .bad{ color:#dc2626; font-weight:700; }
-  @media (max-width: 920px){ .grid{ grid-template-columns:1fr; } .card{ min-height:auto; } }
+  .status{margin-top:10px;font-size:12.5px;color:var(--muted);}
+  .ok{color:#16a34a;font-weight:700;}
+  .bad{color:#dc2626;font-weight:700;}
+  @media (max-width: 980px){
+    .grid{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <div class="logo">DoseGuide AI</div>
-        <div class="sub">Answers are restricted to the selected drug PDF only.</div>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="mark"></div>
+        <div class="title">DoseGuide AI</div>
       </div>
-      <div class="badge">Protocol Locked</div>
+      <div class="pill">Protocol Locked</div>
     </div>
 
     <div class="grid">
       <div class="card">
         <h3>Ask a Clinical Question</h3>
 
-        <label>Drug</label>
-        <select id="drugSelect">
-          <option value="">Loading drugs…</option>
+        <select id="drugSelect" aria-label="Drug">
+          <option value="">Select drug</option>
         </select>
 
-        <label>Question</label>
-        <textarea id="question" placeholder="e.g., What is the renal dose adjustment for ciprofloxacin in CrCl 25 mL/min?" spellcheck="true"></textarea>
+        <textarea
+          id="question"
+          placeholder="Type your clinical question..."
+          spellcheck="true"
+          autocomplete="on"
+        ></textarea>
 
-        <div class="row">
-          <button class="primary" id="askBtn" onclick="ask()">Ask</button>
-          <button class="ghost" onclick="clearAll()">Clear</button>
+        <div class="actions">
+          <button class="btn-primary" id="askBtn">Ask</button>
+          <button class="btn-ghost" id="clearBtn" type="button">Clear</button>
         </div>
 
         <div class="hint">
-          Status: <span id="status" class="ok">Ready</span>
+          Answers are restricted to the selected drug PDF protocol only.
         </div>
       </div>
 
       <div class="card">
         <h3>Result</h3>
-        <div id="result" class="result">Ready…</div>
-        <div class="hint">
-          If the information is not in the PDF, the system must reply: <b>Not found in protocol</b>.
-        </div>
+        <div id="result" class="result">Ready.</div>
+        <div id="status" class="status">Status: <span class="ok">Idle</span></div>
       </div>
     </div>
   </div>
 
 <script>
-  // ✅ IMPORTANT: exact URL
+  // ✅ Put your REAL worker URL here (note: mxmx9669)
   const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mxmx9669.workers.dev";
-  const DRUGS_JSON = "vectorstores.json"; // must exist in same Pages site root
 
-  function setStatus(text, kind="ok"){
-    const el = document.getElementById("status");
-    el.className = kind === "bad" ? "bad" : "ok";
-    el.textContent = text;
-  }
-
-  function clearAll(){
-    document.getElementById("question").value = "";
-    document.getElementById("result").textContent = "Ready…";
-    setStatus("Ready","ok");
-  }
-
+  // ✅ Load list from local repo file (must exist in Pages root)
   async function loadDrugs(){
-    const select = document.getElementById("drugSelect");
-    select.innerHTML = `<option value="">Select Drug</option>`;
     try{
-      const res = await fetch(DRUGS_JSON, { cache: "no-store" });
-      if(!res.ok) throw new Error("Failed to load vectorstores.json");
-      const map = await res.json();
+      const res = await fetch("./vectorstores.json", { cache: "no-store" });
+      if(!res.ok) throw new Error("vectorstores.json not reachable");
+      const data = await res.json();
 
-      const drugs = Object.keys(map).sort((a,b)=>a.localeCompare(b));
-      for(const drug of drugs){
-        const opt = document.createElement("option");
-        opt.value = drug;
-        opt.textContent = drug;
-        select.appendChild(opt);
+      const select = document.getElementById("drugSelect");
+      const keys = Object.keys(data).sort((a,b)=>a.localeCompare(b));
+      for(const k of keys){
+        const o = document.createElement("option");
+        o.value = k;
+        o.textContent = k;
+        select.appendChild(o);
       }
-
-      setStatus("Ready","ok");
     }catch(e){
-      select.innerHTML = `<option value="">(No drugs found)</option>`;
-      document.getElementById("result").textContent =
-        "Error: vectorstores.json not found or invalid.";
-      setStatus("Error","bad");
-      console.error(e);
+      console.warn("Drug list not loaded:", e);
+      // fallback minimal options if file missing
+      const select = document.getElementById("drugSelect");
+      ["Ciprofloxacin","Levofloxacin","Meropenem","Vancomycin"].forEach(k=>{
+        const o=document.createElement("option");
+        o.value=k; o.textContent=k;
+        select.appendChild(o);
+      });
     }
+  }
+
+  function setStatus(text, ok=true){
+    const el = document.getElementById("status");
+    el.innerHTML = `Status: <span class="${ok ? "ok":"bad"}">${text}</span>`;
   }
 
   async function ask(){
     const drug = document.getElementById("drugSelect").value;
     const question = document.getElementById("question").value.trim();
     const resultBox = document.getElementById("result");
-    const btn = document.getElementById("askBtn");
 
     if(!drug || !question){
       resultBox.textContent = "Please select a drug and enter a question.";
-      setStatus("Missing input","bad");
+      setStatus("Missing input", false);
       return;
     }
 
-    btn.disabled = true;
-    btn.style.opacity = ".7";
-    resultBox.textContent = "Processing…";
-    setStatus("Processing","ok");
+    resultBox.textContent = "Processing...";
+    setStatus("Connecting...", true);
 
     try{
       const res = await fetch(API_ENDPOINT, {
@@ -183,23 +172,31 @@
       });
 
       const data = await res.json().catch(()=> ({}));
+      const ans = (data && data.answer) ? String(data.answer) : "No response returned.";
 
-      if(!res.ok){
-        resultBox.textContent = data?.error || `Server error (${res.status}).`;
-        setStatus("Error","bad");
-      }else{
-        resultBox.textContent = data?.answer || "No response returned.";
-        setStatus("Done","ok");
-      }
+      resultBox.textContent = ans;
+      setStatus(res.ok ? "OK" : "Error", res.ok);
+
     }catch(err){
-      resultBox.textContent = "Error connecting to server.";
-      setStatus("Offline / DNS / CORS","bad");
       console.error(err);
-    }finally{
-      btn.disabled = false;
-      btn.style.opacity = "1";
+      resultBox.textContent = "Error connecting to server.";
+      setStatus("Network error", false);
     }
   }
+
+  function clearAll(){
+    document.getElementById("question").value = "";
+    document.getElementById("result").textContent = "Ready.";
+    setStatus("Idle", true);
+  }
+
+  document.getElementById("askBtn").addEventListener("click", ask);
+  document.getElementById("clearBtn").addEventListener("click", clearAll);
+
+  // Submit on Ctrl+Enter
+  document.getElementById("question").addEventListener("keydown", (e)=>{
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
+  });
 
   loadDrugs();
 </script>
