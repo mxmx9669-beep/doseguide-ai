@@ -1,207 +1,247 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DoseGuide AI — Protocol-Locked</title>
-  <style>
-    :root{
-      --bg1:#060914; --bg2:#0b1a2a;
-      --card: rgba(255,255,255,.06);
-      --card2: rgba(255,255,255,.08);
-      --stroke: rgba(255,255,255,.12);
-      --text:#eaf2ff; --muted:rgba(234,242,255,.65);
-      --accent:#44b7ff; --accent2:#7c5cff;
-      --good:#34d399; --bad:#fb7185;
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-      --r: 22px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1000px 600px at 85% 10%, rgba(124,92,255,.25), transparent 55%),
-        radial-gradient(900px 600px at 15% 20%, rgba(68,183,255,.25), transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-      padding: 28px 16px;
-    }
-    .wrap{max-width:1100px; margin:0 auto;}
-    .top{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:14px; margin-bottom:16px;
-    }
-    .brand{
-      display:flex; gap:12px; align-items:center;
-    }
-    .logo{
-      width:44px; height:44px; border-radius:16px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 12px 30px rgba(68,183,255,.18);
-    }
-    h1{margin:0; font-size:20px; letter-spacing:.2px}
-    .sub{margin:2px 0 0; color:var(--muted); font-size:13px}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 12px; border-radius:999px;
-      background:rgba(255,255,255,.06); border:1px solid var(--stroke);
-      color:var(--muted); font-size:13px;
-    }
-    .dot{width:10px;height:10px;border-radius:50%; background:var(--good); box-shadow:0 0 0 6px rgba(52,211,153,.12)}
-    .grid{
-      display:grid; grid-template-columns: 1.2fr .8fr;
-      gap:14px;
-    }
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr;}
-    }
-    .card{
-      background: var(--card);
-      border: 1px solid var(--stroke);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding:14px 16px;
-      display:flex; align-items:center; justify-content:space-between;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-    }
-    .card .hd b{font-size:14px}
-    .card .bd{padding:16px}
-    label{display:block; margin:0 0 8px; color:var(--muted); font-size:13px}
-    select, textarea, input{
-      width:100%;
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
-      color:var(--text);
-      padding:12px 12px;
-      outline:none;
-    }
-    textarea{min-height:170px; resize:vertical; line-height:1.4}
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
-    @media (max-width: 520px){ .row{grid-template-columns:1fr} }
-    .actions{display:flex; gap:10px; margin-top:12px; align-items:center}
-    .btn{
-      border:0; border-radius: 16px;
-      padding: 12px 16px; cursor:pointer; font-weight:700;
-      color:#04101c;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 14px 35px rgba(68,183,255,.18);
-    }
-    .btn2{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color:var(--text);
-      border-radius: 16px;
-      padding:12px 16px;
-      cursor:pointer;
-    }
-    .meta{
-      margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;
-      color:var(--muted); font-size:12px;
-    }
-    .badge{
-      padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-    }
-    .result{
-      white-space:pre-wrap;
-      padding:14px;
-      border-radius: 18px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25);
-      min-height: 240px;
-      line-height:1.55;
-    }
-    .err{color: var(--bad)}
-    .ok{color: var(--good)}
-    .hint{
-      color:var(--muted); font-size:12.5px; margin-top:10px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DoseGuide AI</title>
+
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-soft:#dbeafe;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --text:#0f172a;
+  --muted:#64748b;
+  --radius:14px;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:40px 20px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:600;
+  color:var(--primary);
+}
+
+.status{
+  background:var(--primary-soft);
+  color:var(--primary);
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:13px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+}
+
+.card h3{
+  margin-top:0;
+  margin-bottom:15px;
+  font-size:16px;
+  color:var(--muted);
+}
+
+select, textarea{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-size:14px;
+  outline:none;
+  transition:.2s;
+}
+
+select:focus, textarea:focus{
+  border-color:var(--primary);
+}
+
+textarea{
+  min-height:140px;
+  resize:vertical;
+}
+
+.button-row{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+
+button{
+  padding:10px 18px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-weight:500;
+  transition:.2s;
+}
+
+.primary{
+  background:var(--primary);
+  color:white;
+}
+
+.primary:hover{
+  opacity:.9;
+}
+
+.secondary{
+  background:#f1f5f9;
+}
+
+.result-box{
+  flex:1;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:15px;
+  font-size:14px;
+  white-space:pre-wrap;
+  overflow:auto;
+}
+
+.loading{
+  color:var(--muted);
+}
+
+@media(max-width:900px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <h1>DoseGuide AI — Protocol-Locked</h1>
-          <div class="sub">واجهة تجريبية: إجابات مقيدة بمصدر PDF لكل دواء فقط</div>
-        </div>
-      </div>
-      <div class="pill"><span class="dot"></span><span id="statusTxt">Online • Netlify Function</span></div>
-    </div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="hd"><b>لوحة السؤال</b><span class="pill" style="padding:6px 10px"><span style="opacity:.9">اختر الدواء ثم اكتب السؤال</span></span></div>
-        <div class="bd">
-          <div class="row">
-            <div>
-              <label>الدواء (من القائمة المتاحة)</label>
-              <select id="drugKey"></select>
-              <div class="hint">القائمة تُسحب من <code>vectorstores.json</code> (الموجود داخل functions/data)</div>
-            </div>
-            <div>
-              <label>لغة الرد</label>
-              <select id="lang">
-                <option value="auto">Auto (حسب السؤال)</option>
-                <option value="ar">Arabic</option>
-                <option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="tl">Filipino/Tagalog</option>
-                <option value="am">Amharic</option>
-              </select>
-              <div class="hint">يدعم عدة لغات — لكن يظل مقيد بالـPDF فقط</div>
-            </div>
-          </div>
+<div class="container">
 
-          <div style="margin-top:12px">
-            <label>وضع الإجابة</label>
-            <select id="answerMode">
-              <option value="recommended">مختصر (Recommended)</option>
-              <option value="bullet">نقاط</option>
-              <option value="detailed">تفصيلي</option>
-            </select>
-          </div>
-
-          <div style="margin-top:12px">
-            <label>السؤال</label>
-            <textarea id="question" placeholder="مثال: ما هي جرعة التحميل حسب البروتوكول؟"></textarea>
-          </div>
-
-          <div class="actions">
-            <button class="btn" id="askBtn">Ask</button>
-            <button class="btn2" id="clearBtn">مسح</button>
-          </div>
-
-          <div class="meta">
-            <span class="badge" id="metaStatus">Status: —</span>
-            <span class="badge" id="metaEndpoint">Endpoint: /.netlify/functions/ask</span>
-            <span class="badge" id="metaDrug">Drug: —</span>
-          </div>
-
-          <div class="hint">
-            تذكير: هذه واجهة اختبار — لا تعتمد عليها كبديل عن بروتوكول مستشفى معتمد.
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><b>Result</b><span class="pill" style="padding:6px 10px"><span style="opacity:.9">الرد المقيد بالـPDF</span></span></div>
-        <div class="bd">
-          <div id="result" class="result">جاهز…</div>
-        </div>
-      </div>
-    </div>
+  <div class="header">
+    <div class="logo">DoseGuide AI</div>
+    <div class="status">Protocol Locked</div>
   </div>
 
-  <script src="./app.js"></script>
+  <div class="grid">
+
+    <!-- INPUT -->
+    <div class="card">
+      <h3>Ask a Clinical Question</h3>
+
+      <select id="drugSelect">
+        <option value="">Select Drug</option>
+      </select>
+
+      <textarea 
+        id="question" 
+        placeholder="Type your clinical question..."
+        spellcheck="true"
+      ></textarea>
+
+      <div class="button-row">
+        <button class="primary" onclick="ask()">Ask</button>
+        <button class="secondary" onclick="clearForm()">Clear</button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card">
+      <h3>Result</h3>
+      <div id="result" class="result-box">
+        Ready...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mmxm9669.workers.dev";
+
+async function loadDrugs(){
+  try{
+    const res = await fetch("vectorstores.json");
+    const data = await res.json();
+    const select = document.getElementById("drugSelect");
+
+    Object.keys(data).forEach(key=>{
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = key;
+      select.appendChild(option);
+    });
+
+  }catch(e){
+    console.log("Drug list not loaded.");
+  }
+}
+
+async function ask(){
+  const drug = document.getElementById("drugSelect").value;
+  const question = document.getElementById("question").value.trim();
+  const resultBox = document.getElementById("result");
+
+  if(!drug || !question){
+    resultBox.textContent = "Please select a drug and enter a question.";
+    return;
+  }
+
+  resultBox.innerHTML = '<span class="loading">Processing...</span>';
+
+  try{
+    const res = await fetch(API_ENDPOINT,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        drug,
+        question,
+        mode:"concise"
+      })
+    });
+
+    const data = await res.json();
+    resultBox.textContent = data.answer || "No answer returned.";
+
+  }catch(err){
+    resultBox.textContent = "Error connecting to server.";
+  }
+}
+
+function clearForm(){
+  document.getElementById("question").value="";
+  document.getElementById("result").textContent="Ready...";
+}
+
+loadDrugs();
+</script>
+
 </body>
 </html>
