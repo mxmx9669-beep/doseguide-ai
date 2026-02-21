@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DoseGuide AI</title>
 
 <style>
 :root{
   --primary:#2563eb;
-  --primary-soft:#dbeafe;
-  --bg:#f8fafc;
+  --accent:#0ea5e9;
+  --bg:#f4f7fb;
   --card:#ffffff;
   --border:#e2e8f0;
   --text:#0f172a;
   --muted:#64748b;
-  --radius:14px;
+  --radius:16px;
 }
 
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
+*{box-sizing:border-box;font-family:Inter,system-ui;}
+
 body{
   margin:0;
   background:var(--bg);
@@ -34,19 +35,19 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:30px;
+  margin-bottom:40px;
 }
 
 .logo{
-  font-size:22px;
-  font-weight:600;
+  font-size:24px;
+  font-weight:700;
   color:var(--primary);
 }
 
-.status{
-  background:var(--primary-soft);
-  color:var(--primary);
-  padding:6px 12px;
+.badge{
+  background:#e0f2fe;
+  color:var(--accent);
+  padding:6px 14px;
   border-radius:999px;
   font-size:13px;
 }
@@ -54,32 +55,32 @@ body{
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:20px;
+  gap:24px;
 }
 
 .card{
   background:var(--card);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:20px;
+  padding:25px;
   display:flex;
   flex-direction:column;
 }
 
-.card h3{
+h3{
   margin-top:0;
-  margin-bottom:15px;
-  font-size:16px;
-  color:var(--muted);
+  margin-bottom:20px;
+  font-size:18px;
 }
 
 select, textarea{
   width:100%;
-  padding:12px;
-  border-radius:10px;
+  padding:14px;
+  border-radius:12px;
   border:1px solid var(--border);
   font-size:14px;
   outline:none;
+  margin-bottom:15px;
   transition:.2s;
 }
 
@@ -88,23 +89,17 @@ select:focus, textarea:focus{
 }
 
 textarea{
-  min-height:140px;
+  min-height:150px;
   resize:vertical;
 }
 
-.button-row{
-  display:flex;
-  gap:10px;
-  margin-top:15px;
-}
-
 button{
-  padding:10px 18px;
-  border-radius:10px;
+  padding:12px 20px;
+  border-radius:12px;
   border:none;
   cursor:pointer;
-  font-weight:500;
-  transition:.2s;
+  font-weight:600;
+  font-size:14px;
 }
 
 .primary{
@@ -117,17 +112,18 @@ button{
 }
 
 .secondary{
-  background:#f1f5f9;
+  background:#e2e8f0;
 }
 
 .result-box{
   flex:1;
   border:1px solid var(--border);
-  border-radius:12px;
+  border-radius:14px;
   padding:15px;
   font-size:14px;
   white-space:pre-wrap;
   overflow:auto;
+  background:#f8fafc;
 }
 
 .loading{
@@ -145,45 +141,39 @@ button{
 
 <div class="container">
 
-  <div class="header">
-    <div class="logo">DoseGuide AI</div>
-    <div class="status">Protocol Locked</div>
-  </div>
+<div class="header">
+<div class="logo">DoseGuide AI</div>
+<div class="badge">Protocol Locked</div>
+</div>
 
-  <div class="grid">
+<div class="grid">
 
-    <!-- INPUT -->
-    <div class="card">
-      <h3>Ask a Clinical Question</h3>
+<div class="card">
+<h3>Ask a Clinical Question</h3>
 
-      <select id="drugSelect">
-        <option value="">Select Drug</option>
-      </select>
+<select id="drugSelect">
+<option value="">Select Drug</option>
+</select>
 
-      <textarea 
-        id="question" 
-        placeholder="Type your clinical question..."
-        spellcheck="true"
-      ></textarea>
+<textarea 
+id="question"
+placeholder="Type your clinical question..."
+spellcheck="true"
+></textarea>
 
-      <div class="button-row">
-        <button class="primary" onclick="ask()">Ask</button>
-        <button class="secondary" onclick="clearForm()">Clear</button>
-      </div>
-    </div>
+<button class="primary" onclick="ask()">Ask</button>
+</div>
 
-    <!-- RESULT -->
-    <div class="card">
-      <h3>Result</h3>
-      <div id="result" class="result-box">
-        Ready...
-      </div>
-    </div>
+<div class="card">
+<h3>Result</h3>
+<div id="result" class="result-box">Ready...</div>
+</div>
 
-  </div>
+</div>
 </div>
 
 <script>
+
 const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mmxm9669.workers.dev";
 
 async function loadDrugs(){
@@ -198,7 +188,6 @@ async function loadDrugs(){
       option.textContent = key;
       select.appendChild(option);
     });
-
   }catch(e){
     console.log("Drug list not loaded.");
   }
@@ -220,24 +209,15 @@ async function ask(){
     const res = await fetch(API_ENDPOINT,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        drug,
-        question,
-        mode:"concise"
-      })
+      body:JSON.stringify({ drug, question })
     });
 
     const data = await res.json();
-    resultBox.textContent = data.answer || "No answer returned.";
+    resultBox.textContent = data.answer || "No response returned.";
 
   }catch(err){
     resultBox.textContent = "Error connecting to server.";
   }
-}
-
-function clearForm(){
-  document.getElementById("question").value="";
-  document.getElementById("result").textContent="Ready...";
 }
 
 loadDrugs();
