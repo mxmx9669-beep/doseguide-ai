@@ -1,0 +1,13 @@
+{
+  "Amiodarone": "vs_69989f379f8c81919e128e7ae1a58234",
+  "Anticoagulation": "vs_69989f7802a48191bc9dbb38132b0d76",
+  "Ciprofloxacin": "vs_69989f95945481919f5b27fe1959b132",
+  "Colistin": "vs_69989fa77a0c81919fd86a8c9c8ec032",
+  "Levofloxacin": "vs_69989ffac0448191a9547a90dd6697a9",
+  "Meropenem": "vs_6998a00e188c81918b8223215a52b287",
+  "Vancomycin": "vs_6998a02126b48191aa4912086482c422",
+  "Warfarin": "vs_6998a0414d4081918239956d0f45447d",
+  "Piperacillin/Tazobactam": "vs_6998a05ee41c8191870a453abe1fc1a5",
+  "Procainamide": "vs_6998a06ec0248191bf036a4f2ccd3e82",
+  "TMP-SMX": "vs_6998a083bf888191b990fc935de1a4ae"
+}
