@@ -15,13 +15,14 @@
     --muted:#64748b;
     --radius:18px;
     --shadow:0 12px 28px rgba(15, 23, 42, .08);
+    --ok:#16a34a;
+    --bad:#dc2626;
+    --warn:#b45309;
   }
   *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
   body{margin:0;background:var(--bg);color:var(--text);}
   .wrap{max-width:1120px;margin:0 auto;padding:34px 18px 60px;}
-  .top{
-    display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;
-  }
+  .top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;}
   .brand{display:flex;align-items:center;gap:12px;}
   .mark{
     width:42px;height:42px;border-radius:14px;
@@ -33,6 +34,7 @@
     font-size:13px;color:#1d4ed8;background:#eaf2ff;border:1px solid #d7e6ff;
     padding:8px 12px;border-radius:999px;font-weight:700;
   }
+
   .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;}
   .card{
     background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
@@ -40,16 +42,19 @@
   }
   .card h3{margin:0 0 12px;font-size:18px;}
   .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > *{flex:1; min-width: 180px;}
+
   select, textarea, input{
     width:100%;border:1px solid var(--border);border-radius:14px;
-    padding:14px 14px;font-size:14px;outline:none;background:#fff;
+    padding:12px 14px;font-size:14px;outline:none;background:#fff;
     transition:border .15s, box-shadow .15s;
   }
   select:focus, textarea:focus, input:focus{
     border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.14);
   }
   textarea{min-height:180px;resize:vertical;line-height:1.35;}
-  .actions{display:flex;gap:10px;align-items:center;margin-top:12px;}
+
+  .actions{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;}
   button{
     border:0;border-radius:14px;padding:12px 16px;font-weight:800;
     cursor:pointer;font-size:14px;
@@ -58,14 +63,73 @@
   .btn-primary:hover{filter:brightness(.98);}
   .btn-ghost{background:#eef2ff;color:#1e3a8a;}
   .btn-ghost:hover{filter:brightness(.98);}
+
+  .seg{
+    display:flex; gap:8px; flex-wrap:wrap;
+    padding:10px; border:1px solid var(--border); border-radius:14px; background:#fbfcff;
+  }
+  .seg button{
+    padding:10px 12px; border-radius:12px; font-weight:800;
+    background:#eef2ff; color:#1e3a8a;
+  }
+  .seg button.active{
+    background:var(--pri); color:#fff;
+  }
+
   .hint{margin-top:10px;color:var(--muted);font-size:12.5px;}
+
   .result{
     border:1px solid var(--border);border-radius:14px;padding:14px;background:#fbfcff;
-    white-space:pre-wrap;min-height:260px;overflow:auto;font-size:14px;line-height:1.4;
+    white-space:pre-wrap;min-height:220px;overflow:auto;font-size:14px;line-height:1.4;
   }
+
+  .meta{
+    margin-top:10px;
+    display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
+  .badge{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; font-weight:900;
+    padding:7px 10px; border-radius:999px; border:1px solid var(--border);
+    background:#fff;
+  }
+  .badge.ok{ color:var(--ok); border-color:#bbf7d0; background:#f0fdf4;}
+  .badge.bad{ color:var(--bad); border-color:#fecaca; background:#fef2f2;}
+  .badge.warn{ color:var(--warn); border-color:#fed7aa; background:#fff7ed;}
+
+  .source{
+    width:100%;
+    border:1px dashed #dbe3f3;
+    background:#ffffff;
+    border-radius:14px;
+    padding:10px 12px;
+    color:#334155;
+    font-size:13px;
+    white-space:pre-wrap;
+  }
+
+  .evidenceTitle{
+    margin:14px 0 8px;
+    font-weight:900;
+    font-size:13px;
+    color:#1e3a8a;
+  }
+  .evidence{
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px;
+    background:#ffffff;
+    white-space:pre-wrap;
+    font-size:13px;
+    line-height:1.45;
+    max-height:240px;
+    overflow:auto;
+  }
+
   .status{margin-top:10px;font-size:12.5px;color:var(--muted);}
-  .ok{color:#16a34a;font-weight:700;}
-  .bad{color:#dc2626;font-weight:700;}
+  .okText{color:var(--ok);font-weight:800;}
+  .badText{color:var(--bad);font-weight:800;}
+
   @media (max-width: 980px){
     .grid{grid-template-columns:1fr;}
   }
@@ -85,9 +149,33 @@
       <div class="card">
         <h3>Ask a Clinical Question</h3>
 
-        <select id="drugSelect" aria-label="Drug">
-          <option value="">Select drug</option>
-        </select>
+        <div class="row">
+          <select id="drugSelect" aria-label="Drug">
+            <option value="">Select drug</option>
+          </select>
+
+          <select id="langSelect" aria-label="Language">
+            <option value="auto">Auto</option>
+            <option value="en">English</option>
+            <option value="ar">Arabic</option>
+          </select>
+
+          <select id="answerMode" aria-label="Answer style">
+            <option value="recommended">Recommended</option>
+            <option value="bullet">Bullet</option>
+            <option value="detailed">Detailed</option>
+          </select>
+        </div>
+
+        <div class="hint" style="margin-top:10px;margin-bottom:8px;">
+          Output mode:
+        </div>
+        <div class="seg" id="modeSeg">
+          <button type="button" data-mode="hybrid" class="active">Hybrid</button>
+          <button type="button" data-mode="short">Short</button>
+          <button type="button" data-mode="verbatim">Verbatim</button>
+          <button type="button" data-mode="link">Source</button>
+        </div>
 
         <textarea
           id="question"
@@ -102,23 +190,38 @@
         </div>
 
         <div class="hint">
-          Answers are restricted to the selected drug PDF protocol only.
+          Answers are restricted to the selected drug PDF protocol only. No evidence → Not found.
         </div>
       </div>
 
       <div class="card">
         <h3>Result</h3>
+
         <div id="result" class="result">Ready.</div>
-        <div id="status" class="status">Status: <span class="ok">Idle</span></div>
+
+        <div class="meta">
+          <div id="badge" class="badge warn">VERDICT: IDLE</div>
+          <div id="status" class="status">Status: <span class="okText">Idle</span></div>
+          <div id="lockedInfo" class="status">Locked: <span class="okText">—</span></div>
+        </div>
+
+        <div class="evidenceTitle">Source</div>
+        <div id="source" class="source">—</div>
+
+        <div class="evidenceTitle">Evidence (verbatim)</div>
+        <div id="evidence" class="evidence">—</div>
       </div>
     </div>
   </div>
 
 <script>
-  // ✅ Put your REAL worker URL here (note: mxmx9669)
-  const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mxmx9669.workers.dev";
+  // ✅ Netlify Functions endpoint (recommended). If you still use a worker, point to it.
+  // Example Netlify:
+  // const API_ENDPOINT = "/.netlify/functions/ask";
+  const API_ENDPOINT = "/.netlify/functions/ask";
 
-  // ✅ Load list from local repo file (must exist in Pages root)
+  let selectedMode = "hybrid";
+
   async function loadDrugs(){
     try{
       const res = await fetch("./vectorstores.json", { cache: "no-store" });
@@ -129,13 +232,12 @@
       const keys = Object.keys(data).sort((a,b)=>a.localeCompare(b));
       for(const k of keys){
         const o = document.createElement("option");
-        o.value = k;
+        o.value = k;         // drugKey
         o.textContent = k;
         select.appendChild(o);
       }
     }catch(e){
       console.warn("Drug list not loaded:", e);
-      // fallback minimal options if file missing
       const select = document.getElementById("drugSelect");
       ["Ciprofloxacin","Levofloxacin","Meropenem","Vancomycin"].forEach(k=>{
         const o=document.createElement("option");
@@ -147,40 +249,122 @@
 
   function setStatus(text, ok=true){
     const el = document.getElementById("status");
-    el.innerHTML = `Status: <span class="${ok ? "ok":"bad"}">${text}</span>`;
+    el.innerHTML = `Status: <span class="${ok ? "okText":"badText"}">${text}</span>`;
+  }
+
+  function setBadge(verdict){
+    const b = document.getElementById("badge");
+    if(verdict === "FOUND"){
+      b.className = "badge ok";
+      b.textContent = "VERDICT: FOUND";
+    }else if(verdict === "NOT_FOUND"){
+      b.className = "badge bad";
+      b.textContent = "VERDICT: NOT_FOUND";
+    }else{
+      b.className = "badge warn";
+      b.textContent = "VERDICT: " + (verdict || "IDLE");
+    }
+  }
+
+  function setLockedInfo(locked){
+    const el = document.getElementById("lockedInfo");
+    el.innerHTML = `Locked: <span class="${locked ? "okText":"badText"}">${locked ? "YES" : "NO"}</span>`;
+  }
+
+  function renderEvidence(verbatimArr){
+    const box = document.getElementById("evidence");
+    if(!Array.isArray(verbatimArr) || verbatimArr.length === 0){
+      box.textContent = "—";
+      return;
+    }
+    box.textContent = verbatimArr.map((e, i) => {
+      const q = e.quote || "";
+      const sec = e.section_hint ? ` [${e.section_hint}]` : "";
+      const pg = e.page_hint ? ` ${e.page_hint}` : "";
+      return `${i+1}) ${q}${sec}${pg}`;
+    }).join("\n\n");
+  }
+
+  function renderSource(sourceHint){
+    const box = document.getElementById("source");
+    box.textContent = sourceHint && String(sourceHint).trim() ? String(sourceHint).trim() : "—";
+  }
+
+  function setModeUI(mode){
+    selectedMode = mode;
+    document.querySelectorAll("#modeSeg button").forEach(btn=>{
+      btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
   }
 
   async function ask(){
-    const drug = document.getElementById("drugSelect").value;
+    const drugKey = document.getElementById("drugSelect").value;
     const question = document.getElementById("question").value.trim();
+    const lang = document.getElementById("langSelect").value;
+    const answerMode = document.getElementById("answerMode").value;
+
     const resultBox = document.getElementById("result");
 
-    if(!drug || !question){
+    if(!drugKey || !question){
       resultBox.textContent = "Please select a drug and enter a question.";
       setStatus("Missing input", false);
+      setBadge("IDLE");
+      setLockedInfo(false);
+      renderSource("");
+      renderEvidence([]);
       return;
     }
 
     resultBox.textContent = "Processing...";
     setStatus("Connecting...", true);
+    setBadge("RUNNING");
+    setLockedInfo(true);
+    renderSource("—");
+    renderEvidence([]);
 
     try{
       const res = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
-        body: JSON.stringify({ drug, question })
+        body: JSON.stringify({
+          drugKey,
+          question,
+          lang,
+          answerMode,
+          mode: selectedMode
+        })
       });
 
       const data = await res.json().catch(()=> ({}));
-      const ans = (data && data.answer) ? String(data.answer) : "No response returned.";
 
-      resultBox.textContent = ans;
+      // Primary UI text: reply
+      resultBox.textContent = (data && data.reply) ? String(data.reply) : "No response returned.";
+
+      // Verdict & details
+      const verdict = data?.result?.verdict || "UNKNOWN";
+      setBadge(verdict);
+
+      setLockedInfo(Boolean(data?.locked));
       setStatus(res.ok ? "OK" : "Error", res.ok);
+
+      // Source + evidence
+      renderSource(data?.result?.source_hint || "");
+      renderEvidence(data?.result?.verbatim || []);
+
+      // If mode is short, you may want to hide evidence visually (optional):
+      if(selectedMode === "short"){
+        // keep evidence but subtle
+        // (or you can clear it: renderEvidence([]))
+      }
 
     }catch(err){
       console.error(err);
       resultBox.textContent = "Error connecting to server.";
       setStatus("Network error", false);
+      setBadge("ERROR");
+      setLockedInfo(false);
+      renderSource("");
+      renderEvidence([]);
     }
   }
 
@@ -188,17 +372,27 @@
     document.getElementById("question").value = "";
     document.getElementById("result").textContent = "Ready.";
     setStatus("Idle", true);
+    setBadge("IDLE");
+    setLockedInfo(true);
+    renderSource("");
+    renderEvidence([]);
   }
 
   document.getElementById("askBtn").addEventListener("click", ask);
   document.getElementById("clearBtn").addEventListener("click", clearAll);
 
-  // Submit on Ctrl+Enter
   document.getElementById("question").addEventListener("keydown", (e)=>{
     if((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
   });
 
+  document.getElementById("modeSeg").addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-mode]");
+    if(!btn) return;
+    setModeUI(btn.dataset.mode);
+  });
+
   loadDrugs();
+  setModeUI("hybrid");
 </script>
 </body>
 </html>
