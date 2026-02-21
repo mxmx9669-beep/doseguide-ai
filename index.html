@@ -2,305 +2,799 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DoseGuide AI – Adult Antimicrobial Guidelines</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DoseGuide AI — Adult Antimicrobial Guidelines (Protocol-Locked)</title>
   <style>
     :root{
-      --bg:#0B1220; --card:#0F1A2E; --card2:#0D172A;
-      --line:#20304B; --text:#E6EEF9; --muted:#9FB0C6;
-      --pri:#4DA3FF; --pri2:#7CC7FF; --ok:#2DD4BF; --bad:#FB7185; --warn:#FBBF24;
-      --shadow: 0 18px 60px rgba(0,0,0,.35);
-      --r:18px;
+      --bg:#071324;
+      --panel:#0b1c33;
+      --panel2:#0a182c;
+      --card:#0e2542;
+      --line:rgba(255,255,255,.10);
+      --text:#eaf2ff;
+      --muted:rgba(234,242,255,.70);
+      --muted2:rgba(234,242,255,.55);
+      --ok:#27d17f;
+      --warn:#ffcc66;
+      --bad:#ff5c7a;
+      --accent:#69a9ff;
+      --accent2:#7cf2ff;
+      --shadow:0 22px 70px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:24px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
     *{box-sizing:border-box}
     body{
-      margin:0; background: radial-gradient(1100px 700px at 20% 0%, rgba(77,163,255,.22), transparent 60%),
-                         radial-gradient(900px 600px at 90% 20%, rgba(45,212,191,.14), transparent 55%),
-                         var(--bg);
-      color:var(--text); font-family:var(--sans);
+      margin:0; font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(105,169,255,.25), transparent 60%),
+        radial-gradient(900px 650px at 85% 0%, rgba(124,242,255,.16), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, rgba(105,169,255,.14), transparent 55%),
+        linear-gradient(180deg, var(--bg), #050d18 70%);
+      min-height:100vh;
+      padding:22px;
     }
-    .wrap{max-width:1100px; margin:28px auto; padding:0 18px;}
+    .wrap{max-width:1200px; margin:0 auto}
     .top{
-      display:flex; align-items:center; justify-content:space-between; gap:16px;
-      margin-bottom:16px;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;
+      padding:18px 18px 10px 18px;
+      border:1px solid var(--line);
+      border-radius:var(--radius2);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
     }
-    .brand{display:flex; align-items:center; gap:12px;}
+    .brand{
+      display:flex; gap:14px; align-items:center;
+    }
     .logo{
-      width:44px; height:44px; border-radius:14px;
-      background: linear-gradient(135deg, rgba(77,163,255,1), rgba(124,199,255,1));
-      box-shadow: 0 12px 30px rgba(77,163,255,.22);
+      width:54px; height:54px; border-radius:18px;
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow:0 14px 30px rgba(105,169,255,.25);
+      flex:0 0 auto;
     }
-    .title h1{margin:0; font-size:22px; letter-spacing:.2px}
-    .title p{margin:3px 0 0; color:var(--muted); font-size:13px}
+    h1{margin:0; font-size:26px; letter-spacing:.2px}
+    .sub{margin-top:4px; color:var(--muted); font-size:13.5px}
+    .badges{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 12px; border-radius:999px;
-      border:1px solid rgba(124,199,255,.35);
-      background: rgba(15,26,46,.75);
-      color:var(--pri2); font-size:12px;
-    }
-    .grid{display:grid; grid-template-columns: 1.05fr .95fr; gap:16px;}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
-    .card{
-      background: rgba(15,26,46,.72);
-      border:1px solid rgba(32,48,75,.85);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding:14px 16px; border-bottom:1px solid rgba(32,48,75,.85);
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-    }
-    .card .hd b{font-size:14px}
-    .card .bd{padding:16px}
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    textarea{
-      width:100%; min-height:140px; resize:vertical;
-      background: rgba(13,23,42,.9);
-      border:1px solid rgba(32,48,75,.9);
-      border-radius: 14px;
-      color: var(--text);
-      padding:12px 12px;
-      font-size:14px; line-height:1.55;
-      outline:none;
-    }
-    textarea:focus{border-color: rgba(124,199,255,.55); box-shadow: 0 0 0 4px rgba(77,163,255,.12);}
-    .btn{
-      border:1px solid rgba(77,163,255,.45);
-      background: linear-gradient(180deg, rgba(77,163,255,.25), rgba(77,163,255,.12));
-      color: var(--text);
-      padding:10px 14px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-weight:600;
-      transition:.15s transform, .15s opacity;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      font-size:13px;
+      color:var(--muted);
+      display:flex; gap:8px; align-items:center;
       user-select:none;
     }
-    .btn:hover{transform: translateY(-1px)}
-    .btn:active{transform: translateY(0px); opacity:.9}
-    .btn.secondary{
-      border:1px solid rgba(32,48,75,.85);
-      background: rgba(13,23,42,.85);
-      color: var(--muted);
+    .pill b{color:var(--text); font-weight:650}
+    .dot{width:8px; height:8px; border-radius:50%}
+    .dot.ok{background:var(--ok)}
+    .dot.bad{background:var(--bad)}
+    .dot.warn{background:var(--warn)}
+    .grid{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
     }
-    .seg{
-      display:flex; gap:8px; flex-wrap:wrap;
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr}
     }
-    .seg button{
-      border:1px solid rgba(32,48,75,.85);
-      background: rgba(13,23,42,.85);
-      color: var(--muted);
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius2);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background:rgba(0,0,0,.08);
+    }
+    .cardHead .title{font-weight:750; letter-spacing:.2px}
+    .cardBody{padding:16px}
+    .hint{color:var(--muted2); font-size:13px; line-height:1.5}
+    .steps{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-start;
+    }
+    .stepChip{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
       padding:8px 10px;
-      border-radius: 999px;
-      cursor:pointer;
+      border-radius:999px;
+      font-size:12.5px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .stepChip.active{color:var(--text); border-color:rgba(105,169,255,.45); background:rgba(105,169,255,.10)}
+    .stepChip.done{color:var(--text); border-color:rgba(39,209,127,.45); background:rgba(39,209,127,.08)}
+    .stepChip .num{
+      width:18px; height:18px; border-radius:999px;
+      display:grid; place-items:center;
       font-size:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
     }
-    .seg button.active{
-      border-color: rgba(124,199,255,.55);
-      color: var(--pri2);
-      background: rgba(77,163,255,.12);
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(11,28,51,.75), rgba(10,24,44,.65));
+      margin-bottom:12px;
     }
-    .meta{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-      font-size:12px; color:var(--muted);
+    .panelHeader{
+      padding:12px 14px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      background:rgba(0,0,0,.10);
+      cursor:pointer;
+      user-select:none;
     }
+    .panelHeader .left{display:flex; align-items:center; gap:10px}
     .badge{
-      font-family:var(--mono);
-      border:1px solid rgba(32,48,75,.85);
-      background: rgba(13,23,42,.7);
-      padding:6px 10px; border-radius:999px;
-      display:inline-flex; gap:8px; align-items:center;
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:rgba(255,255,255,.03);
     }
-    .dot{width:8px; height:8px; border-radius:999px; background: var(--warn);}
-    .dot.ok{background: var(--ok)}
-    .dot.bad{background: var(--bad)}
-    .out{
-      background: rgba(13,23,42,.9);
-      border:1px solid rgba(32,48,75,.9);
-      border-radius: 14px;
+    .badge.ok{border-color:rgba(39,209,127,.45); color:rgba(234,242,255,.92); background:rgba(39,209,127,.08)}
+    .badge.lock{border-color:rgba(255,255,255,.18); color:rgba(234,242,255,.90); background:rgba(255,255,255,.04)}
+    .panelBody{padding:14px; display:none}
+    .panelBody.open{display:block}
+
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:640px){.row{grid-template-columns:1fr}}
+    label{display:block; font-size:12.5px; color:var(--muted); margin:0 0 6px}
+    input, select, textarea{
+      width:100%;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:14px;
       padding:12px 12px;
-      min-height: 220px;
-      white-space: pre-wrap;
-      line-height:1.6;
+      color:var(--text);
+      outline:none;
       font-size:14px;
     }
-    .small{
+    textarea{min-height:120px; font-family:var(--mono); line-height:1.4}
+    input::placeholder, textarea::placeholder{color:rgba(234,242,255,.35)}
+    .checks{display:flex; flex-wrap:wrap; gap:10px}
+    .check{
+      display:flex; gap:8px; align-items:center;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
       color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
+      cursor:pointer;
+      user-select:none;
     }
+    .check input{width:auto; margin:0}
+    .check.on{color:var(--text); border-color:rgba(105,169,255,.40); background:rgba(105,169,255,.10)}
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    button{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:11px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:650;
+      letter-spacing:.2px;
+    }
+    button.primary{
+      border-color:rgba(105,169,255,.50);
+      background:rgba(105,169,255,.14);
+    }
+    button.danger{
+      border-color:rgba(255,92,122,.50);
+      background:rgba(255,92,122,.10);
+    }
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+    .mini{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.45}
+    .resultBox{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(0,0,0,.18);
+      padding:14px;
+      min-height:280px;
+      white-space:pre-wrap;
+      font-family:var(--mono);
+      line-height:1.45;
+    }
+    .kv{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px
+    }
+    .kv .pill{padding:8px 10px; font-size:12.5px}
     .foot{
-      margin-top:14px;
-      color: rgba(159,176,198,.9);
-      font-size:12px;
+      margin-top:10px;
+      color:var(--muted2);
+      font-size:12.5px;
+      line-height:1.5;
     }
-    a{color: var(--pri2); text-decoration:none}
-    a:hover{text-decoration:underline}
+    .mutedLink{color:rgba(124,242,255,.9); text-decoration:none; border-bottom:1px dotted rgba(124,242,255,.5)}
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo"></div>
-        <div class="title">
-          <h1>DoseGuide AI</h1>
-          <p>Adult Antimicrobial Guidelines — Protocol-Locked Q&amp;A</p>
-        </div>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>DoseGuide AI</h1>
+        <div class="sub">Adult Antimicrobial Guidelines — Protocol-Locked Assistant (answers only from your uploaded PDF)</div>
       </div>
-      <div class="pill">🔒 Locked to: Antimicrobial PDF</div>
     </div>
 
-    <div class="grid">
-      <!-- Left: Ask -->
-      <div class="card">
-        <div class="hd">
-          <b>Ask a clinical question</b>
-          <div class="seg" id="modeSeg">
-            <button data-mode="hybrid" class="active" title="Best balance">Hybrid</button>
-            <button data-mode="short" title="Just the answer">Short</button>
-            <button data-mode="source" title="Only evidence">Source</button>
-          </div>
-        </div>
-        <div class="bd">
-          <textarea id="q" placeholder="Example:
-• Empiric therapy for community-acquired pneumonia?
-• Dose adjustment in renal impairment for ...?
-• Duration of therapy for ...?"></textarea>
-
-          <div class="row" style="margin-top:12px; align-items:center; justify-content:space-between;">
-            <div class="row" style="gap:8px;">
-              <button class="btn" id="askBtn">Ask</button>
-              <button class="btn secondary" id="clearBtn">Clear</button>
-            </div>
-            <div class="meta">
-              <span class="badge"><span class="dot" id="statusDot"></span><span id="statusTxt">Idle</span></span>
-              <span class="badge">Locked: <b style="color:var(--pri2)">YES</b></span>
-            </div>
-          </div>
-
-          <div class="foot">
-            This tool answers only from the uploaded guideline (vector store). If not found, it returns <span style="font-family:var(--mono)">Not found in protocol</span>.
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Result -->
-      <div class="card">
-        <div class="hd">
-          <b>Result</b>
-          <div class="meta">
-            <span class="badge">Verdict: <b id="verdict" style="color:var(--warn)">—</b></span>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="out" id="answer">—</div>
-          <div class="small" style="margin-top:10px;">
-            Tip: ask specific (indication + patient factors). Example: “Adult, CrCl 25 mL/min, suspected pyelonephritis — recommended empiric antibiotics?”
-          </div>
-        </div>
-      </div>
+    <div class="badges">
+      <div class="pill"><span class="dot ok"></span><b id="lockText">Locked</b> to Vector Store</div>
+      <div class="pill"><span class="dot warn"></span><b>Clinical tool</b> — verify with full guideline</div>
+      <div class="pill"><span class="dot ok"></span><b id="statusText">Ready</b></div>
     </div>
   </div>
 
-  <script>
-    const q = document.getElementById("q");
-    const askBtn = document.getElementById("askBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const answerEl = document.getElementById("answer");
-    const verdictEl = document.getElementById("verdict");
-    const statusDot = document.getElementById("statusDot");
-    const statusTxt = document.getElementById("statusTxt");
-    const modeSeg = document.getElementById("modeSeg");
+  <div class="grid">
+    <!-- LEFT: STEPPER -->
+    <div class="card">
+      <div class="cardHead">
+        <div class="title">Guided Question Builder (Stepper)</div>
+        <div class="steps" id="stepChips"></div>
+      </div>
+      <div class="cardBody">
 
-    let mode = "hybrid";
+        <!-- STEP 1 -->
+        <div class="panel" data-step="1">
+          <div class="panelHeader">
+            <div class="left">
+              <span class="badge lock">Step 1</span>
+              <b>Choose clinical syndrome</b>
+            </div>
+            <span class="badge" id="s1Badge">Pending</span>
+          </div>
+          <div class="panelBody">
+            <div class="row">
+              <div>
+                <label>Syndrome</label>
+                <select id="syndrome">
+                  <option value="">Select…</option>
+                  <option>Community-acquired pneumonia (CAP)</option>
+                  <option>Hospital-acquired pneumonia (HAP) / VAP</option>
+                  <option>Urinary tract infection (UTI)</option>
+                  <option>Pyelonephritis</option>
+                  <option>Skin & soft tissue infection (SSTI)</option>
+                  <option>Sepsis / Septic shock (empiric)</option>
+                  <option>Intra-abdominal infection</option>
+                  <option>Meningitis (empiric)</option>
+                  <option>Bone / joint infection (empiric)</option>
+                  <option>Neutropenic fever (empiric)</option>
+                  <option>Other (free text)</option>
+                </select>
+              </div>
+              <div>
+                <label>If “Other”, specify</label>
+                <input id="syndromeOther" placeholder="e.g., biliary sepsis, diabetic foot infection…" disabled />
+              </div>
+            </div>
 
-    function setStatus(state, text) {
-      statusTxt.textContent = text || state;
-      statusDot.classList.remove("ok", "bad");
-      if (state === "ok") statusDot.classList.add("ok");
-      else if (state === "bad") statusDot.classList.add("bad");
+            <div class="btns">
+              <button class="primary" id="toStep2" disabled>Next →</button>
+            </div>
+            <div class="mini">This step controls the rest of the flow. You’ll only see the next step after selecting a syndrome.</div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="panel" data-step="2">
+          <div class="panelHeader">
+            <div class="left">
+              <span class="badge lock">Step 2</span>
+              <b>Care setting & severity</b>
+            </div>
+            <span class="badge" id="s2Badge">Locked</span>
+          </div>
+          <div class="panelBody">
+            <div class="row">
+              <div>
+                <label>Setting</label>
+                <select id="setting">
+                  <option value="">Select…</option>
+                  <option>Outpatient</option>
+                  <option>Inpatient (ward)</option>
+                  <option>ICU / critical care</option>
+                  <option>ED (initial empiric)</option>
+                </select>
+              </div>
+              <div>
+                <label>Severity / stability</label>
+                <select id="severity">
+                  <option value="">Select…</option>
+                  <option>Stable / non-severe</option>
+                  <option>Severe / unstable</option>
+                  <option>Septic shock / vasopressors</option>
+                  <option>Unknown</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Source suspicion</label>
+                <select id="source">
+                  <option value="">Select…</option>
+                  <option>Unknown (empiric)</option>
+                  <option>Respiratory</option>
+                  <option>Urinary</option>
+                  <option>Skin/soft tissue</option>
+                  <option>Intra-abdominal</option>
+                  <option>CNS</option>
+                  <option>Line-related / bloodstream</option>
+                </select>
+              </div>
+              <div>
+                <label>Notes (optional)</label>
+                <input id="notes" placeholder="e.g., aspiration risk, COPD, recent antibiotics…" />
+              </div>
+            </div>
+
+            <div class="btns">
+              <button id="backTo1">← Back</button>
+              <button class="primary" id="toStep3" disabled>Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="panel" data-step="3">
+          <div class="panelHeader">
+            <div class="left">
+              <span class="badge lock">Step 3</span>
+              <b>Patient factors</b>
+            </div>
+            <span class="badge" id="s3Badge">Locked</span>
+          </div>
+          <div class="panelBody">
+            <div class="row">
+              <div>
+                <label>Age (years)</label>
+                <input id="age" inputmode="numeric" placeholder="e.g., 56" />
+              </div>
+              <div>
+                <label>Creatinine clearance (mL/min) — if known</label>
+                <input id="crcl" inputmode="decimal" placeholder="e.g., 25" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Renal replacement therapy</label>
+                <select id="rrt">
+                  <option value="">None / unknown</option>
+                  <option>Intermittent hemodialysis (IHD)</option>
+                  <option>CRRT</option>
+                  <option>Peritoneal dialysis (PD)</option>
+                </select>
+              </div>
+              <div>
+                <label>β-lactam allergy</label>
+                <select id="allergy">
+                  <option value="">None / unknown</option>
+                  <option>Non-severe (rash, GI intolerance)</option>
+                  <option>Severe (anaphylaxis, angioedema, SJS/TEN)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="btns">
+              <button id="backTo2">← Back</button>
+              <button class="primary" id="toStep4">Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="panel" data-step="4">
+          <div class="panelHeader">
+            <div class="left">
+              <span class="badge lock">Step 4</span>
+              <b>Pathogen risk flags</b>
+            </div>
+            <span class="badge" id="s4Badge">Locked</span>
+          </div>
+          <div class="panelBody">
+            <div class="checks" id="riskChecks">
+              <label class="check"><input type="checkbox" value="MRSA risk" /> MRSA risk</label>
+              <label class="check"><input type="checkbox" value="Pseudomonas risk" /> Pseudomonas risk</label>
+              <label class="check"><input type="checkbox" value="ESBL/CRE risk" /> ESBL/CRE risk</label>
+              <label class="check"><input type="checkbox" value="Aspiration risk" /> Aspiration risk</label>
+              <label class="check"><input type="checkbox" value="Recent hospitalization/antibiotics" /> Recent hospitalization/antibiotics</label>
+              <label class="check"><input type="checkbox" value="Immunocompromised" /> Immunocompromised</label>
+            </div>
+
+            <div class="btns">
+              <button id="backTo3">← Back</button>
+              <button class="primary" id="toStep5">Next →</button>
+            </div>
+            <div class="mini">These flags don’t “decide” the therapy — they only help craft a precise question for the guideline-locked engine.</div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="panel" data-step="5">
+          <div class="panelHeader">
+            <div class="left">
+              <span class="badge lock">Step 5</span>
+              <b>Review question & ask</b>
+            </div>
+            <span class="badge" id="s5Badge">Locked</span>
+          </div>
+          <div class="panelBody">
+            <div class="row">
+              <div>
+                <label>Answer style</label>
+                <select id="mode">
+                  <option value="hybrid">Hybrid (recommended)</option>
+                  <option value="short">Short</option>
+                  <option value="source">Source-focused</option>
+                </select>
+              </div>
+              <div>
+                <label>Extra constraint (optional)</label>
+                <input id="extra" placeholder="e.g., avoid fluoroquinolones, QT prolongation…" />
+              </div>
+            </div>
+
+            <label>Generated question (editable)</label>
+            <textarea id="question" placeholder="Your question will appear here…"></textarea>
+
+            <div class="btns">
+              <button id="backTo4">← Back</button>
+              <button class="primary" id="askBtn">Ask guideline</button>
+              <button class="danger" id="resetBtn">Reset</button>
+            </div>
+
+            <div class="foot">
+              This is a protocol-locked assistant. If the answer is not in the uploaded guideline, it should return <b>Not found in protocol</b>.<br/>
+              Always verify with the full PDF and local antimicrobial stewardship policy.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULT -->
+    <div class="card">
+      <div class="cardHead">
+        <div class="title">Result</div>
+        <div class="kv">
+          <div class="pill"><span class="dot ok" id="runDot"></span><b id="runState">Idle</b></div>
+          <div class="pill"><b>Verdict:</b> <span id="verdict">—</span></div>
+        </div>
+      </div>
+      <div class="cardBody">
+        <div class="resultBox" id="result">—</div>
+        <div class="mini" style="margin-top:10px">
+          Tip: be specific (syndrome + setting + severity + renal function + allergy + risk flags).
+        </div>
+        <div class="mini">
+          If you see JSON errors, it usually means the Worker returned a non-JSON response (or crashed). We’ll fix the Worker to always return JSON.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ✅ 1) PUT YOUR WORKER URL HERE
+  const WORKER_URL = "https://shrill-paper-51ae.mxmx9669.workers.dev";
+
+  // Step state
+  const steps = [1,2,3,4,5];
+  let currentStep = 1;
+
+  // Elements
+  const stepChips = document.getElementById("stepChips");
+  const panels = [...document.querySelectorAll(".panel")];
+
+  const syndrome = document.getElementById("syndrome");
+  const syndromeOther = document.getElementById("syndromeOther");
+  const setting = document.getElementById("setting");
+  const severity = document.getElementById("severity");
+  const source = document.getElementById("source");
+  const notes = document.getElementById("notes");
+  const age = document.getElementById("age");
+  const crcl = document.getElementById("crcl");
+  const rrt = document.getElementById("rrt");
+  const allergy = document.getElementById("allergy");
+  const extra = document.getElementById("extra");
+  const mode = document.getElementById("mode");
+  const question = document.getElementById("question");
+
+  const toStep2 = document.getElementById("toStep2");
+  const toStep3 = document.getElementById("toStep3");
+  const toStep4 = document.getElementById("toStep4");
+  const toStep5 = document.getElementById("toStep5");
+
+  const backTo1 = document.getElementById("backTo1");
+  const backTo2 = document.getElementById("backTo2");
+  const backTo3 = document.getElementById("backTo3");
+  const backTo4 = document.getElementById("backTo4");
+
+  const askBtn = document.getElementById("askBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  const result = document.getElementById("result");
+  const verdict = document.getElementById("verdict");
+  const runState = document.getElementById("runState");
+  const runDot = document.getElementById("runDot");
+  const statusText = document.getElementById("statusText");
+
+  // Badges
+  const s1Badge = document.getElementById("s1Badge");
+  const s2Badge = document.getElementById("s2Badge");
+  const s3Badge = document.getElementById("s3Badge");
+  const s4Badge = document.getElementById("s4Badge");
+  const s5Badge = document.getElementById("s5Badge");
+
+  // Build step chips UI
+  function renderStepChips(){
+    stepChips.innerHTML = "";
+    steps.forEach(n=>{
+      const chip = document.createElement("div");
+      chip.className = "stepChip";
+      if (n === currentStep) chip.classList.add("active");
+      if (n < currentStep) chip.classList.add("done");
+      chip.innerHTML = `<span class="num">${n}</span> Step ${n}`;
+      stepChips.appendChild(chip);
+    });
+  }
+
+  function openStep(n){
+    currentStep = n;
+    renderStepChips();
+
+    panels.forEach(p=>{
+      const step = Number(p.getAttribute("data-step"));
+      const body = p.querySelector(".panelBody");
+      // Only open current step (and allow reopening previous by clicking header)
+      body.classList.toggle("open", step === n);
+      // Lock future panels (visual)
+      const badge = p.querySelector(".panelHeader .badge");
+      if (step > currentStep) badge?.classList.remove("ok");
+    });
+    refreshBadges();
+  }
+
+  // Click header to open previous step (not future)
+  panels.forEach(p=>{
+    const header = p.querySelector(".panelHeader");
+    header.addEventListener("click", ()=>{
+      const step = Number(p.getAttribute("data-step"));
+      if (step <= currentStep) openStep(step);
+    });
+  });
+
+  // Risk checkbox styling
+  const riskChecksWrap = document.getElementById("riskChecks");
+  function syncCheckStyles(){
+    [...riskChecksWrap.querySelectorAll(".check")].forEach(lbl=>{
+      const cb = lbl.querySelector("input");
+      lbl.classList.toggle("on", cb.checked);
+    });
+  }
+  riskChecksWrap.addEventListener("change", syncCheckStyles);
+
+  function getSyndromeText(){
+    if (syndrome.value === "Other (free text)") return syndromeOther.value.trim() || "Other (unspecified)";
+    return syndrome.value;
+  }
+
+  function selectedRisks(){
+    return [...riskChecksWrap.querySelectorAll("input[type=checkbox]:checked")].map(x=>x.value);
+  }
+
+  // Build question from steps
+  function buildQuestion(){
+    const syn = getSyndromeText();
+    const risks = selectedRisks();
+    const parts = [];
+
+    if (syn) parts.push(`Clinical scenario: ${syn}.`);
+    if (setting.value) parts.push(`Setting: ${setting.value}.`);
+    if (severity.value) parts.push(`Severity: ${severity.value}.`);
+    if (source.value) parts.push(`Suspected source: ${source.value}.`);
+    if (age.value.trim()) parts.push(`Age: ${age.value.trim()} years.`);
+    if (crcl.value.trim()) parts.push(`CrCl: ${crcl.value.trim()} mL/min.`);
+    if (rrt.value) parts.push(`Renal replacement therapy: ${rrt.value}.`);
+    if (allergy.value) parts.push(`Beta-lactam allergy: ${allergy.value}.`);
+    if (risks.length) parts.push(`Risk flags: ${risks.join(", ")}.`);
+    if (notes.value.trim()) parts.push(`Notes: ${notes.value.trim()}.`);
+    if (extra.value.trim()) parts.push(`Constraint: ${extra.value.trim()}.`);
+
+    // The actual ask:
+    parts.push(`Question: According to the Adult Antimicrobial Guidelines in this protocol, what is the recommended empiric antimicrobial regimen (and dosing/renal adjustment if specified) for this scenario? If not addressed, respond "Not found in protocol".`);
+
+    return parts.join(" ");
+  }
+
+  function refreshQuestion(){
+    question.value = buildQuestion();
+  }
+
+  function refreshBadges(){
+    // Step completion logic
+    const s1Done = !!syndrome.value && (syndrome.value !== "Other (free text)" || syndromeOther.value.trim().length > 2);
+    const s2Done = !!setting.value && !!severity.value && !!source.value;
+    const s3Done = true; // optional fields, user may skip
+    const s4Done = true; // optional
+    const s5Done = question.value.trim().length > 10;
+
+    s1Badge.textContent = s1Done ? "Done" : "Pending";
+    s1Badge.className = "badge " + (s1Done ? "ok" : "");
+    s2Badge.textContent = (currentStep >= 2) ? (s2Done ? "Done" : "Pending") : "Locked";
+    s2Badge.className = "badge " + ((currentStep >= 2 && s2Done) ? "ok" : "");
+    s3Badge.textContent = (currentStep >= 3) ? "Open" : "Locked";
+    s4Badge.textContent = (currentStep >= 4) ? "Open" : "Locked";
+    s5Badge.textContent = (currentStep >= 5) ? "Ready" : "Locked";
+
+    // Buttons enable
+    toStep2.disabled = !s1Done;
+    toStep3.disabled = !s2Done;
+  }
+
+  // Step transitions
+  toStep2.addEventListener("click", ()=>{
+    refreshQuestion();
+    openStep(2);
+  });
+  toStep3.addEventListener("click", ()=>{
+    refreshQuestion();
+    openStep(3);
+  });
+  toStep4.addEventListener("click", ()=>{
+    refreshQuestion();
+    openStep(4);
+  });
+  toStep5.addEventListener("click", ()=>{
+    refreshQuestion();
+    openStep(5);
+  });
+
+  backTo1.addEventListener("click", ()=>openStep(1));
+  backTo2.addEventListener("click", ()=>openStep(2));
+  backTo3.addEventListener("click", ()=>openStep(3));
+  backTo4.addEventListener("click", ()=>openStep(4));
+
+  // Field watchers
+  syndrome.addEventListener("change", ()=>{
+    syndromeOther.disabled = syndrome.value !== "Other (free text)";
+    if (syndromeOther.disabled) syndromeOther.value = "";
+    refreshQuestion(); refreshBadges();
+  });
+  syndromeOther.addEventListener("input", ()=>{ refreshQuestion(); refreshBadges(); });
+  [setting,severity,source,notes,age,crcl,rrt,allergy,extra,mode].forEach(el=>{
+    el.addEventListener("input", ()=>{ refreshQuestion(); refreshBadges(); });
+    el.addEventListener("change", ()=>{ refreshQuestion(); refreshBadges(); });
+  });
+
+  // Auto-open next step when ready (nice UX)
+  syndrome.addEventListener("change", ()=>{
+    if (!toStep2.disabled) {
+      // don't force; user can click Next
     }
+  });
 
-    function setMode(m){
-      mode = m;
-      [...modeSeg.querySelectorAll("button")].forEach(b=>{
-        b.classList.toggle("active", b.dataset.mode === m);
+  // Run state UI
+  function setRunState(state, ok=true){
+    runState.textContent = state;
+    runDot.className = "dot " + (ok ? "ok" : "bad");
+  }
+
+  // Ask
+  askBtn.addEventListener("click", async ()=>{
+    const q = question.value.trim();
+    if (!q) return;
+
+    setRunState("Asking…", true);
+    statusText.textContent = "Working";
+    verdict.textContent = "—";
+    result.textContent = "…";
+
+    try{
+      const payload = {
+        question: q,
+        mode: mode.value
+      };
+
+      const resp = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
       });
-    }
 
-    modeSeg.addEventListener("click", (e) => {
-      const btn = e.target.closest("button[data-mode]");
-      if (!btn) return;
-      setMode(btn.dataset.mode);
-    });
-
-    clearBtn.addEventListener("click", () => {
-      q.value = "";
-      answerEl.textContent = "—";
-      verdictEl.textContent = "—";
-      verdictEl.style.color = "var(--warn)";
-      setStatus("idle", "Idle");
-      q.focus();
-    });
-
-    async function ask() {
-      const question = q.value.trim();
-      if (!question) return;
-
-      askBtn.disabled = true;
-      setStatus("idle", "Working…");
-      answerEl.textContent = "Thinking…";
-      verdictEl.textContent = "—";
-      verdictEl.style.color = "var(--warn)";
-
-      try {
-        // We can influence style by prefixing the user question (server remains locked).
-        let prompt = question;
-        if (mode === "short") prompt = "Answer briefly.\n\n" + question;
-        if (mode === "source") prompt = "Return only the Evidence quotes.\n\n" + question;
-
-        const r = await fetch("/.netlify/functions/ask", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ question: prompt })
-        });
-
-        const data = await r.json();
-        if (!r.ok || !data?.ok) throw new Error(data?.error || "Request failed");
-
-        const ans = (data.answer || "").trim();
-        answerEl.textContent = ans || "Not found in protocol";
-
-        const verdict = data.verdict || (ans === "Not found in protocol" ? "NOT_FOUND" : "FOUND");
-        verdictEl.textContent = verdict;
-
-        if (verdict === "FOUND") {
-          verdictEl.style.color = "var(--ok)";
-          setStatus("ok", "OK");
-        } else {
-          verdictEl.style.color = "var(--bad)";
-          setStatus("bad", "NOT FOUND");
-        }
-      } catch (e) {
-        answerEl.textContent = "Error: " + (e?.message || e);
-        verdictEl.textContent = "ERROR";
-        verdictEl.style.color = "var(--bad)";
-        setStatus("bad", "Error");
-      } finally {
-        askBtn.disabled = false;
+      // Try to parse JSON safely (handles "Unexpected end of JSON input")
+      const raw = await resp.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch(e){
+        throw new Error("Worker did not return valid JSON. Raw response:\n" + raw.slice(0, 800));
       }
+
+      // Expected shapes: { answer, verdict, sources? } OR { error }
+      if (!resp.ok || data?.error){
+        verdict.textContent = "ERROR";
+        setRunState("Error", false);
+        result.textContent = data?.error ? String(data.error) : ("HTTP " + resp.status + "\n" + raw);
+        statusText.textContent = "Error";
+        return;
+      }
+
+      verdict.textContent = data?.verdict || "OK";
+      result.textContent =
+        (data?.answer ?? data?.output_text ?? "(No answer field returned)") +
+        (data?.sources ? ("\n\n— Sources —\n" + JSON.stringify(data.sources, null, 2)) : "");
+
+      setRunState("Done", true);
+      statusText.textContent = "Ready";
+    }catch(err){
+      verdict.textContent = "ERROR";
+      setRunState("Error", false);
+      result.textContent = String(err?.message || err);
+      statusText.textContent = "Error";
     }
+  });
 
-    askBtn.addEventListener("click", ask);
-    q.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
-    });
+  // Reset
+  resetBtn.addEventListener("click", ()=>{
+    syndrome.value = "";
+    syndromeOther.value = "";
+    syndromeOther.disabled = true;
 
-    setStatus("idle", "Idle");
-  </script>
+    setting.value = "";
+    severity.value = "";
+    source.value = "";
+    notes.value = "";
+    age.value = "";
+    crcl.value = "";
+    rrt.value = "";
+    allergy.value = "";
+    extra.value = "";
+    mode.value = "hybrid";
+
+    [...riskChecksWrap.querySelectorAll("input[type=checkbox]")].forEach(x=>x.checked=false);
+    syncCheckStyles();
+
+    question.value = "";
+    result.textContent = "—";
+    verdict.textContent = "—";
+    setRunState("Idle", true);
+    statusText.textContent = "Ready";
+
+    openStep(1);
+    refreshBadges();
+  });
+
+  // Init
+  function init(){
+    renderStepChips();
+    openStep(1);
+    refreshBadges();
+    syncCheckStyles();
+    refreshQuestion();
+    // quick connectivity check (optional GET)
+    fetch(WORKER_URL, { method:"GET" }).then(()=>{}).catch(()=>{});
+  }
+  init();
+</script>
 </body>
 </html>
