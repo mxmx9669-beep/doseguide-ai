@@ -1,131 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DoseGuide AI</title>
-
 <style>
-:root{
-  --primary:#2563eb;
-  --bg:#f4f7fb;
-  --card:#ffffff;
-  --border:#e2e8f0;
-  --text:#0f172a;
-  --radius:16px;
-}
-*{box-sizing:border-box;font-family:Inter,system-ui;}
-body{margin:0;background:var(--bg);color:var(--text);}
-.container{max-width:1100px;margin:auto;padding:40px 20px;}
-.header{display:flex;justify-content:space-between;margin-bottom:40px;}
-.logo{font-size:24px;font-weight:700;color:var(--primary);}
-.badge{background:#e0f2fe;color:#0284c7;padding:6px 14px;border-radius:999px;font-size:13px;}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:25px;display:flex;flex-direction:column;}
-h3{margin:0 0 20px;}
-select, textarea{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  font-size:14px;
-  margin-bottom:15px;
-}
-textarea{min-height:150px;resize:vertical;}
-button{
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  cursor:pointer;
-  font-weight:600;
-  background:var(--primary);
-  color:white;
-}
-.result-box{
-  flex:1;
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:15px;
-  font-size:14px;
-  white-space:pre-wrap;
-  overflow:auto;
-  background:#f8fafc;
-}
-@media(max-width:900px){
-  .grid{grid-template-columns:1fr;}
-}
+  :root{
+    --primary:#2563eb;
+    --bg:#f6f8fc;
+    --card:#ffffff;
+    --border:#e5eaf2;
+    --text:#0f172a;
+    --muted:#64748b;
+    --radius:18px;
+  }
+  *{ box-sizing:border-box; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+  body{ margin:0; background:var(--bg); color:var(--text); }
+  .container{ max-width:1100px; margin:auto; padding:34px 18px; }
+  .header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:12px; }
+  .logo{ font-size:26px; font-weight:800; letter-spacing:.2px; color:var(--primary); }
+  .badge{ background:#e8f2ff; color:#1d4ed8; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:700; }
+  .sub{ color:var(--muted); margin-top:6px; font-size:13px; }
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow: 0 10px 26px rgba(15,23,42,.06);
+    display:flex; flex-direction:column;
+    min-height: 420px;
+  }
+  h3{ margin:0 0 12px; font-size:16px; }
+  label{ font-size:12px; color:var(--muted); margin:10px 0 6px; }
+  select, textarea{
+    width:100%;
+    padding:12px 12px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    font-size:14px;
+    outline:none;
+    transition:.15s;
+    background:#fff;
+  }
+  select:focus, textarea:focus{ border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.12); }
+  textarea{ min-height:170px; resize:vertical; line-height:1.45; }
+  .row{ display:flex; gap:10px; margin-top:12px; }
+  button{
+    border:none; cursor:pointer;
+    border-radius:14px;
+    padding:12px 14px;
+    font-weight:800;
+    font-size:14px;
+  }
+  .primary{ background:var(--primary); color:#fff; flex:1; }
+  .primary:hover{ opacity:.95; }
+  .ghost{ background:#eef2ff; color:#1e40af; }
+  .result{
+    flex:1;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px;
+    background:#fbfdff;
+    white-space:pre-wrap;
+    overflow:auto;
+    font-size:14px;
+    line-height:1.55;
+  }
+  .hint{ margin-top:10px; font-size:12px; color:var(--muted); }
+  .ok{ color:#16a34a; font-weight:700; }
+  .bad{ color:#dc2626; font-weight:700; }
+  @media (max-width: 920px){ .grid{ grid-template-columns:1fr; } .card{ min-height:auto; } }
 </style>
 </head>
 <body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="logo">DoseGuide AI</div>
+        <div class="sub">Answers are restricted to the selected drug PDF only.</div>
+      </div>
+      <div class="badge">Protocol Locked</div>
+    </div>
 
-<div class="container">
-<div class="header">
-<div class="logo">DoseGuide AI</div>
-<div class="badge">Protocol Locked</div>
-</div>
+    <div class="grid">
+      <div class="card">
+        <h3>Ask a Clinical Question</h3>
 
-<div class="grid">
+        <label>Drug</label>
+        <select id="drugSelect">
+          <option value="">Loading drugs…</option>
+        </select>
 
-<div class="card">
-<h3>Ask a Clinical Question</h3>
+        <label>Question</label>
+        <textarea id="question" placeholder="e.g., What is the renal dose adjustment for ciprofloxacin in CrCl 25 mL/min?" spellcheck="true"></textarea>
 
-<select id="drugSelect">
-<option value="">Select Drug</option>
-<option value="Ciprofloxacin">Ciprofloxacin</option>
-<option value="Levofloxacin">Levofloxacin</option>
-<option value="Meropenem">Meropenem</option>
-<option value="Vancomycin">Vancomycin</option>
-<option value="Spironolactone">Spironolactone</option>
-</select>
+        <div class="row">
+          <button class="primary" id="askBtn" onclick="ask()">Ask</button>
+          <button class="ghost" onclick="clearAll()">Clear</button>
+        </div>
 
-<textarea
-id="question"
-placeholder="Type your clinical question..."
-spellcheck="true"
-></textarea>
+        <div class="hint">
+          Status: <span id="status" class="ok">Ready</span>
+        </div>
+      </div>
 
-<button onclick="ask()">Ask</button>
-</div>
-
-<div class="card">
-<h3>Result</h3>
-<div id="result" class="result-box">Ready...</div>
-</div>
-
-</div>
-</div>
+      <div class="card">
+        <h3>Result</h3>
+        <div id="result" class="result">Ready…</div>
+        <div class="hint">
+          If the information is not in the PDF, the system must reply: <b>Not found in protocol</b>.
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
+  // ✅ IMPORTANT: exact URL
+  const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mxmx9669.workers.dev";
+  const DRUGS_JSON = "vectorstores.json"; // must exist in same Pages site root
 
-const API_ENDPOINT = "https://steep-frost-149fdoseguide-api.mxmx9669.workers.dev";
-
-async function ask(){
-  const drug = document.getElementById("drugSelect").value;
-  const question = document.getElementById("question").value.trim();
-  const resultBox = document.getElementById("result");
-
-  if(!drug || !question){
-    resultBox.textContent = "Please select a drug and enter a question.";
-    return;
+  function setStatus(text, kind="ok"){
+    const el = document.getElementById("status");
+    el.className = kind === "bad" ? "bad" : "ok";
+    el.textContent = text;
   }
 
-  resultBox.textContent = "Processing...";
-
-  try{
-    const res = await fetch(API_ENDPOINT,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ drug, question })
-    });
-
-    const data = await res.json();
-    resultBox.textContent = data.answer || "No response returned.";
-
-  }catch(err){
-    resultBox.textContent = "Error connecting to server.";
+  function clearAll(){
+    document.getElementById("question").value = "";
+    document.getElementById("result").textContent = "Ready…";
+    setStatus("Ready","ok");
   }
-}
+
+  async function loadDrugs(){
+    const select = document.getElementById("drugSelect");
+    select.innerHTML = `<option value="">Select Drug</option>`;
+    try{
+      const res = await fetch(DRUGS_JSON, { cache: "no-store" });
+      if(!res.ok) throw new Error("Failed to load vectorstores.json");
+      const map = await res.json();
+
+      const drugs = Object.keys(map).sort((a,b)=>a.localeCompare(b));
+      for(const drug of drugs){
+        const opt = document.createElement("option");
+        opt.value = drug;
+        opt.textContent = drug;
+        select.appendChild(opt);
+      }
+
+      setStatus("Ready","ok");
+    }catch(e){
+      select.innerHTML = `<option value="">(No drugs found)</option>`;
+      document.getElementById("result").textContent =
+        "Error: vectorstores.json not found or invalid.";
+      setStatus("Error","bad");
+      console.error(e);
+    }
+  }
+
+  async function ask(){
+    const drug = document.getElementById("drugSelect").value;
+    const question = document.getElementById("question").value.trim();
+    const resultBox = document.getElementById("result");
+    const btn = document.getElementById("askBtn");
+
+    if(!drug || !question){
+      resultBox.textContent = "Please select a drug and enter a question.";
+      setStatus("Missing input","bad");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.style.opacity = ".7";
+    resultBox.textContent = "Processing…";
+    setStatus("Processing","ok");
+
+    try{
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ drug, question })
+      });
+
+      const data = await res.json().catch(()=> ({}));
+
+      if(!res.ok){
+        resultBox.textContent = data?.error || `Server error (${res.status}).`;
+        setStatus("Error","bad");
+      }else{
+        resultBox.textContent = data?.answer || "No response returned.";
+        setStatus("Done","ok");
+      }
+    }catch(err){
+      resultBox.textContent = "Error connecting to server.";
+      setStatus("Offline / DNS / CORS","bad");
+      console.error(err);
+    }finally{
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
+  }
+
+  loadDrugs();
 </script>
-
 </body>
 </html>
