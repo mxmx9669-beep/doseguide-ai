@@ -1,111 +1,376 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DoseGuide AI Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DoseGuide AI – Test</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a30;
+      --card2:#0c162a;
+      --text:#e7eefc;
+      --muted:#a9b7d6;
+      --line:rgba(255,255,255,.08);
+      --pri:#39b9ff;
+      --pri2:#7c5cff;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(124,92,255,.35), transparent 55%),
+                  radial-gradient(1000px 600px at 0% 10%, rgba(57,185,255,.25), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:980px;margin:42px auto;padding:0 18px}
+    .top{
+      display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px;
+    }
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background: linear-gradient(135deg, var(--pri), var(--pri2));
+      box-shadow: 0 10px 26px rgba(57,185,255,.25);
+    }
+    .title h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .title p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .pill{
+      padding:10px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03);
+      color:var(--muted);font-size:12px
+    }
 
-<style>
-body{
-  font-family: Arial;
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
-}
-.card{
-  border:1px solid #ddd;
-  border-radius:12px;
-  padding:20px;
-  margin-bottom:20px;
-}
-label{
-  display:block;
-  margin-top:15px;
-  font-weight:bold;
-}
-input, textarea{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-textarea{
-  min-height:120px;
-}
-button{
-  margin-top:15px;
-  padding:10px 20px;
-  border:none;
-  border-radius:8px;
-  background:#0E6F8E;
-  color:white;
-  cursor:pointer;
-}
-pre{
-  background:#111;
-  color:#0f0;
-  padding:15px;
-  border-radius:10px;
-  white-space:pre-wrap;
-}
-</style>
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      padding:16px 18px;
+      background: rgba(255,255,255,.02);
+      border-bottom: 1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    }
+    .card-h .h{
+      font-weight:700;
+      display:flex;align-items:center;gap:10px
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--ok);
+      box-shadow: 0 0 0 6px rgba(34,197,94,.12);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+      padding:18px;
+    }
+    @media(min-width:900px){
+      .grid{grid-template-columns: 360px 1fr;}
+    }
+
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+    .field{
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:10px 12px;
+    }
+    select,input,textarea{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:14px;
+      font-family: inherit;
+    }
+    textarea{min-height:160px;resize:vertical;line-height:1.55}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    .actions{
+      display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btn{
+      border:0;cursor:pointer;
+      padding:12px 16px;border-radius:14px;
+      font-weight:700;
+      color:#071024;
+      background: linear-gradient(135deg, var(--pri), var(--pri2));
+      box-shadow: 0 14px 30px rgba(57,185,255,.18);
+      min-width:120px;
+    }
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn2{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      padding:12px 14px;border-radius:14px;
+      cursor:pointer;
+      font-weight:650;
+    }
+
+    .result{
+      padding:18px;
+      border-top:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .out{
+      white-space:pre-wrap;
+      line-height:1.7;
+      font-size:14px;
+      background: rgba(0,0,0,.22);
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:14px 14px;
+      min-height:120px;
+    }
+    .meta{
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+      margin-top:10px;color:var(--muted);font-size:12px;
+    }
+    .badge{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      padding:6px 10px;border-radius:999px;
+    }
+    .err{color:#ffd0d0}
+    .ok{color:#d7ffe5}
+    .tiny{opacity:.9}
+    .help{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+    .link{
+      color:#bcd7ff;text-decoration:none;border-bottom:1px dotted rgba(188,215,255,.5)
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="title">
+          <h1>DoseGuide AI – Test</h1>
+          <p>واجهة تجريبية للربط مع Netlify Function + OpenAI</p>
+        </div>
+      </div>
+      <div class="pill" id="statusPill">Loading…</div>
+    </div>
 
-<h2>🧠 DoseGuide AI – Test Page</h2>
+    <div class="card">
+      <div class="card-h">
+        <div class="h"><span class="dot" id="dot"></span> لوحة السؤال</div>
+        <div class="help tiny">
+          يسحب الأدوية من <code>vectorstores.json</code> — إذا ما ظهر شيء، الملف غير موجود أو صيغته غير متوقعة.
+        </div>
+      </div>
 
-<div class="card">
-  <label>Drug key (مثل ما هو في vectorstores.json)</label>
-  <input id="drugInput" placeholder="vancomycin">
+      <div class="grid">
+        <!-- Left -->
+        <div>
+          <div style="margin-bottom:12px">
+            <label>Drug key (من vectorstores.json)</label>
+            <div class="field">
+              <select id="drugSelect">
+                <option value="">… جاري التحميل</option>
+              </select>
+            </div>
+          </div>
 
-  <label>Question</label>
-  <textarea id="questionInput" placeholder="What is the loading dose?"></textarea>
+          <div style="margin-bottom:12px">
+            <label>وضع الإجابة</label>
+            <div class="field">
+              <select id="mode">
+                <option value="concise" selected>مختصر (Recommended)</option>
+                <option value="detailed">تفصيلي</option>
+              </select>
+            </div>
+          </div>
 
-  <button onclick="askDrug()">Ask</button>
-</div>
+          <div class="help">
+            تذكير: هذه صفحة اختبار. لا تعتمد الإجابة كبديل عن بروتوكول مستشفاك.
+          </div>
 
-<div class="card">
-  <h3>Result</h3>
-  <pre id="answerBox">Waiting...</pre>
-</div>
+          <div class="actions">
+            <button class="btn2" id="clearBtn" type="button">مسح</button>
+            <button class="btn" id="askBtn" type="button">Ask</button>
+          </div>
+
+          <div class="meta" id="meta">
+            <span class="badge">Endpoint: <span id="endpointTxt">/.netlify/functions/ask</span></span>
+            <span class="badge">Status: <span id="apiState">—</span></span>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div>
+          <label>Question</label>
+          <div class="field">
+            <textarea id="question" placeholder="اكتب سؤالك هنا… مثال: How should vancomycin infusion be adjusted to prevent infusion reactions?"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="result">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <div style="font-weight:800">Result</div>
+          <div class="help">
+            إذا ظهرت <span class="err">No message provided</span> = الواجهة ما أرسلت الحقل الصحيح.
+          </div>
+        </div>
+        <div class="out" id="output">جاهز… اختر دواء واكتب سؤال ثم اضغط Ask.</div>
+      </div>
+    </div>
+
+    <div class="help" style="margin-top:14px">
+      إذا واجهت 404 في Netlify سابقاً: لازم يكون عندك <code>index.html</code> في الجذر (root)، مو باسم ثاني.
+    </div>
+  </div>
 
 <script>
-async function askDrug(){
+  const $ = (id) => document.getElementById(id);
 
-  const drug = document.getElementById("drugInput").value.trim();
-  const question = document.getElementById("questionInput").value.trim();
-  const box = document.getElementById("answerBox");
+  const statusPill = $("statusPill");
+  const dot = $("dot");
+  const drugSelect = $("drugSelect");
+  const askBtn = $("askBtn");
+  const clearBtn = $("clearBtn");
+  const questionEl = $("question");
+  const output = $("output");
+  const apiState = $("apiState");
+  const modeEl = $("mode");
 
-  if(!drug || !question){
-    box.textContent = "Enter drug and question.";
-    return;
+  const endpoint = "/.netlify/functions/ask";
+
+  function setStatus(text, ok=true){
+    statusPill.textContent = text;
+    dot.style.background = ok ? "var(--ok)" : "var(--bad)";
+    dot.style.boxShadow = ok ? "0 0 0 6px rgba(34,197,94,.12)" : "0 0 0 6px rgba(239,68,68,.12)";
   }
 
-  box.textContent = "Searching...";
+  function safeText(x){
+    return (x ?? "").toString();
+  }
 
-  try{
-    const res = await fetch("/.netlify/functions/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ drug, question })
-    });
+  async function loadDrugs(){
+    try{
+      setStatus("Loading vectorstores.json…", true);
+      apiState.textContent = "Loading drugs";
 
-    const data = await res.json();
+      const res = await fetch("/vectorstores.json", { cache: "no-store" });
+      if(!res.ok) throw new Error("vectorstores.json not found ("+res.status+")");
+      const data = await res.json();
 
-    if(!res.ok){
-      box.textContent = data.error || "Error occurred.";
+      // مرونة: يدعم أكثر من شكل
+      // 1) { "vancomycin": {...}, "meropenem": {...} }
+      // 2) { "stores": { "vancomycin": {...} } }
+      // 3) { "items": [{key:"vancomycin"}] }
+      let keys = [];
+
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        if (data.stores && typeof data.stores === "object") {
+          keys = Object.keys(data.stores);
+        } else if (Array.isArray(data.items)) {
+          keys = data.items.map(x => x.key).filter(Boolean);
+        } else {
+          keys = Object.keys(data);
+        }
+      }
+
+      keys = keys.filter(Boolean).sort((a,b)=>a.localeCompare(b));
+      if(keys.length === 0) throw new Error("No drug keys found in vectorstores.json");
+
+      drugSelect.innerHTML = `<option value="">اختر…</option>` + keys.map(k =>
+        `<option value="${k}">${k}</option>`
+      ).join("");
+
+      setStatus("Ready ✅", true);
+      apiState.textContent = "Ready";
+    }catch(e){
+      drugSelect.innerHTML = `<option value="">(لا توجد أدوية)</option>`;
+      setStatus("vectorstores.json error ❌", false);
+      apiState.textContent = "Error";
+      output.textContent = "Error loading drugs: " + e.message;
+    }
+  }
+
+  async function ask(){
+    const drugKey = drugSelect.value.trim();
+    const q = questionEl.value.trim();
+    const mode = modeEl.value;
+
+    if(!drugKey){
+      output.textContent = "اختر Drug key أولاً.";
+      return;
+    }
+    if(!q){
+      output.textContent = "اكتب سؤال أولاً.";
       return;
     }
 
-    box.textContent = data.answer || "No answer returned.";
+    askBtn.disabled = true;
+    askBtn.textContent = "Asking…";
+    output.textContent = "⏳ جاري الإرسال…";
 
-  }catch(e){
-    box.textContent = "Connection failed.";
+    try{
+      const payload = {
+        drugKey,
+        message: q,      // <<< هذا هو المهم
+        mode
+      };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+      if(!res.ok){
+        const msg = data?.error || data?.message || data?.raw || ("HTTP " + res.status);
+        throw new Error(msg);
+      }
+
+      const reply = data?.reply ?? data?.answer ?? data?.raw ?? "";
+      output.textContent = reply || "(No reply)";
+      apiState.textContent = "OK";
+    }catch(e){
+      output.textContent = "❌ " + e.message;
+      apiState.textContent = "Failed";
+    }finally{
+      askBtn.disabled = false;
+      askBtn.textContent = "Ask";
+    }
   }
-}
-</script>
 
+  clearBtn.addEventListener("click", () => {
+    questionEl.value = "";
+    output.textContent = "جاهز… اختر دواء واكتب سؤال ثم اضغط Ask.";
+    questionEl.focus();
+  });
+
+  askBtn.addEventListener("click", ask);
+
+  // Load on start
+  loadDrugs();
+</script>
 </body>
 </html>
