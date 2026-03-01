@@ -1,333 +1,659 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DoseGuide AI</title>
+
   <style>
     :root{
-      --bg:#f0f4ff; --card:#fff; --text:#0f172a; --muted:#64748b;
-      --pri:#2563eb; --line:#e2e8f0; --ok:#16a34a; --bad:#dc2626;
-      --shadow:0 18px 45px rgba(2,6,23,.08);
-      --ok-bg:#f0fdf4; --ok-border:#bbf7d0;
-      --cite-bg:#f8faff; --cite-border:#dbeafe;
+      --bg1:#eef3ff;
+      --bg2:#f8fbff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --pri:#2563eb;
+      --pri2:#1d4ed8;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#dc2626;
+      --shadow:0 14px 40px rgba(2,8,23,.10);
+      --radius:18px;
     }
-    *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
-    body{margin:0;background:var(--bg);color:var(--text)}
-    .wrap{max-width:900px;margin:0 auto;padding:28px 18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:28px}
-    .title{display:flex;align-items:center;gap:10px;font-size:26px;font-weight:800;margin:0 0 20px}
-    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 12px;border-radius:999px;color:var(--muted);font-size:12px;font-weight:600}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    @media(max-width:700px){.grid{grid-template-columns:1fr}}
-    label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.5px}
-    select,textarea{
-      width:100%;border:1.5px solid var(--line);border-radius:12px;
-      padding:11px 14px;background:#fff;font-size:14px;outline:none;
-      transition:border .2s;color:var(--text)
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(900px 600px at 20% 10%, var(--bg1), transparent 70%),
+                  radial-gradient(900px 600px at 80% 20%, #e9f6ff, transparent 70%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height:100vh;
     }
-    select:focus,textarea:focus{border-color:var(--pri)}
-    textarea{min-height:120px;resize:vertical;line-height:1.6}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+
+    .wrap{
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 18px 40px;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px;
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom: 18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 240px;
+    }
+
+    .pill{
+      width:42px;height:42px;
+      border-radius:14px;
+      background: linear-gradient(135deg, #ff6b6b, #ffb703);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 8px 20px rgba(255,107,107,.22);
+      font-size: 22px;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+    .title h1{
+      margin:0;
+      font-size: 26px;
+      letter-spacing:.2px;
+    }
+    .title .sub{
+      margin-top:4px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .worker-badge{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 13px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(245,158,11,.15);
+    }
+    .dot.ok{ background: var(--ok); box-shadow: 0 0 0 4px rgba(22,163,74,.15); }
+    .dot.bad{ background: var(--bad); box-shadow: 0 0 0 4px rgba(220,38,38,.15); }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: .2px;
+    }
+
+    select, textarea, input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      outline: none;
+      font-size: 14px;
+    }
+    select:focus, textarea:focus, input:focus{
+      border-color: rgba(37,99,235,.5);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    .hint{
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .modes{
+      margin-top: 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+
+    .mode-group{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .seg{
+      display:flex;
+      background:#f8fafc;
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding: 6px;
+      gap: 6px;
+      overflow:auto;
+    }
+
+    .seg button{
+      border: 0;
+      background: transparent;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      color: var(--muted);
+      cursor:pointer;
+      transition:.15s ease;
+      white-space:nowrap;
+    }
+    .seg button.active{
+      background: rgba(37,99,235,.10);
+      color: var(--pri2);
+      box-shadow: inset 0 0 0 1px rgba(37,99,235,.18);
+    }
+    .seg button:hover{ transform: translateY(-1px); }
+
+    .qbox{
+      margin-top: 14px;
+    }
+    textarea{
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top: 14px;
+    }
+
     .btn{
-      border:0;border-radius:12px;padding:13px 28px;
-      background:var(--pri);color:#fff;font-weight:700;cursor:pointer;font-size:15px;
-      transition:opacity .2s
+      border:0;
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 600;
+      transition: .18s ease;
+      font-size: 14px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
     }
-    .btn:hover{opacity:.88}
-    .btn.secondary{background:#fff;color:var(--text);border:1.5px solid var(--line)}
-    .modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .mode{
-      border:1.5px solid var(--line);background:#fff;border-radius:999px;
-      padding:8px 16px;cursor:pointer;font-weight:600;color:var(--muted);font-size:13px;
-      transition:all .2s
+    .btn.primary{
+      background: linear-gradient(135deg, var(--pri), var(--pri2));
+      color:#fff;
+      box-shadow: 0 10px 20px rgba(37,99,235,.22);
     }
-    .mode.active{border-color:var(--pri);color:var(--pri);background:#eff6ff}
-    .out{margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
-    .small{font-size:12px;color:var(--muted)}
+    .btn.primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 26px rgba(37,99,235,.28); }
+    .btn.ghost{
+      background: #fff;
+      border:1px solid var(--border);
+      color: var(--text);
+    }
+    .btn.ghost:hover{ transform: translateY(-1px); }
 
-    /* ── Verdict Badge ── */
-    .verdict-badge{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 16px;border-radius:999px;font-weight:700;font-size:14px;
-      margin-bottom:16px
+    .status-row{
+      margin-top: 18px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
     }
-    .verdict-badge.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)}
-    .verdict-badge.bad{background:#fef2f2;color:var(--bad);border:1px solid #fecaca}
-    .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+    .status-pill{
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-weight:600;
+      color: var(--text);
+    }
+    .status-pill.ok{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.08); }
+    .status-pill.bad{ border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.08); }
+    .status-pill.warn{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.08); }
 
-    /* ── Answer Box ── */
-    .answer-box{
-      background:#f8faff;border:1.5px solid #dbeafe;border-radius:16px;
-      padding:20px 22px;font-size:15px;line-height:1.8;color:var(--text);
-      white-space:pre-wrap;margin-bottom:20px
-    }
-
-    /* ── Citations ── */
-    .cites-title{
-      font-size:13px;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px
-    }
-    .cite{
-      border:1.5px solid var(--cite-border);border-radius:14px;
-      padding:14px 16px;background:var(--cite-bg);margin-bottom:10px
-    }
-    .cite-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
-    .cite-icon{font-size:18px}
-    .cite-filename{font-weight:700;font-size:14px;color:var(--pri);flex:1}
-    .cite-page{
-      background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700;
-      padding:3px 10px;border-radius:999px
-    }
-    .cite-ids{font-size:11px;color:var(--muted);margin-bottom:8px}
-    .cite-excerpt{
-      font-size:13px;line-height:1.7;color:#334155;
-      background:#fff;border-radius:10px;padding:10px 14px;
-      border:1px solid var(--line);white-space:pre-wrap
+    .out{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
     }
 
-    /* ── Raw JSON toggle ── */
-    .raw-toggle{
-      margin-top:16px;cursor:pointer;font-size:12px;
-      color:var(--muted);display:flex;align-items:center;gap:6px;
-      user-select:none
+    .panel{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 16px;
+      padding: 16px;
     }
-    .raw-toggle:hover{color:var(--pri)}
-    pre{
-      white-space:pre-wrap;background:#0f172a;color:#e2e8f0;
-      padding:16px;border-radius:14px;overflow:auto;
-      font-size:12px;margin-top:8px;display:none
+    .panel h3{
+      margin:0 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight:700;
+      letter-spacing:.2px;
+      text-transform:uppercase;
     }
-    pre.show{display:block}
 
-    .loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:16px 0}
-    .spinner{width:20px;height:20px;border:3px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:spin .7s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+    .answer{
+      white-space: pre-wrap;
+      line-height:1.55;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .src{
+      margin-top: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .src-item{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background:#f8fafc;
+    }
+    .src-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size: 13px;
+      font-weight:700;
+    }
+    .src-head span{
+      color: var(--muted);
+      font-weight:600;
+    }
+    .src-ex{
+      margin-top:8px;
+      color: #1f2937;
+      font-size: 13px;
+      white-space: pre-wrap;
+      line-height:1.5;
+    }
+
+    .foot{
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align:center;
+    }
+
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+      .top{ flex-direction:column; align-items:flex-start; }
+      .worker-badge{ align-self:flex-start; }
+      .actions{ flex-wrap:wrap; }
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="card">
-      <h1 class="title">💊 DoseGuide AI <span class="pill" id="healthPill">⏳ checking…</span></h1>
+      <div class="top">
+        <div class="brand">
+          <div class="pill">💊</div>
+          <div class="title">
+            <h1>DoseGuide AI</h1>
+            <div class="sub">Protocol-bound answers with citations (Vector Store)</div>
+          </div>
+        </div>
+
+        <div class="worker-badge" id="workerBadge" title="Worker health status">
+          <span class="dot" id="workerDot"></span>
+          <span id="workerText">Worker: Checking…</span>
+        </div>
+      </div>
 
       <div class="grid">
         <div>
-          <label>Drug / Topic</label>
-          <select id="drug">
+          <label for="topic">Drug / Topic</label>
+          <select id="topic">
             <option value="">(Optional) None</option>
           </select>
-          <div class="small" id="catalogHint" style="margin-top:6px"></div>
+          <div class="hint" id="catalogHint">Loading catalog…</div>
         </div>
+
         <div>
-          <label>Language</label>
-          <select id="lang">
+          <label for="language">Language</label>
+          <select id="language">
             <option value="English">English</option>
             <option value="Arabic">Arabic</option>
           </select>
+          <div class="hint">Controls response language.</div>
         </div>
+
         <div>
-          <label>Answer Style</label>
-          <select id="style">
+          <label for="answerStyle">Answer Style</label>
+          <select id="answerStyle">
             <option value="Recommended">Recommended</option>
-            <option value="Bullet">Bullet Points</option>
+            <option value="Concise">Concise</option>
             <option value="Detailed">Detailed</option>
+            <option value="Strict">Strict (citations required)</option>
           </select>
+          <div class="hint">Controls tone/structure.</div>
         </div>
       </div>
 
-      <div style="margin-top:16px">
-        <label>Output Mode</label>
-        <div class="modes">
-          <button class="mode active" data-mode="Hybrid">Hybrid</button>
-          <button class="mode" data-mode="Short">Short</button>
-          <button class="mode" data-mode="Verbatim">Verbatim</button>
-          <button class="mode" data-mode="Source">Source Only</button>
+      <div class="modes">
+        <div class="mode-group">
+          <label style="margin:0;color:var(--muted);font-size:12px;">Output Mode</label>
+          <div class="seg" aria-label="Output mode selector">
+            <button type="button" class="active" data-mode="Hybrid">Hybrid</button>
+            <button type="button" data-mode="Short">Short</button>
+            <button type="button" data-mode="Verbatim">Verbatim</button>
+            <button type="button" data-mode="Source Only">Source Only</button>
+          </div>
         </div>
       </div>
 
-      <div style="margin-top:16px">
-        <label>Your Question</label>
-        <textarea id="q" placeholder="Ask based on your uploaded PDFs…"></textarea>
+      <div class="qbox">
+        <label for="question">Your Question</label>
+        <textarea id="question" placeholder="Ask a clinical question… (e.g., dosing, contraindications, monitoring, interactions)"></textarea>
+
+        <div class="actions">
+          <button class="btn primary" id="askBtn" type="button">
+            🔎 Ask DoseGuide
+          </button>
+          <button class="btn ghost" id="clearBtn" type="button">
+            Clear
+          </button>
+        </div>
       </div>
 
-      <div class="row">
-        <button class="btn" id="askBtn">🔍 Ask DoseGuide</button>
-        <button class="btn secondary" id="clearBtn">Clear</button>
+      <div class="status-row">
+        <div class="status-pill" id="statusPill">
+          <span class="dot" id="statusDot" style="box-shadow:none;background:var(--warn)"></span>
+          <span id="statusText">Status: Idle</span>
+        </div>
+        <div id="statusMsg"></div>
       </div>
 
-      <!-- Output -->
-      <div class="out" id="out" style="display:none">
+      <div class="out">
+        <div class="panel">
+          <h3>Answer</h3>
+          <div class="answer" id="answerBox">—</div>
+        </div>
 
-        <div id="verdictBadge"></div>
-        <div id="answerBox"></div>
-        <div id="citationsBox"></div>
-
-        <div class="raw-toggle" id="rawToggle">▶ Show Raw JSON</div>
-        <pre id="raw"></pre>
+        <div class="panel">
+          <h3>Reference Sources</h3>
+          <div class="src" id="sourcesBox">
+            <div class="hint">No sources yet.</div>
+          </div>
+        </div>
       </div>
+
+      <div class="foot">Innovation & Design by Mohammed Al-Ishaq</div>
     </div>
   </div>
 
 <script>
-  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
-
-  const elDrug    = document.getElementById("drug");
-  const elLang    = document.getElementById("lang");
-  const elStyle   = document.getElementById("style");
-  const elQ       = document.getElementById("q");
-  const elOut     = document.getElementById("out");
-  const elRaw     = document.getElementById("raw");
-  const elAnswerBox     = document.getElementById("answerBox");
-  const elCitationsBox  = document.getElementById("citationsBox");
-  const elVerdictBadge  = document.getElementById("verdictBadge");
-  const elHealthPill    = document.getElementById("healthPill");
-  const elCatalogHint   = document.getElementById("catalogHint");
-  const elRawToggle     = document.getElementById("rawToggle");
-
+  // ---- UI State ----
   let outputMode = "Hybrid";
 
-  document.querySelectorAll(".mode").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      document.querySelectorAll(".mode").forEach(b=>b.classList.remove("active"));
+  // output mode buttons
+  document.querySelectorAll(".seg button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".seg button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      outputMode = btn.dataset.mode;
+      outputMode = btn.dataset.mode || "Hybrid";
     });
   });
 
-  document.getElementById("clearBtn").addEventListener("click",()=>{
-    elQ.value="";
-    elOut.style.display="none";
+  // clear button
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    document.getElementById("question").value = "";
+    setStatus("Idle", "warn", "");
+    setAnswer("—", []);
   });
 
-  elRawToggle.addEventListener("click",()=>{
-    const show = elRaw.classList.toggle("show");
-    elRawToggle.textContent = (show ? "▼ Hide" : "▶ Show") + " Raw JSON";
-  });
+  // status helpers
+  function setStatus(text, tone="warn", msg=""){
+    const pill = document.getElementById("statusPill");
+    const dot = document.getElementById("statusDot");
+    const st = document.getElementById("statusText");
+    const sm = document.getElementById("statusMsg");
 
-  function escapeHtml(s){
-    return String(s||"")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    pill.classList.remove("ok","bad","warn");
+    pill.classList.add(tone);
+    dot.style.background = tone === "ok" ? "var(--ok)" : (tone === "bad" ? "var(--bad)" : "var(--warn)");
+    st.textContent = "Status: " + text;
+    sm.textContent = msg || "";
   }
 
-  async function healthCheck(){
-    try{
-      const r = await fetch(WORKER_BASE+"/health");
-      elHealthPill.textContent = r.ok ? "✅ Worker: OK" : "❌ Worker: ERROR";
-      elHealthPill.style.color = r.ok ? "#16a34a" : "#dc2626";
-    }catch{
-      elHealthPill.textContent = "❌ Not reachable";
-      elHealthPill.style.color = "#dc2626";
+  function setWorker(ok, msg){
+    const dot = document.getElementById("workerDot");
+    const txt = document.getElementById("workerText");
+    dot.classList.remove("ok","bad");
+    dot.classList.add(ok ? "ok" : "bad");
+    txt.textContent = ok ? "Worker: OK" : ("Worker: " + (msg || "Error"));
+  }
+
+  // render answer + sources
+  function setAnswer(answerText, sources){
+    const a = document.getElementById("answerBox");
+    const sbox = document.getElementById("sourcesBox");
+
+    a.textContent = (answerText && String(answerText).trim()) ? String(answerText).trim() : "—";
+
+    sbox.innerHTML = "";
+    if (!sources || !Array.isArray(sources) || sources.length === 0){
+      const div = document.createElement("div");
+      div.className = "hint";
+      div.textContent = "No sources returned.";
+      sbox.appendChild(div);
+      return;
     }
+
+    sources.forEach((src) => {
+      const item = document.createElement("div");
+      item.className = "src-item";
+
+      const head = document.createElement("div");
+      head.className = "src-head";
+
+      const left = document.createElement("div");
+      left.textContent = src.filename || "Unknown file";
+
+      const right = document.createElement("div");
+      const pg = (src.page === 0 || src.page) ? src.page : null;
+      right.innerHTML = `<span>evidence:</span> ${(src.evidence_ids || []).join(", ") || "—"} &nbsp; <span>page:</span> ${pg ?? "—"}`;
+
+      head.appendChild(left);
+      head.appendChild(right);
+
+      const ex = document.createElement("div");
+      ex.className = "src-ex";
+      ex.textContent = src.excerpt || "";
+
+      item.appendChild(head);
+      item.appendChild(ex);
+      sbox.appendChild(item);
+    });
   }
 
+  // ---- optional: load catalog of topics ----
   async function loadCatalog(){
-    try{
-      const r    = await fetch(WORKER_BASE+"/catalog");
-      const data = await r.json();
-      if(!data?.ok) throw new Error();
-      const files = Array.isArray(data.files) ? data.files : [];
-      elCatalogHint.textContent = files.length
-        ? `📂 ${files.length} files loaded`
-        : "No files found.";
-      elDrug.innerHTML = `<option value="">(Optional) None</option>`;
-      files.forEach(f=>{
-        const name = f.filename || f.file_id || "unknown";
-        const opt  = document.createElement("option");
-        opt.value  = name; opt.textContent = name;
-        elDrug.appendChild(opt);
-      });
-    }catch{
-      elCatalogHint.textContent = "Could not load catalog.";
+    const sel = document.getElementById("topic");
+    const hint = document.getElementById("catalogHint");
+
+    // If you have an endpoint for catalog, keep it here.
+    // If not, it will gracefully show "Could not load catalog."
+    const urls = ["/catalog", "/topics", "/drug_catalog"];
+    for (const u of urls){
+      try{
+        const r = await fetch(u, { method:"GET" });
+        if (!r.ok) continue;
+        const data = await r.json();
+
+        // Expect data like: { items: ["Warfarin","Heparin"] } or ["Warfarin",...]
+        const items = Array.isArray(data) ? data : (data.items || data.catalog || []);
+        if (!Array.isArray(items) || items.length === 0) continue;
+
+        // clear & repopulate
+        sel.innerHTML = `<option value="">(Optional) None</option>`;
+        items.forEach(x => {
+          const opt = document.createElement("option");
+          opt.value = String(x);
+          opt.textContent = String(x);
+          sel.appendChild(opt);
+        });
+
+        hint.textContent = `Catalog loaded (${items.length}).`;
+        return;
+      }catch(e){
+        // try next
+      }
     }
+
+    hint.textContent = "Could not load catalog.";
   }
 
-  function renderResult(data){
-    elOut.style.display = "block";
-    elRaw.classList.remove("show");
-    elRawToggle.textContent = "▶ Show Raw JSON";
-
-    // ── Verdict Badge ──
-    const verdict = data?.verdict || (data?.ok===false ? "ERROR" : "UNKNOWN");
-    const isOk    = verdict === "OK";
-    elVerdictBadge.innerHTML = `
-      <div class="verdict-badge ${isOk ? "ok" : "bad"}">
-        <span class="dot"></span>
-        ${isOk ? "✅ Answer Found" : "❌ " + verdict}
-      </div>`;
-
-    // ── Answer ──
-    elAnswerBox.innerHTML = "";
-    const ans = (data?.answer || "").trim();
-    if(ans && !ans.startsWith("NOT_FOUND")){
-      elAnswerBox.innerHTML = `<div class="answer-box">${escapeHtml(ans)}</div>`;
-    } else if(ans){
-      elAnswerBox.innerHTML = `
-        <div class="answer-box" style="border-color:#fecaca;background:#fef2f2;color:#991b1b">
-          ${escapeHtml(ans)}
-        </div>`;
+  // ---- health check (best-effort) ----
+  async function checkWorker(){
+    const urls = ["/health", "/ask", "/"];
+    for (const u of urls){
+      try{
+        const r = await fetch(u, { method: u === "/ask" ? "OPTIONS" : "GET" });
+        // If the worker exists, at least one of these should return something reachable
+        if (r && (r.ok || r.status === 204 || r.status === 405)){
+          setWorker(true);
+          return;
+        }
+      }catch(e){}
     }
-
-    // ── Citations ──
-    elCitationsBox.innerHTML = "";
-    const cits = Array.isArray(data?.citations) ? data.citations : [];
-    if(cits.length){
-      elCitationsBox.innerHTML = `<div class="cites-title">📎 Reference Sources</div>`;
-      cits.forEach((c, i)=>{
-        const page    = (c.page!==null && c.page!==undefined) ? c.page : null;
-        const pageBadge = page !== null
-          ? `<span class="cite-page">Page ${page}</span>` : "";
-        const ids     = (c.evidence_ids||[]).join(", ");
-        elCitationsBox.innerHTML += `
-          <div class="cite">
-            <div class="cite-header">
-              <span class="cite-icon">📄</span>
-              <span class="cite-filename">${escapeHtml(c.filename||"Unknown file")}</span>
-              ${pageBadge}
-            </div>
-            <div class="cite-ids">Evidence refs: ${escapeHtml(ids)}</div>
-            <div class="cite-excerpt">${escapeHtml(c.excerpt||"")}</div>
-          </div>`;
-      });
-    }
-
-    elRaw.textContent = JSON.stringify(data, null, 2);
+    // even if check fails, the worker may still work; don't block usage
+    setWorker(false, "Unknown");
   }
 
-  document.getElementById("askBtn").addEventListener("click", async()=>{
-    const question = elQ.value.trim();
-    if(question.length < 2){ alert("Write a question first."); return; }
+  // ---- ask handler ----
+  document.getElementById("askBtn").addEventListener("click", askDoseGuide);
+  document.getElementById("question").addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") askDoseGuide();
+  });
 
+  async function askDoseGuide(){
+    const q = document.getElementById("question").value.trim();
+    const topic = document.getElementById("topic").value;
+    const language = document.getElementById("language").value;
+    const answerStyle = document.getElementById("answerStyle").value;
+
+    if (!q){
+      setStatus("Error", "bad", "Please enter a question.");
+      return;
+    }
+
+    setStatus("Working…", "warn", "Sending to /ask");
+    setAnswer("…", []);
+
+    // Send a payload that is compatible with many worker implementations:
+    // (question/q/prompt) + (topic/drug) + (output_mode/mode) + (language) + (answer_style/style)
     const payload = {
-      question,
-      drug:        elDrug.value.trim(),
-      language:    elLang.value,
-      answer_style:elStyle.value,
-      output_mode: outputMode
+      question: q,
+      q: q,
+      prompt: q,
+
+      topic: topic || null,
+      drug: topic || null,
+
+      language,
+      answer_style: answerStyle,
+      style: answerStyle,
+
+      output_mode: outputMode,
+      mode: outputMode
     };
 
-    elOut.style.display    = "block";
-    elVerdictBadge.innerHTML = "";
-    elAnswerBox.innerHTML  = `<div class="loading"><div class="spinner"></div> Thinking…</div>`;
-    elCitationsBox.innerHTML = "";
-    elRaw.textContent      = "";
-
     try{
-      const r    = await fetch(WORKER_BASE+"/ask",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const data = await r.json().catch(()=>({ok:false,error:"BAD_JSON"}));
-      renderResult(data);
-    }catch(e){
-      renderResult({ok:false,verdict:"ERROR",answer:"Request failed.",citations:[],details:String(e)});
-    }
-  });
 
-  healthCheck();
+      const text = await res.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch(_e){}
+
+      if (!res.ok){
+        setStatus("Error", "bad", `HTTP ${res.status}`);
+        setAnswer(data?.error || text || "Request failed.", data?.sources || data?.reference_sources || []);
+        return;
+      }
+
+      // Normalize response shapes:
+      const answer =
+        data?.answer ??
+        data?.response ??
+        data?.text ??
+        (typeof data === "string" ? data : "");
+
+      const sources =
+        data?.sources ??
+        data?.reference_sources ??
+        data?.references ??
+        data?.ReferenceSources ??
+        data?.["Reference Sources"] ??
+        [];
+
+      const verdict = data?.verdict || data?.Verdict || (res.ok ? "OK" : "ERROR");
+      setStatus(verdict === "OK" ? "OK" : "Done", verdict === "OK" ? "ok" : "warn", "");
+
+      setAnswer(answer, sources);
+
+    }catch(err){
+      setStatus("Error", "bad", "Network / Worker error");
+      setAnswer(String(err || "Unknown error"), []);
+    }
+  }
+
+  // init
   loadCatalog();
+  checkWorker();
+  setStatus("Idle", "warn", "");
 </script>
+
 </body>
 </html>
-
