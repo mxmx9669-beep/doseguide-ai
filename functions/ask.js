@@ -259,6 +259,7 @@ const MODEL = "gpt-4o-mini";
       .filter(Boolean)
       .join("\n");
 
+    // ✅ الإصلاح: استخدام text.format بدلاً من response_format
     const schema = {
       type: "json_schema",
       json_schema: {
@@ -293,14 +294,14 @@ const MODEL = "gpt-4o-mini";
     };
 
     const r = await openaiFetch("/responses", {
-  model: MODEL,
-  input: [
-    { role: "system", content: system },
-    { role: "system", content: style },
-    { role: "user", content: userPrompt },
-  ],
-  text: { format: schema },  // ✅ صح
-});
+      model: MODEL,
+      input: [
+        { role: "system", content: system },
+        { role: "system", content: style },
+        { role: "user", content: userPrompt },
+      ],
+      text: { format: schema }, // ✅ تم الإصلاح: كان response_format: schema
+    });
 
     if (!r.ok) return { ok: false, error: r.data };
 
