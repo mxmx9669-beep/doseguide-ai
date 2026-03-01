@@ -1,1165 +1,423 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide AI — Clinical Intelligence System</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+  <title>DoseGuide AI</title>
   <style>
     :root {
-      --navy:    #04101e;
-      --navy2:   #071828;
-      --navy3:   #0b2238;
-      --teal:    #0ea5a0;
-      --teal2:   #14cec8;
-      --teal3:   #5eedea;
-      --gold:    #c9a84c;
-      --gold2:   #e8c96d;
-      --cream:   #f0ede6;
-      --white:   #ffffff;
-      --muted:   #7a9ab5;
-      --border:  rgba(14,165,160,0.18);
-      --border2: rgba(14,165,160,0.10);
-      --ok:      #10b981;
-      --warn:    #f59e0b;
-      --bad:     #ef4444;
-      --card-bg: rgba(7,24,40,0.82);
-      --glass:   rgba(255,255,255,0.04);
-      --shadow:  0 32px 80px rgba(0,0,0,0.5);
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --accent: #0f172a;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Sora', sans-serif;
-      background: var(--navy);
-      color: var(--cream);
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    /* ── Background ── */
-    .bg-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .bg-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(14,165,160,0.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(14,165,160,0.055) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
-    }
-
-    .bg-glow1 {
-      position: absolute;
-      width: 900px; height: 600px;
-      top: -200px; left: -300px;
-      background: radial-gradient(ellipse, rgba(14,165,160,0.12) 0%, transparent 70%);
-      animation: drift1 18s ease-in-out infinite;
-    }
-    .bg-glow2 {
-      position: absolute;
-      width: 700px; height: 700px;
-      bottom: -200px; right: -200px;
-      background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
-      animation: drift2 22s ease-in-out infinite;
-    }
-    .bg-glow3 {
-      position: absolute;
-      width: 400px; height: 400px;
-      top: 40%; left: 60%;
-      background: radial-gradient(ellipse, rgba(14,165,160,0.07) 0%, transparent 70%);
-      animation: drift3 15s ease-in-out infinite;
-    }
-
-    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
-    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,-50px)} }
-    @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,30px)} }
-
-    /* Scan lines */
-    .bg-scan {
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(0,0,0,0.07) 3px,
-        rgba(0,0,0,0.07) 4px
-      );
-      pointer-events: none;
-    }
-
-    /* ── Layout ── */
-    .wrap {
-      position: relative;
-      z-index: 1;
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
-    }
-
-    /* ── Header ── */
-    header {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 20px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 48px;
-      gap: 20px;
-      flex-wrap: wrap;
+      justify-content: center;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .brand-icon {
-      position: relative;
-      width: 56px; height: 56px;
-      flex-shrink: 0;
-    }
-
-    .brand-icon svg {
-      width: 100%; height: 100%;
-    }
-
-    .brand-icon::after {
-      content: '';
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 1px solid rgba(14,165,160,0.3);
-      animation: pulse-ring 2.5s ease-out infinite;
-    }
-
-    @keyframes pulse-ring {
-      0% { transform: scale(1); opacity: 0.6; }
-      100% { transform: scale(1.5); opacity: 0; }
-    }
-
-    .brand-text h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 28px;
-      letter-spacing: 0.3px;
-      color: var(--white);
-      line-height: 1;
-    }
-
-    .brand-text h1 span {
-      color: var(--teal2);
-    }
-
-    .brand-text p {
-      margin-top: 5px;
-      font-size: 11.5px;
-      font-weight: 500;
-      color: var(--muted);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    /* Status badge */
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 18px;
-      border-radius: 99px;
-      border: 1px solid var(--border);
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-      transition: all 0.3s;
-    }
-
-    .status-badge.ok { border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
-    .status-badge.bad { border-color: rgba(239,68,68,0.3); color: #fca5a5; }
-
-    .badge-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--warn);
-      flex-shrink: 0;
-    }
-    .badge-dot.ok { background: var(--ok); box-shadow: 0 0 10px rgba(16,185,129,0.7); animation: blink 2s ease-in-out infinite; }
-    .badge-dot.bad { background: var(--bad); }
-
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    /* ── Divider ── */
-    .divider {
+    .container {
       width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--teal) 30%, var(--gold) 70%, transparent);
-      margin-bottom: 36px;
-      opacity: 0.35;
-    }
-
-    /* ── Main card ── */
-    .card {
+      max-width: 900px;
       background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 36px;
-      backdrop-filter: blur(20px);
-      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
-      position: relative;
-      overflow: hidden;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     }
 
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--teal2), var(--gold2), transparent);
-      opacity: 0.7;
-    }
-
-    /* Corner decorations */
-    .corner {
-      position: absolute;
-      width: 30px; height: 30px;
-      opacity: 0.4;
-    }
-    .corner-tl { top: 16px; left: 16px; border-top: 1.5px solid var(--teal); border-left: 1.5px solid var(--teal); border-radius: 4px 0 0 0; }
-    .corner-tr { top: 16px; right: 16px; border-top: 1.5px solid var(--teal); border-right: 1.5px solid var(--teal); border-radius: 0 4px 0 0; }
-    .corner-bl { bottom: 16px; left: 16px; border-bottom: 1.5px solid var(--teal); border-left: 1.5px solid var(--teal); border-radius: 0 0 0 4px; }
-    .corner-br { bottom: 16px; right: 16px; border-bottom: 1.5px solid var(--teal); border-right: 1.5px solid var(--teal); border-radius: 0 0 4px 0; }
-
-    /* ── Section label ── */
-    .section-label {
+    h1 {
+      font-size: 1.5rem;
+      margin-top: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .section-label::before {
-      content: '';
-      width: 3px; height: 18px;
-      background: linear-gradient(to bottom, var(--teal2), var(--gold));
-      border-radius: 2px;
-    }
-
-    .section-label span {
-      font-size: 10.5px;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--teal3);
-    }
-
-    /* ── Controls grid ── */
-    .controls-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
       gap: 8px;
     }
 
-    .field label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
+    /* Configuration Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
     }
 
-    select, textarea {
-      width: 100%;
-      background: rgba(4,16,30,0.7);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--cream);
-      font-family: 'Sora', sans-serif;
-      font-size: 13.5px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      appearance: none;
-      -webkit-appearance: none;
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
     }
 
-    select {
-      padding: 12px 36px 12px 14px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230ea5a0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      cursor: pointer;
-    }
-
-    select option { background: #071828; }
-
-    select:focus, textarea:focus {
-      border-color: rgba(14,165,160,0.5);
-      box-shadow: 0 0 0 3px rgba(14,165,160,0.12), 0 0 20px rgba(14,165,160,0.08);
-    }
-
-    /* ── Mode selector ── */
-    .modes-row {
+    label {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-
-    .modes-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .seg {
-      display: flex;
-      background: rgba(4,16,30,0.6);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 5px;
       gap: 4px;
     }
 
-    .seg button {
-      border: 0;
-      background: transparent;
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-      font-family: 'Sora', sans-serif;
-      letter-spacing: 0.3px;
+    select, textarea {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline-color: var(--primary);
     }
 
-    .seg button.active {
-      background: linear-gradient(135deg, rgba(14,165,160,0.25), rgba(14,165,160,0.12));
-      color: var(--teal3);
-      border: 1px solid rgba(14,165,160,0.3);
-      box-shadow: 0 4px 12px rgba(14,165,160,0.15);
-    }
-
-    .seg button:hover:not(.active) {
-      color: var(--cream);
-      background: rgba(255,255,255,0.04);
-    }
-
-    /* ── Textarea ── */
-    .question-wrap {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    textarea {
-      padding: 16px 18px;
-      min-height: 130px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-
-    .char-count {
-      position: absolute;
-      bottom: 12px;
-      right: 14px;
-      font-size: 11px;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-      pointer-events: none;
-    }
-
-    /* ── Actions ── */
-    .actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .btn {
+    /* Tooltip Logic */
+    .help-icon {
+      cursor: help;
+      background: var(--border);
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 13px 24px;
-      border-radius: 13px;
-      font-size: 14px;
-      font-weight: 700;
-      font-family: 'Sora', sans-serif;
-      cursor: pointer;
-      border: 0;
-      transition: all 0.22s;
-      letter-spacing: 0.2px;
-      position: relative;
-      overflow: hidden;
+      justify-content: center;
+      font-size: 10px;
     }
 
-    .btn::after {
-      content: '';
+    .help-icon:hover::after {
+      content: attr(data-tip);
       position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .btn:hover::after { opacity: 1; }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--teal), #0891b2);
-      color: var(--white);
-      box-shadow: 0 8px 24px rgba(14,165,160,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 32px rgba(14,165,160,0.4);
+      top: 25px;
+      left: 0;
+      z-index: 10;
+      background: var(--accent);
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      width: 220px;
+      font-weight: normal;
+      line-height: 1.4;
     }
 
-    .btn-primary:active { transform: translateY(0); }
-
-    .btn-primary.loading {
-      pointer-events: none;
-      opacity: 0.8;
+    /* Mode Buttons */
+    .mode-container {
+      display: flex;
+      gap: 8px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 8px;
     }
 
-    .btn-ghost {
+    .mode-btn {
+      flex: 1;
+      border: none;
       background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: 0.2s;
     }
-    .btn-ghost:hover { border-color: rgba(14,165,160,0.35); color: var(--teal3); }
 
-    /* Spinner */
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+    .mode-btn.active {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* Interaction Area */
+    .input-area { margin-top: 24px; }
+    textarea {
+      width: 100%;
+      height: 120px;
+      box-sizing: border-box;
+      resize: vertical;
+      margin-bottom: 12px;
+    }
+
+    .actions { display: flex; gap: 12px; }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 2;
+    }
+    .btn-secondary {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Results Panel */
+    #resultPanel {
+      margin-top: 32px;
+      border-top: 2px solid var(--bg);
+      padding-top: 24px;
       display: none;
     }
-    .btn-primary.loading .spinner { display: block; }
-    .btn-primary.loading .btn-icon { display: none; }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Keyboard shortcut hint */
-    .shortcut-hint {
-      font-size: 11.5px;
-      color: var(--muted);
-      margin-left: auto;
-    }
-
-    .kbd {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 3px 7px;
-      border-radius: 5px;
-      border: 1px solid rgba(122,154,181,0.3);
-      background: rgba(4,16,30,0.5);
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-    }
-
-    /* ── Separator ── */
-    .sep {
-      height: 1px;
-      background: var(--border2);
-      margin: 28px 0;
-    }
-
-    /* ── Query status ── */
-    .query-status {
+    .status-bar {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 18px;
-      border-radius: 12px;
-      border: 1px solid var(--border2);
-      background: rgba(4,16,30,0.4);
-      margin-bottom: 20px;
-      transition: all 0.3s;
-    }
-
-    .query-status.ok {
-      border-color: rgba(16,185,129,0.2);
-      background: rgba(16,185,129,0.05);
-    }
-
-    .query-status.bad {
-      border-color: rgba(239,68,68,0.2);
-      background: rgba(239,68,68,0.05);
-    }
-
-    .query-status.loading {
-      border-color: rgba(14,165,160,0.2);
-      background: rgba(14,165,160,0.05);
-    }
-
-    .q-dot {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      background: var(--warn);
-      flex-shrink: 0;
-    }
-    .query-status.ok .q-dot { background: var(--ok); box-shadow: 0 0 8px rgba(16,185,129,0.6); }
-    .query-status.bad .q-dot { background: var(--bad); }
-    .query-status.loading .q-dot {
-      background: var(--teal2);
-      animation: blink 0.8s ease-in-out infinite;
-    }
-
-    .q-text {
-      font-size: 12.5px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    .q-verdict {
-      margin-left: auto;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .query-status.ok .q-verdict { color: var(--ok); }
-    .query-status.bad .q-verdict { color: var(--bad); }
-
-    /* ── Output panels ── */
-    .out-grid {
-      display: grid;
-      gap: 16px;
-    }
-
-    .panel {
-      background: rgba(4,16,30,0.6);
-      border: 1px solid var(--border2);
-      border-radius: 18px;
-      overflow: hidden;
-      transition: border-color 0.3s;
-    }
-
-    .panel:hover { border-color: rgba(14,165,160,0.2); }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border2);
-      background: rgba(7,24,40,0.5);
-    }
-
-    .panel-title {
-      display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--teal3);
+      margin-bottom: 16px;
+      font-size: 0.85rem;
     }
 
-    .panel-icon {
-      font-size: 14px;
-    }
+    .badge { padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+    .badge-locked { background: #fee2e2; color: #991b1b; }
 
-    .panel-body {
+    .verdict-box {
+      background: #eff6ff;
       padding: 20px;
-    }
-
-    /* Answer */
-    .answer-text {
-      font-size: 14.5px;
-      line-height: 1.75;
-      color: #d4e8f0;
-      white-space: pre-wrap;
-      font-weight: 300;
-    }
-
-    .answer-text.empty {
-      color: var(--muted);
-      font-style: italic;
-    }
-
-    /* Copy button */
-    .copy-btn {
-      background: transparent;
-      border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 5px 12px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      font-family: 'Sora', sans-serif;
-      transition: all 0.2s;
-      letter-spacing: 0.5px;
-    }
-    .copy-btn:hover { border-color: var(--teal); color: var(--teal3); }
-
-    /* Sources */
-    .sources-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .source-card {
-      border: 1px solid var(--border2);
-      border-radius: 14px;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .source-card:hover {
-      border-color: rgba(14,165,160,0.25);
-      transform: translateX(3px);
-    }
-
-    .source-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(7,24,40,0.6);
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .source-name {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: var(--cream);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .source-name::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--teal2);
-      flex-shrink: 0;
-    }
-
-    .source-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .meta-chip {
-      font-family: 'DM Mono', monospace;
-      font-size: 10.5px;
-      color: var(--muted);
-      padding: 3px 9px;
-      border-radius: 6px;
-      background: rgba(14,165,160,0.08);
-      border: 1px solid rgba(14,165,160,0.15);
-    }
-
-    .source-excerpt {
-      padding: 12px 16px;
-      font-size: 12.5px;
-      color: #8daec2;
-      line-height: 1.65;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 20px;
       white-space: pre-wrap;
-      font-weight: 300;
-      border-top: 1px solid var(--border2);
     }
 
-    .empty-hint {
-      font-size: 13px;
-      color: var(--muted);
-      font-style: italic;
-      text-align: center;
-      padding: 20px 0;
+    .source-section {
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1px dashed var(--border);
+      white-space: pre-wrap;
     }
 
-    /* ── Footer ── */
-    footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 40px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .footer-brand {
-      font-family: 'DM Serif Display', serif;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .footer-brand span { color: var(--teal3); }
-
-    .footer-disclaimer {
-      font-size: 10.5px;
-      color: rgba(122,154,181,0.6);
-      letter-spacing: 0.5px;
-      text-align: right;
-      max-width: 400px;
-    }
-
-    /* ── Animations ── */
-    .fade-in {
-      animation: fadeIn 0.4s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 760px) {
-      .controls-grid { grid-template-columns: 1fr; }
-      header { flex-direction: column; align-items: flex-start; }
-      .card { padding: 22px 18px; }
-      .shortcut-hint { display: none; }
-      .actions { flex-wrap: wrap; }
-    }
-
-    @media (max-width: 500px) {
-      .seg { flex-wrap: wrap; }
-    }
+    .source-title { font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
   </style>
 </head>
-
 <body>
 
-  <!-- Background layers -->
-  <div class="bg-canvas">
-    <div class="bg-grid"></div>
-    <div class="bg-glow1"></div>
-    <div class="bg-glow2"></div>
-    <div class="bg-glow3"></div>
-    <div class="bg-scan"></div>
-  </div>
+<div class="container">
+  <h1>💊 DoseGuide AI</h1>
 
-  <div class="wrap">
-
-    <!-- Header -->
-    <header>
-      <div class="brand">
-        <div class="brand-icon">
-          <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="28" cy="28" r="27" stroke="url(#ring)" stroke-width="1.5"/>
-            <rect x="22" y="14" width="12" height="28" rx="4" fill="url(#cross1)"/>
-            <rect x="14" y="22" width="28" height="12" rx="4" fill="url(#cross2)"/>
-            <circle cx="28" cy="28" r="4" fill="#0b2238"/>
-            <circle cx="28" cy="28" r="2.5" fill="url(#center)"/>
-            <defs>
-              <linearGradient id="ring" x1="0" y1="0" x2="56" y2="56">
-                <stop offset="0%" stop-color="#0ea5a0"/>
-                <stop offset="100%" stop-color="#c9a84c"/>
-              </linearGradient>
-              <linearGradient id="cross1" x1="22" y1="14" x2="34" y2="42" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#0ea5a0" stop-opacity="0.9"/>
-                <stop offset="100%" stop-color="#14cec8" stop-opacity="0.6"/>
-              </linearGradient>
-              <linearGradient id="cross2" x1="14" y1="22" x2="42" y2="34" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#14cec8" stop-opacity="0.6"/>
-                <stop offset="100%" stop-color="#0ea5a0" stop-opacity="0.9"/>
-              </linearGradient>
-              <radialGradient id="center">
-                <stop offset="0%" stop-color="#e8c96d"/>
-                <stop offset="100%" stop-color="#c9a84c"/>
-              </radialGradient>
-            </defs>
-          </svg>
-        </div>
-
-        <div class="brand-text">
-          <h1>Dose<span>Guide</span> AI</h1>
-          <p>Clinical Intelligence · Evidence-Bound · Vector Retrieval</p>
-        </div>
-      </div>
-
-      <div class="status-badge" id="workerBadge">
-        <span class="badge-dot" id="workerDot"></span>
-        <span id="workerText">System · Checking…</span>
-      </div>
-    </header>
-
-    <div class="divider"></div>
-
-    <!-- Main Card -->
-    <div class="card">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
-
-      <!-- Query Parameters -->
-      <div class="section-label"><span>Query Parameters</span></div>
-
-      <div class="controls-grid">
-        <div class="field">
-          <label for="topic">Drug / Topic</label>
-          <select id="topic">
-            <option value="">(Optional) — All Topics</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="language">Response Language</label>
-          <select id="language">
-            <option value="English">English</option>
-            <option value="Arabic">Arabic (العربية)</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="answerStyle">Answer Style</label>
-          <select id="answerStyle">
-            <option value="Recommended">Recommended</option>
-            <option value="Bullet">Bullet Points</option>
-            <option value="Detailed">Detailed</option>
-            <option value="Strict">Strict — Citations Required</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Output Mode -->
-      <div class="modes-row">
-        <span class="modes-label">Output Mode</span>
-        <div class="seg" aria-label="Output mode selector">
-          <button type="button" class="active" data-mode="Hybrid">⚡ Hybrid</button>
-          <button type="button" data-mode="Short">Short</button>
-          <button type="button" data-mode="Verbatim">Verbatim</button>
-          <button type="button" data-mode="Source Only">Source Only</button>
-        </div>
-      </div>
-
-      <!-- Question -->
-      <div class="section-label"><span>Clinical Question</span></div>
-      <div class="question-wrap">
-        <textarea
-          id="question"
-          placeholder="Enter a clinical question — dosing, contraindications, monitoring parameters, drug interactions, renal/hepatic adjustments…"
-        ></textarea>
-        <span class="char-count" id="charCount">0</span>
-      </div>
-
-      <!-- Actions -->
-      <div class="actions">
-        <button class="btn btn-primary" id="askBtn" type="button">
-          <span class="btn-icon">🔎</span>
-          <span class="spinner"></span>
-          Ask DoseGuide
-        </button>
-        <button class="btn btn-ghost" id="clearBtn" type="button">
-          ✕ Clear
-        </button>
-        <span class="shortcut-hint">
-          Submit with <span class="kbd">⌘</span><span class="kbd">↵</span>
-        </span>
-      </div>
-
-      <div class="sep"></div>
-
-      <!-- Query Status -->
-      <div class="query-status" id="queryStatus">
-        <span class="q-dot" id="qDot"></span>
-        <span class="q-text" id="qText">Awaiting query — enter a clinical question above</span>
-        <span class="q-verdict" id="qVerdict"></span>
-      </div>
-
-      <!-- Output -->
-      <div class="out-grid" id="outGrid">
-
-        <!-- Answer Panel -->
-        <div class="panel fade-in">
-          <div class="panel-header">
-            <div class="panel-title">
-              <span class="panel-icon">📋</span>
-              Clinical Response
-            </div>
-            <button class="copy-btn" id="copyBtn" type="button">Copy</button>
-          </div>
-          <div class="panel-body">
-            <div class="answer-text empty" id="answerBox">Response will appear here after submitting a query.</div>
-          </div>
-        </div>
-
-        <!-- Sources Panel -->
-        <div class="panel fade-in">
-          <div class="panel-header">
-            <div class="panel-title">
-              <span class="panel-icon">📚</span>
-              Reference Sources
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="sources-list" id="sourcesBox">
-              <p class="empty-hint">No sources retrieved yet.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
+  <div class="controls-grid">
+    <div class="form-group">
+      <label>Drug/Topic</label>
+      <select id="drug">
+        <option value="warfarin">Warfarin</option>
+        <option value="insulin">Insulin</option>
+        <option value="amoxicillin">Amoxicillin</option>
+      </select>
     </div>
 
-    <!-- Footer -->
-    <footer>
-      <div class="footer-brand">Dose<span>Guide</span> AI · Clinical Engine</div>
-      <div class="footer-disclaimer">
-        For professional clinical reference only. Always verify dosing with current prescribing information and institutional protocols.
-      </div>
-    </footer>
+    <div class="form-group">
+      <label>Language</label>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="ar">Arabic</option>
+      </select>
+    </div>
 
+    <div class="form-group">
+      <label>
+        Answer Style
+        <span class="help-icon"
+              data-tip="Recommended: Balanced for clinical use. Bullet: Quick scan. Detailed: More depth with caveats.">?</span>
+      </label>
+      <select id="answer_style">
+        <option value="Recommended">Recommended</option>
+        <option value="Bullet">Bullet</option>
+        <option value="Detailed">Detailed</option>
+      </select>
+    </div>
   </div>
 
+  <div class="form-group">
+    <label>
+      Output Mode
+      <span class="help-icon"
+            data-tip="Hybrid: Explanation + quotes. Short: concise. Verbatim: direct quotes only. Source: citations focus.">?</span>
+    </label>
+    <div class="mode-container" id="modeGroup">
+      <button type="button" class="mode-btn active" onclick="setMode('Hybrid')">Hybrid</button>
+      <button type="button" class="mode-btn" onclick="setMode('Short')">Short</button>
+      <button type="button" class="mode-btn" onclick="setMode('Verbatim')">Verbatim</button>
+      <button type="button" class="mode-btn" onclick="setMode('Source')">Source</button>
+    </div>
+    <input type="hidden" id="output_mode" value="Hybrid" />
+  </div>
+
+  <div class="input-area">
+    <div class="form-group">
+      <label>Your Question</label>
+      <textarea id="question" placeholder="e.g. What is the loading dose for a patient with renal impairment?"></textarea>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" onclick="handleAsk()">Ask DoseGuide</button>
+      <button class="btn-secondary" onclick="handleClear()">Clear</button>
+    </div>
+  </div>
+
+  <div id="resultPanel">
+    <div class="status-bar">
+      <div>Status: <span id="statusText" style="font-weight:600">Ready</span></div>
+      <div id="lockedIndicator" class="badge badge-locked" style="display:none">🔒 Protocol Locked</div>
+    </div>
+
+    <div class="verdict-box">
+      <div style="font-weight:600; margin-bottom:8px;">Verdict</div>
+      <div id="verdictContent">Waiting for query...</div>
+    </div>
+
+    <div class="source-section">
+      <div class="source-title">Reference Sources</div>
+      <div id="sourceContent">No references cited yet.</div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ── State ──
-  let outputMode = "Hybrid";
+  /******************************************************************
+   * ✅ IMPORTANT: Put your Cloudflare Worker base URL here
+   * مثال:
+   * const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
+   ******************************************************************/
+  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
 
-  // ── Mode selector ──
-  document.querySelectorAll(".seg button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".seg button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      outputMode = btn.dataset.mode || "Hybrid";
-    });
-  });
+  // Optional: endpoints
+  const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
+  const HEALTH_ENDPOINT = `${WORKER_BASE}/health`;
 
-  // ── Char counter ──
-  const questionEl = document.getElementById("question");
-  const charCount  = document.getElementById("charCount");
-  questionEl.addEventListener("input", () => {
-    charCount.textContent = questionEl.value.length;
-  });
-
-  // ── Clear ──
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    questionEl.value = "";
-    charCount.textContent = "0";
-    setQueryStatus("idle", "Awaiting query — enter a clinical question above", "");
-    setAnswer("", []);
-  });
-
-  // ── Copy ──
-  document.getElementById("copyBtn").addEventListener("click", () => {
-    const txt = document.getElementById("answerBox").textContent;
-    if (txt && txt !== "Response will appear here after submitting a query.") {
-      navigator.clipboard.writeText(txt).then(() => {
-        const btn = document.getElementById("copyBtn");
-        btn.textContent = "Copied!";
-        setTimeout(() => btn.textContent = "Copy", 2000);
-      });
-    }
-  });
-
-  // ── Status helpers ──
-  function setQueryStatus(type, text, verdict) {
-    const el   = document.getElementById("queryStatus");
-    const dot  = document.getElementById("qDot");
-    const qtxt = document.getElementById("qText");
-    const qv   = document.getElementById("qVerdict");
-    el.classList.remove("ok", "bad", "loading");
-    if (type) el.classList.add(type);
-    qtxt.textContent = text || "";
-    qv.textContent   = verdict || "";
+  function setMode(val) {
+    document.getElementById('output_mode').value = val;
+    const buttons = document.querySelectorAll('.mode-btn');
+    buttons.forEach(btn => btn.classList.toggle('active', btn.innerText === val));
   }
 
-  function setWorker(ok, msg) {
-    const dot  = document.getElementById("workerDot");
-    const txt  = document.getElementById("workerText");
-    const badge = document.getElementById("workerBadge");
-    dot.classList.remove("ok", "bad");
-    dot.classList.add(ok ? "ok" : "bad");
-    badge.classList.remove("ok", "bad");
-    badge.classList.add(ok ? "ok" : "bad");
-    txt.textContent = ok ? "System · Online" : ("System · " + (msg || "Offline"));
+  function handleClear() {
+    document.getElementById('question').value = '';
+    document.getElementById('resultPanel').style.display = 'none';
+    document.getElementById('statusText').innerText = "Ready";
+    document.getElementById('lockedIndicator').style.display = 'none';
   }
 
-  // ── Render answer & sources ──
-  function setAnswer(answerText, sources) {
-    const abox  = document.getElementById("answerBox");
-    const sbox  = document.getElementById("sourcesBox");
-
-    const hasAnswer = answerText && String(answerText).trim();
-    abox.textContent = hasAnswer ? String(answerText).trim() : "Response will appear here after submitting a query.";
-    abox.classList.toggle("empty", !hasAnswer);
-
-    sbox.innerHTML = "";
-    if (!sources || !Array.isArray(sources) || sources.length === 0) {
-      const p = document.createElement("p");
-      p.className = "empty-hint";
-      p.textContent = "No reference sources returned.";
-      sbox.appendChild(p);
-      return;
-    }
-
-    sources.forEach((src, i) => {
-      const card = document.createElement("div");
-      card.className = "source-card fade-in";
-      card.style.animationDelay = `${i * 60}ms`;
-
-      const pg = (src.page === 0 || src.page) ? src.page : null;
-      const ids = (src.evidence_ids || []).join(", ") || "—";
-
-      card.innerHTML = `
-        <div class="source-head">
-          <div class="source-name">${src.filename || "Unknown file"}</div>
-          <div class="source-meta">
-            ${ids !== "—" ? `<span class="meta-chip">EV: ${ids}</span>` : ""}
-            ${pg !== null ? `<span class="meta-chip">p.${pg}</span>` : ""}
-          </div>
-        </div>
-        <div class="source-excerpt">${src.excerpt || ""}</div>
-      `;
-
-      sbox.appendChild(card);
-    });
+  function safeText(x) {
+    if (x === null || x === undefined) return "";
+    if (typeof x === "string") return x;
+    try { return JSON.stringify(x, null, 2); } catch { return String(x); }
   }
 
-  // ── Load catalog ──
-  async function loadCatalog() {
-    const sel = document.getElementById("topic");
-    const urls = ["/catalog", "/topics", "/drug_catalog"];
-    for (const u of urls) {
-      try {
-        const r = await fetch(u, { method: "GET" });
-        if (!r.ok) continue;
-        const data = await r.json();
-        const items = Array.isArray(data) ? data : (data.items || data.catalog || []);
-        if (!Array.isArray(items) || items.length === 0) continue;
-        sel.innerHTML = `<option value="">(Optional) — All Topics</option>`;
-        items.forEach(x => {
-          const opt = document.createElement("option");
-          opt.value = String(x);
-          opt.textContent = String(x);
-          sel.appendChild(opt);
-        });
-        return;
-      } catch(e) {}
-    }
+  // Accept many worker response shapes
+  function normalizeWorkerResponse(data) {
+    // Common patterns:
+    // { ok, result:{text,sources,locked,status} }
+    // { verdict, source, locked, status }
+    // { answer, sources }
+    // { reply, citations }
+    const locked =
+      Boolean(data.locked) ||
+      Boolean(data.protocol_locked) ||
+      Boolean(data?.result?.locked) ||
+      Boolean(data?.result?.protocol_locked);
+
+    const status =
+      data.status ||
+      data?.result?.status ||
+      (data.ok === false ? "ERROR" : "OK");
+
+    const verdict =
+      data.verdict ||
+      data.answer ||
+      data.reply ||
+      data.text ||
+      data?.result?.verdict ||
+      data?.result?.answer ||
+      data?.result?.reply ||
+      data?.result?.text ||
+      "";
+
+    const source =
+      data.source ||
+      data.sources ||
+      data.citations ||
+      data?.result?.source ||
+      data?.result?.sources ||
+      data?.result?.citations ||
+      "";
+
+    return { locked, status, verdict, source };
   }
 
-  // ── Health check ──
-  async function checkWorker() {
-    try {
-      const r = await fetch("/api/ask?health=1", { method: "GET" });
-      if (r.ok || r.status === 204) { setWorker(true); return; }
-    } catch(e) {}
-    // Try OPTIONS fallback
-    try {
-      const r = await fetch("/api/ask", { method: "OPTIONS" });
-      if (r.ok || r.status === 204) { setWorker(true); return; }
-    } catch(e) {}
-    setWorker(false, "Unreachable");
-  }
-
-  // ── Ask handler ──
-  document.getElementById("askBtn").addEventListener("click", askDoseGuide);
-  questionEl.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") askDoseGuide();
-  });
-
-  async function askDoseGuide() {
-    const q           = questionEl.value.trim();
-    const topic       = document.getElementById("topic").value;
-    const language    = document.getElementById("language").value;
-    const answerStyle = document.getElementById("answerStyle").value;
-
-    if (!q) {
-      setQueryStatus("bad", "Please enter a clinical question before submitting.", "ERROR");
-      return;
-    }
-
-    const askBtn = document.getElementById("askBtn");
-    askBtn.classList.add("loading");
-    setQueryStatus("loading", "Retrieving evidence from vector store…", "");
-    setAnswer("", []);
-
+  async function handleAsk() {
     const payload = {
-      question: q,
-      q,
-      topic: topic || null,
-      drug:  topic || null,
-      language,
-      answer_style: answerStyle,
-      style: answerStyle,
-      output_mode: outputMode,
-      mode: outputMode
+      drug: document.getElementById('drug').value,
+      language: document.getElementById('language').value,
+      answer_style: document.getElementById('answer_style').value,
+      output_mode: document.getElementById('output_mode').value,
+      question: document.getElementById('question').value
     };
 
+    if (!payload.question || !payload.question.trim()) {
+      alert("Please enter a question.");
+      return;
+    }
+
+    // UI state update
+    document.getElementById('statusText').innerText = "Analyzing...";
+    document.getElementById('resultPanel').style.display = 'block';
+    document.getElementById('verdictContent').innerText = "Working...";
+    document.getElementById('sourceContent').innerText = "—";
+    document.getElementById('lockedIndicator').style.display = 'none';
+
     try {
-      const res  = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      // Quick check (optional) - you can comment it if you want
+      // await fetch(HEALTH_ENDPOINT, { method: "GET" });
+
+      const response = await fetch(ASK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      const raw  = await res.text();
-      let data   = null;
-      try { data = JSON.parse(raw); } catch(_) {}
-
-      askBtn.classList.remove("loading");
-
-      if (!res.ok) {
-        setQueryStatus("bad", `Request failed — HTTP ${res.status}`, "FAILED");
-        setAnswer(data?.error || raw || "Request failed.", []);
+      // If server returns non-JSON error
+      const contentType = response.headers.get("content-type") || "";
+      if (!response.ok) {
+        const errText = contentType.includes("application/json")
+          ? safeText(await response.json())
+          : safeText(await response.text());
+        document.getElementById('statusText').innerText = `HTTP ${response.status}`;
+        document.getElementById('verdictContent').innerText =
+          `Request failed.\n\nEndpoint: ${ASK_ENDPOINT}\n\n${errText}`;
+        document.getElementById('sourceContent').innerText = "—";
         return;
       }
 
-      const answer = data?.answer ?? data?.response ?? data?.text ?? (typeof data === "string" ? data : "");
-      const sources = data?.sources ?? data?.citations ?? data?.reference_sources ?? data?.references ?? [];
-      const verdict = data?.verdict || (res.ok ? "OK" : "ERROR");
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : { verdict: await response.text(), status: "OK", locked: false, source: "" };
 
-      if (verdict === "OK") {
-        setQueryStatus("ok", "Evidence retrieved and answer generated successfully.", "OK");
-      } else {
-        setQueryStatus("idle", "Query processed — no matching evidence found in vector store.", "NOT FOUND");
-      }
+      const out = normalizeWorkerResponse(data);
 
-      setAnswer(answer, sources);
+      // Render results
+      document.getElementById('verdictContent').innerText = safeText(out.verdict) || "No answer returned.";
+      document.getElementById('statusText').innerText = safeText(out.status) || "OK";
+      document.getElementById('sourceContent').innerText = safeText(out.source) || "No references returned.";
+      document.getElementById('lockedIndicator').style.display = out.locked ? 'block' : 'none';
 
-    } catch(err) {
-      document.getElementById("askBtn").classList.remove("loading");
-      setQueryStatus("bad", "Network error — could not reach the worker.", "ERROR");
-      setAnswer(String(err || "Unknown error"), []);
+    } catch (error) {
+      document.getElementById('statusText').innerText = "Error fetching response.";
+      document.getElementById('verdictContent').innerText =
+        `Network/CORS error.\n\nEndpoint: ${ASK_ENDPOINT}\n\n` +
+        `Details: ${error?.message || error}`;
+      document.getElementById('sourceContent').innerText = "—";
     }
   }
-
-  // ── Init ──
-  loadCatalog();
-  checkWorker();
 </script>
 
 </body>
