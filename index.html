@@ -6,60 +6,118 @@
   <title>DoseGuide AI</title>
   <style>
     :root{
-      --bg:#f6f8fb; --card:#fff; --text:#0f172a; --muted:#64748b;
+      --bg:#f0f4ff; --card:#fff; --text:#0f172a; --muted:#64748b;
       --pri:#2563eb; --line:#e2e8f0; --ok:#16a34a; --bad:#dc2626;
       --shadow:0 18px 45px rgba(2,6,23,.08);
+      --ok-bg:#f0fdf4; --ok-border:#bbf7d0;
+      --cite-bg:#f8faff; --cite-border:#dbeafe;
     }
     *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
     body{margin:0;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:22px}
-    .title{display:flex;align-items:center;gap:10px;font-size:28px;font-weight:800;margin:0 0 16px}
-    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px}
+    .wrap{max-width:900px;margin:0 auto;padding:28px 18px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:28px}
+    .title{display:flex;align-items:center;gap:10px;font-size:26px;font-weight:800;margin:0 0 20px}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 12px;border-radius:999px;color:var(--muted);font-size:12px;font-weight:600}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+    label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.5px}
     select,textarea{
-      width:100%;border:1px solid var(--line);border-radius:12px;
-      padding:12px;background:#fff;font-size:14px;outline:none
+      width:100%;border:1.5px solid var(--line);border-radius:12px;
+      padding:11px 14px;background:#fff;font-size:14px;outline:none;
+      transition:border .2s;color:var(--text)
     }
-    textarea{min-height:140px;resize:vertical}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+    select:focus,textarea:focus{border-color:var(--pri)}
+    textarea{min-height:120px;resize:vertical;line-height:1.6}
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
     .btn{
-      border:0;border-radius:12px;padding:12px 14px;
-      background:var(--pri);color:#fff;font-weight:700;cursor:pointer;min-width:180px
+      border:0;border-radius:12px;padding:13px 28px;
+      background:var(--pri);color:#fff;font-weight:700;cursor:pointer;font-size:15px;
+      transition:opacity .2s
     }
-    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
-    .modes{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .btn:hover{opacity:.88}
+    .btn.secondary{background:#fff;color:var(--text);border:1.5px solid var(--line)}
+    .modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .mode{
-      border:1px solid var(--line);background:#fff;border-radius:999px;
-      padding:10px 14px;cursor:pointer;font-weight:700;color:var(--muted)
+      border:1.5px solid var(--line);background:#fff;border-radius:999px;
+      padding:8px 16px;cursor:pointer;font-weight:600;color:var(--muted);font-size:13px;
+      transition:all .2s
     }
-    .mode.active{border-color:var(--pri);color:var(--pri);box-shadow:0 10px 25px rgba(37,99,235,.12)}
-    .out{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
-    .status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
-    .dot{width:10px;height:10px;border-radius:50%}
-    .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
-    pre{white-space:pre-wrap;background:#0b1220;color:#e5e7eb;padding:14px;border-radius:14px;overflow:auto}
+    .mode.active{border-color:var(--pri);color:var(--pri);background:#eff6ff}
+    .out{margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
     .small{font-size:12px;color:var(--muted)}
-    .cite{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;margin-top:10px}
-    .cite b{display:block;margin-bottom:6px}
+
+    /* ── Verdict Badge ── */
+    .verdict-badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 16px;border-radius:999px;font-weight:700;font-size:14px;
+      margin-bottom:16px
+    }
+    .verdict-badge.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)}
+    .verdict-badge.bad{background:#fef2f2;color:var(--bad);border:1px solid #fecaca}
+    .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+
+    /* ── Answer Box ── */
+    .answer-box{
+      background:#f8faff;border:1.5px solid #dbeafe;border-radius:16px;
+      padding:20px 22px;font-size:15px;line-height:1.8;color:var(--text);
+      white-space:pre-wrap;margin-bottom:20px
+    }
+
+    /* ── Citations ── */
+    .cites-title{
+      font-size:13px;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px
+    }
+    .cite{
+      border:1.5px solid var(--cite-border);border-radius:14px;
+      padding:14px 16px;background:var(--cite-bg);margin-bottom:10px
+    }
+    .cite-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+    .cite-icon{font-size:18px}
+    .cite-filename{font-weight:700;font-size:14px;color:var(--pri);flex:1}
+    .cite-page{
+      background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700;
+      padding:3px 10px;border-radius:999px
+    }
+    .cite-ids{font-size:11px;color:var(--muted);margin-bottom:8px}
+    .cite-excerpt{
+      font-size:13px;line-height:1.7;color:#334155;
+      background:#fff;border-radius:10px;padding:10px 14px;
+      border:1px solid var(--line);white-space:pre-wrap
+    }
+
+    /* ── Raw JSON toggle ── */
+    .raw-toggle{
+      margin-top:16px;cursor:pointer;font-size:12px;
+      color:var(--muted);display:flex;align-items:center;gap:6px;
+      user-select:none
+    }
+    .raw-toggle:hover{color:var(--pri)}
+    pre{
+      white-space:pre-wrap;background:#0f172a;color:#e2e8f0;
+      padding:16px;border-radius:14px;overflow:auto;
+      font-size:12px;margin-top:8px;display:none
+    }
+    pre.show{display:block}
+
+    .loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:16px 0}
+    .spinner{width:20px;height:20px;border:3px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1 class="title">💊 DoseGuide AI <span class="pill" id="healthPill">Worker: checking…</span></h1>
+      <h1 class="title">💊 DoseGuide AI <span class="pill" id="healthPill">⏳ checking…</span></h1>
 
       <div class="grid">
         <div>
-          <label>Drug/Topic (auto from your files)</label>
+          <label>Drug / Topic</label>
           <select id="drug">
             <option value="">(Optional) None</option>
           </select>
-          <div class="small" id="catalogHint" style="margin-top:6px;"></div>
+          <div class="small" id="catalogHint" style="margin-top:6px"></div>
         </div>
-
         <div>
           <label>Language</label>
           <select id="lang">
@@ -67,203 +125,203 @@
             <option value="Arabic">Arabic</option>
           </select>
         </div>
-
         <div>
           <label>Answer Style</label>
           <select id="style">
             <option value="Recommended">Recommended</option>
-            <option value="Bullet">Bullet</option>
+            <option value="Bullet">Bullet Points</option>
             <option value="Detailed">Detailed</option>
           </select>
         </div>
       </div>
 
-      <div style="margin-top:14px">
+      <div style="margin-top:16px">
         <label>Output Mode</label>
         <div class="modes">
           <button class="mode active" data-mode="Hybrid">Hybrid</button>
           <button class="mode" data-mode="Short">Short</button>
           <button class="mode" data-mode="Verbatim">Verbatim</button>
-          <button class="mode" data-mode="Source">Source</button>
+          <button class="mode" data-mode="Source">Source Only</button>
         </div>
       </div>
 
-      <div style="margin-top:14px">
+      <div style="margin-top:16px">
         <label>Your Question</label>
-        <textarea id="q" placeholder="Ask based on your uploaded PDFs..."></textarea>
+        <textarea id="q" placeholder="Ask based on your uploaded PDFs…"></textarea>
       </div>
 
       <div class="row">
-        <button class="btn" id="askBtn">Ask DoseGuide</button>
+        <button class="btn" id="askBtn">🔍 Ask DoseGuide</button>
         <button class="btn secondary" id="clearBtn">Clear</button>
       </div>
 
+      <!-- Output -->
       <div class="out" id="out" style="display:none">
-        <div class="status">
-          <span class="dot" id="dot"></span>
-          <b id="verdict">Verdict</b>
-          <span class="small" id="endpoint"></span>
-        </div>
 
+        <div id="verdictBadge"></div>
         <div id="answerBox"></div>
         <div id="citationsBox"></div>
 
-        <div style="margin-top:12px">
-          <div class="small">Raw JSON</div>
-          <pre id="raw"></pre>
-        </div>
+        <div class="raw-toggle" id="rawToggle">▶ Show Raw JSON</div>
+        <pre id="raw"></pre>
       </div>
     </div>
   </div>
 
 <script>
-  // ✅ حط هنا رابط الـ API Worker (واحد فقط)
   const WORKER_BASE = "https://lingering-mode-e7c2.mxmxx9669.workers.dev";
 
-  const elDrug = document.getElementById("drug");
-  const elLang = document.getElementById("lang");
-  const elStyle = document.getElementById("style");
-  const elQ = document.getElementById("q");
-  const elOut = document.getElementById("out");
-  const elVerdict = document.getElementById("verdict");
-  const elDot = document.getElementById("dot");
-  const elEndpoint = document.getElementById("endpoint");
-  const elRaw = document.getElementById("raw");
-  const elAnswerBox = document.getElementById("answerBox");
-  const elCitationsBox = document.getElementById("citationsBox");
-  const elHealthPill = document.getElementById("healthPill");
-  const elCatalogHint = document.getElementById("catalogHint");
+  const elDrug    = document.getElementById("drug");
+  const elLang    = document.getElementById("lang");
+  const elStyle   = document.getElementById("style");
+  const elQ       = document.getElementById("q");
+  const elOut     = document.getElementById("out");
+  const elRaw     = document.getElementById("raw");
+  const elAnswerBox     = document.getElementById("answerBox");
+  const elCitationsBox  = document.getElementById("citationsBox");
+  const elVerdictBadge  = document.getElementById("verdictBadge");
+  const elHealthPill    = document.getElementById("healthPill");
+  const elCatalogHint   = document.getElementById("catalogHint");
+  const elRawToggle     = document.getElementById("rawToggle");
 
   let outputMode = "Hybrid";
 
   document.querySelectorAll(".mode").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
+    btn.addEventListener("click",()=>{
       document.querySelectorAll(".mode").forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
       outputMode = btn.dataset.mode;
     });
   });
 
-  document.getElementById("clearBtn").addEventListener("click", ()=>{
-    elQ.value = "";
-    elOut.style.display = "none";
+  document.getElementById("clearBtn").addEventListener("click",()=>{
+    elQ.value="";
+    elOut.style.display="none";
   });
+
+  elRawToggle.addEventListener("click",()=>{
+    const show = elRaw.classList.toggle("show");
+    elRawToggle.textContent = (show ? "▼ Hide" : "▶ Show") + " Raw JSON";
+  });
+
+  function escapeHtml(s){
+    return String(s||"")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
 
   async function healthCheck(){
     try{
-      const r = await fetch(WORKER_BASE + "/health");
-      await r.text();
-      elHealthPill.textContent = r.ok ? "Worker: OK" : "Worker: ERROR";
+      const r = await fetch(WORKER_BASE+"/health");
+      elHealthPill.textContent = r.ok ? "✅ Worker: OK" : "❌ Worker: ERROR";
       elHealthPill.style.color = r.ok ? "#16a34a" : "#dc2626";
-    }catch(e){
-      elHealthPill.textContent = "Worker: not reachable";
+    }catch{
+      elHealthPill.textContent = "❌ Not reachable";
       elHealthPill.style.color = "#dc2626";
     }
   }
 
-  function escapeHtml(s){
-    return String(s||"")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
   async function loadCatalog(){
     try{
-      const r = await fetch(WORKER_BASE + "/catalog");
+      const r    = await fetch(WORKER_BASE+"/catalog");
       const data = await r.json();
-      if(!data?.ok) throw new Error("catalog failed");
-
+      if(!data?.ok) throw new Error();
       const files = Array.isArray(data.files) ? data.files : [];
-      elCatalogHint.textContent = files.length ? `Loaded ${files.length} files from Vector Store.` : "No files found.";
-
-      // reset options (keep first)
+      elCatalogHint.textContent = files.length
+        ? `📂 ${files.length} files loaded`
+        : "No files found.";
       elDrug.innerHTML = `<option value="">(Optional) None</option>`;
       files.forEach(f=>{
         const name = f.filename || f.file_id || "unknown";
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
+        const opt  = document.createElement("option");
+        opt.value  = name; opt.textContent = name;
         elDrug.appendChild(opt);
       });
-    }catch(e){
-      elCatalogHint.textContent = "Could not load catalog (check Worker /catalog).";
+    }catch{
+      elCatalogHint.textContent = "Could not load catalog.";
     }
   }
 
   function renderResult(data){
     elOut.style.display = "block";
-    elEndpoint.textContent = "Endpoint: " + WORKER_BASE + "/ask";
+    elRaw.classList.remove("show");
+    elRawToggle.textContent = "▶ Show Raw JSON";
 
-    const verdict = data?.verdict || (data?.ok === false ? "ERROR" : "UNKNOWN");
-    elVerdict.textContent = "Verdict: " + verdict;
-    elDot.className = "dot " + ((verdict === "OK") ? "ok" : "bad");
+    // ── Verdict Badge ──
+    const verdict = data?.verdict || (data?.ok===false ? "ERROR" : "UNKNOWN");
+    const isOk    = verdict === "OK";
+    elVerdictBadge.innerHTML = `
+      <div class="verdict-badge ${isOk ? "ok" : "bad"}">
+        <span class="dot"></span>
+        ${isOk ? "✅ Answer Found" : "❌ " + verdict}
+      </div>`;
 
+    // ── Answer ──
     elAnswerBox.innerHTML = "";
-    elCitationsBox.innerHTML = "";
-
     const ans = (data?.answer || "").trim();
-    if(ans){
-      const pre = document.createElement("pre");
-      pre.textContent = ans;
-      elAnswerBox.appendChild(pre);
+    if(ans && !ans.startsWith("NOT_FOUND")){
+      elAnswerBox.innerHTML = `<div class="answer-box">${escapeHtml(ans)}</div>`;
+    } else if(ans){
+      elAnswerBox.innerHTML = `
+        <div class="answer-box" style="border-color:#fecaca;background:#fef2f2;color:#991b1b">
+          ${escapeHtml(ans)}
+        </div>`;
     }
 
+    // ── Citations ──
+    elCitationsBox.innerHTML = "";
     const cits = Array.isArray(data?.citations) ? data.citations : [];
     if(cits.length){
-      const h = document.createElement("div");
-      h.className = "small";
-      h.textContent = "Citations";
-      elCitationsBox.appendChild(h);
-
-      cits.forEach(c=>{
-        const div = document.createElement("div");
-        div.className = "cite";
-        const page = (c.page === null || c.page === undefined) ? "" : (" | page: " + c.page);
-        div.innerHTML = `
-          <b>${escapeHtml(c.filename || "unknown")}${escapeHtml(page)}</b>
-          <div class="small">Evidence: ${(c.evidence_ids || []).join(", ")}</div>
-          <div style="margin-top:8px; white-space:pre-wrap">${escapeHtml(c.excerpt || "")}</div>
-        `;
-        elCitationsBox.appendChild(div);
+      elCitationsBox.innerHTML = `<div class="cites-title">📎 Reference Sources</div>`;
+      cits.forEach((c, i)=>{
+        const page    = (c.page!==null && c.page!==undefined) ? c.page : null;
+        const pageBadge = page !== null
+          ? `<span class="cite-page">Page ${page}</span>` : "";
+        const ids     = (c.evidence_ids||[]).join(", ");
+        elCitationsBox.innerHTML += `
+          <div class="cite">
+            <div class="cite-header">
+              <span class="cite-icon">📄</span>
+              <span class="cite-filename">${escapeHtml(c.filename||"Unknown file")}</span>
+              ${pageBadge}
+            </div>
+            <div class="cite-ids">Evidence refs: ${escapeHtml(ids)}</div>
+            <div class="cite-excerpt">${escapeHtml(c.excerpt||"")}</div>
+          </div>`;
       });
     }
 
     elRaw.textContent = JSON.stringify(data, null, 2);
   }
 
-  document.getElementById("askBtn").addEventListener("click", async ()=>{
+  document.getElementById("askBtn").addEventListener("click", async()=>{
     const question = elQ.value.trim();
     if(question.length < 2){ alert("Write a question first."); return; }
 
     const payload = {
       question,
-      drug: elDrug.value.trim(),      // now filled from catalog filenames/topics
-      language: elLang.value,
-      answer_style: elStyle.value,
+      drug:        elDrug.value.trim(),
+      language:    elLang.value,
+      answer_style:elStyle.value,
       output_mode: outputMode
     };
 
-    elOut.style.display = "block";
-    elVerdict.textContent = "Verdict: ...";
-    elDot.className = "dot";
-    elEndpoint.textContent = "Endpoint: " + WORKER_BASE + "/ask";
-    elAnswerBox.innerHTML = "<div class='small'>Loading…</div>";
+    elOut.style.display    = "block";
+    elVerdictBadge.innerHTML = "";
+    elAnswerBox.innerHTML  = `<div class="loading"><div class="spinner"></div> Thinking…</div>`;
     elCitationsBox.innerHTML = "";
-    elRaw.textContent = "";
+    elRaw.textContent      = "";
 
     try{
-      const r = await fetch(WORKER_BASE + "/ask", {
+      const r    = await fetch(WORKER_BASE+"/ask",{
         method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        headers:{"Content-Type":"application/json"},
         body: JSON.stringify(payload)
       });
-      const data = await r.json().catch(()=>({ ok:false, error:"BAD_JSON" }));
+      const data = await r.json().catch(()=>({ok:false,error:"BAD_JSON"}));
       renderResult(data);
     }catch(e){
-      renderResult({ ok:false, verdict:"ERROR", answer:"Request failed.", citations:[], details:String(e) });
+      renderResult({ok:false,verdict:"ERROR",answer:"Request failed.",citations:[],details:String(e)});
     }
   });
 
