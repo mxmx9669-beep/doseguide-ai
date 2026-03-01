@@ -293,14 +293,14 @@ const MODEL = "gpt-4o-mini";
     };
 
     const r = await openaiFetch("/responses", {
-      model: MODEL,
-      input: [
-        { role: "system", content: system },
-        { role: "system", content: style },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: schema,
-    });
+  model: MODEL,
+  input: [
+    { role: "system", content: system },
+    { role: "system", content: style },
+    { role: "user", content: userPrompt },
+  ],
+  text: { format: schema },  // ✅ صح
+});
 
     if (!r.ok) return { ok: false, error: r.data };
 
