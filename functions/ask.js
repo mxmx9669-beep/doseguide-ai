@@ -259,37 +259,35 @@ const MODEL = "gpt-4o-mini";
       .filter(Boolean)
       .join("\n");
 
-    // ✅ الإصلاح: استخدام text.format بدلاً من response_format
+    // ✅ الإصلاح: text.format يحتاج name في المستوى الأعلى مباشرة
     const schema = {
       type: "json_schema",
-      json_schema: {
-        name: "doseguide_answer",
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            verdict: { type: "string", enum: ["OK", "NOT_FOUND"] },
-            answer: { type: "string" },
-            citations: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  evidence_ids: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  filename: { type: "string" },
-                  page: { type: ["integer", "null"] },
-                  excerpt: { type: "string" },
+      name: "doseguide_answer",        // ✅ name هنا مباشرة (مش داخل json_schema)
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          verdict: { type: "string", enum: ["OK", "NOT_FOUND"] },
+          answer: { type: "string" },
+          citations: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                evidence_ids: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["evidence_ids", "filename", "page", "excerpt"],
+                filename: { type: "string" },
+                page: { type: ["integer", "null"] },
+                excerpt: { type: "string" },
               },
+              required: ["evidence_ids", "filename", "page", "excerpt"],
             },
           },
-          required: ["verdict", "answer", "citations"],
         },
+        required: ["verdict", "answer", "citations"],
       },
     };
 
