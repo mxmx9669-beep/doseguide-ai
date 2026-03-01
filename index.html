@@ -3,437 +3,952 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide AI</title>
+  <title>DoseGuide AI — Clinical Intelligence System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg1:#eef3ff;
-      --bg2:#f8fbff;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --border:#e2e8f0;
-      --pri:#2563eb;
-      --pri2:#1d4ed8;
-      --ok:#16a34a;
-      --warn:#f59e0b;
-      --bad:#dc2626;
-      --shadow:0 14px 40px rgba(2,8,23,.10);
-      --radius:18px;
+    :root {
+      --navy:    #04101e;
+      --navy2:   #071828;
+      --navy3:   #0b2238;
+      --teal:    #0ea5a0;
+      --teal2:   #14cec8;
+      --teal3:   #5eedea;
+      --gold:    #c9a84c;
+      --gold2:   #e8c96d;
+      --cream:   #f0ede6;
+      --white:   #ffffff;
+      --muted:   #7a9ab5;
+      --border:  rgba(14,165,160,0.18);
+      --border2: rgba(14,165,160,0.10);
+      --ok:      #10b981;
+      --warn:    #f59e0b;
+      --bad:     #ef4444;
+      --card-bg: rgba(7,24,40,0.82);
+      --glass:   rgba(255,255,255,0.04);
+      --shadow:  0 32px 80px rgba(0,0,0,0.5);
     }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--text);
-      background: radial-gradient(900px 600px at 20% 10%, var(--bg1), transparent 70%),
-                  radial-gradient(900px 600px at 80% 20%, #e9f6ff, transparent 70%),
-                  linear-gradient(135deg, var(--bg1), var(--bg2));
-      min-height:100vh;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--navy);
+      color: var(--cream);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .wrap{
-      max-width: 1100px;
-      margin: 40px auto;
-      padding: 0 18px 40px;
+    /* ── Background ── */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    .card{
-      background: var(--card);
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(14,165,160,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14,165,160,0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
+    }
+
+    .bg-glow1 {
+      position: absolute;
+      width: 900px; height: 600px;
+      top: -200px; left: -300px;
+      background: radial-gradient(ellipse, rgba(14,165,160,0.12) 0%, transparent 70%);
+      animation: drift1 18s ease-in-out infinite;
+    }
+    .bg-glow2 {
+      position: absolute;
+      width: 700px; height: 700px;
+      bottom: -200px; right: -200px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
+      animation: drift2 22s ease-in-out infinite;
+    }
+    .bg-glow3 {
+      position: absolute;
+      width: 400px; height: 400px;
+      top: 40%; left: 60%;
+      background: radial-gradient(ellipse, rgba(14,165,160,0.07) 0%, transparent 70%);
+      animation: drift3 15s ease-in-out infinite;
+    }
+
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,-50px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,30px)} }
+
+    /* Scan lines */
+    .bg-scan {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 48px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand-icon {
+      position: relative;
+      width: 56px; height: 56px;
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 100%; height: 100%;
+    }
+
+    .brand-icon::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid rgba(14,165,160,0.3);
+      animation: pulse-ring 2.5s ease-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .brand-text h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      letter-spacing: 0.3px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .brand-text h1 span {
+      color: var(--teal2);
+    }
+
+    .brand-text p {
+      margin-top: 5px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      border-radius: 99px;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 26px;
-    }
-
-    .top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      margin-bottom: 18px;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width: 240px;
-    }
-
-    .pill{
-      width:42px;height:42px;
-      border-radius:14px;
-      background: linear-gradient(135deg, #ff6b6b, #ffb703);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow: 0 8px 20px rgba(255,107,107,.22);
-      font-size: 22px;
-    }
-
-    .title{
-      display:flex;
-      flex-direction:column;
-      line-height:1.1;
-    }
-    .title h1{
-      margin:0;
-      font-size: 26px;
-      letter-spacing:.2px;
-    }
-    .title .sub{
-      margin-top:4px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
       font-size: 12.5px;
+      font-weight: 600;
       color: var(--muted);
+      letter-spacing: 0.5px;
+      transition: all 0.3s;
     }
 
-    .worker-badge{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #f8fafc;
-      color: var(--muted);
-      font-size: 13px;
-      white-space:nowrap;
-    }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
+    .status-badge.ok { border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+    .status-badge.bad { border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+
+    .badge-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
       background: var(--warn);
-      box-shadow: 0 0 0 4px rgba(245,158,11,.15);
+      flex-shrink: 0;
     }
-    .dot.ok{ background: var(--ok); box-shadow: 0 0 0 4px rgba(22,163,74,.15); }
-    .dot.bad{ background: var(--bad); box-shadow: 0 0 0 4px rgba(220,38,38,.15); }
+    .badge-dot.ok { background: var(--ok); box-shadow: 0 0 10px rgba(16,185,129,0.7); animation: blink 2s ease-in-out infinite; }
+    .badge-dot.bad { background: var(--bad); }
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 14px;
-      margin-top: 14px;
-    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 6px;
-      letter-spacing: .2px;
+    /* ── Divider ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal) 30%, var(--gold) 70%, transparent);
+      margin-bottom: 36px;
+      opacity: 0.35;
     }
 
-    select, textarea, input{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
+    /* ── Main card ── */
+    .card {
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      background: #fff;
-      outline: none;
-      font-size: 14px;
-    }
-    select:focus, textarea:focus, input:focus{
-      border-color: rgba(37,99,235,.5);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+      border-radius: 24px;
+      padding: 36px;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
     }
 
-    .hint{
-      margin-top: 6px;
-      font-size: 12px;
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--teal2), var(--gold2), transparent);
+      opacity: 0.7;
+    }
+
+    /* Corner decorations */
+    .corner {
+      position: absolute;
+      width: 30px; height: 30px;
+      opacity: 0.4;
+    }
+    .corner-tl { top: 16px; left: 16px; border-top: 1.5px solid var(--teal); border-left: 1.5px solid var(--teal); border-radius: 4px 0 0 0; }
+    .corner-tr { top: 16px; right: 16px; border-top: 1.5px solid var(--teal); border-right: 1.5px solid var(--teal); border-radius: 0 4px 0 0; }
+    .corner-bl { bottom: 16px; left: 16px; border-bottom: 1.5px solid var(--teal); border-left: 1.5px solid var(--teal); border-radius: 0 0 0 4px; }
+    .corner-br { bottom: 16px; right: 16px; border-bottom: 1.5px solid var(--teal); border-right: 1.5px solid var(--teal); border-radius: 0 0 4px 0; }
+
+    /* ── Section label ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 3px; height: 18px;
+      background: linear-gradient(to bottom, var(--teal2), var(--gold));
+      border-radius: 2px;
+    }
+
+    .section-label span {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--teal3);
+    }
+
+    /* ── Controls grid ── */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
       color: var(--muted);
     }
 
-    .modes{
-      margin-top: 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      flex-wrap:wrap;
+    select, textarea {
+      width: 100%;
+      background: rgba(4,16,30,0.7);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--cream);
+      font-family: 'Sora', sans-serif;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
     }
 
-    .mode-group{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
+    select {
+      padding: 12px 36px 12px 14px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230ea5a0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
     }
 
-    .seg{
-      display:flex;
-      background:#f8fafc;
-      border:1px solid var(--border);
-      border-radius: 16px;
-      padding: 6px;
-      gap: 6px;
-      overflow:auto;
+    select option { background: #071828; }
+
+    select:focus, textarea:focus {
+      border-color: rgba(14,165,160,0.5);
+      box-shadow: 0 0 0 3px rgba(14,165,160,0.12), 0 0 20px rgba(14,165,160,0.08);
     }
 
-    .seg button{
+    /* ── Mode selector ── */
+    .modes-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .modes-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .seg {
+      display: flex;
+      background: rgba(4,16,30,0.6);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 5px;
+      gap: 4px;
+    }
+
+    .seg button {
       border: 0;
       background: transparent;
-      padding: 9px 14px;
-      border-radius: 12px;
-      font-size: 13.5px;
-      color: var(--muted);
-      cursor:pointer;
-      transition:.15s ease;
-      white-space:nowrap;
-    }
-    .seg button.active{
-      background: rgba(37,99,235,.10);
-      color: var(--pri2);
-      box-shadow: inset 0 0 0 1px rgba(37,99,235,.18);
-    }
-    .seg button:hover{ transform: translateY(-1px); }
-
-    .qbox{
-      margin-top: 14px;
-    }
-    textarea{
-      min-height: 140px;
-      resize: vertical;
-      line-height: 1.45;
-    }
-
-    .actions{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin-top: 14px;
-    }
-
-    .btn{
-      border:0;
-      cursor:pointer;
-      border-radius: 14px;
-      padding: 12px 16px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
       font-weight: 600;
-      transition: .18s ease;
-      font-size: 14px;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      font-family: 'Sora', sans-serif;
+      letter-spacing: 0.3px;
     }
-    .btn.primary{
-      background: linear-gradient(135deg, var(--pri), var(--pri2));
-      color:#fff;
-      box-shadow: 0 10px 20px rgba(37,99,235,.22);
-    }
-    .btn.primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 26px rgba(37,99,235,.28); }
-    .btn.ghost{
-      background: #fff;
-      border:1px solid var(--border);
-      color: var(--text);
-    }
-    .btn.ghost:hover{ transform: translateY(-1px); }
 
-    .status-row{
-      margin-top: 18px;
-      display:flex;
-      align-items:center;
+    .seg button.active {
+      background: linear-gradient(135deg, rgba(14,165,160,0.25), rgba(14,165,160,0.12));
+      color: var(--teal3);
+      border: 1px solid rgba(14,165,160,0.3);
+      box-shadow: 0 4px 12px rgba(14,165,160,0.15);
+    }
+
+    .seg button:hover:not(.active) {
+      color: var(--cream);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* ── Textarea ── */
+    .question-wrap {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      padding: 16px 18px;
+      min-height: 130px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .char-count {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      pointer-events: none;
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
       gap: 10px;
-      font-size: 13px;
-      color: var(--muted);
+      padding: 13px 24px;
+      border-radius: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
+      border: 0;
+      transition: all 0.22s;
+      letter-spacing: 0.2px;
+      position: relative;
+      overflow: hidden;
     }
-    .status-pill{
-      padding: 10px 12px;
-      border-radius: 999px;
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn:hover::after { opacity: 1; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal), #0891b2);
+      color: var(--white);
+      box-shadow: 0 8px 24px rgba(14,165,160,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(14,165,160,0.4);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-primary.loading {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .btn-ghost {
+      background: transparent;
       border: 1px solid var(--border);
-      background: #f8fafc;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      font-weight:600;
-      color: var(--text);
-    }
-    .status-pill.ok{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.08); }
-    .status-pill.bad{ border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.08); }
-    .status-pill.warn{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.08); }
-
-    .out{
-      margin-top: 16px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-
-    .panel{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius: 16px;
-      padding: 16px;
-    }
-    .panel h3{
-      margin:0 0 8px;
-      font-size: 14px;
       color: var(--muted);
-      font-weight:700;
-      letter-spacing:.2px;
-      text-transform:uppercase;
+    }
+    .btn-ghost:hover { border-color: rgba(14,165,160,0.35); color: var(--teal3); }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .btn-primary.loading .spinner { display: block; }
+    .btn-primary.loading .btn-icon { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Keyboard shortcut hint */
+    .shortcut-hint {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-left: auto;
     }
 
-    .answer{
-      white-space: pre-wrap;
-      line-height:1.55;
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 7px;
+      border-radius: 5px;
+      border: 1px solid rgba(122,154,181,0.3);
+      background: rgba(4,16,30,0.5);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+    }
+
+    /* ── Separator ── */
+    .sep {
+      height: 1px;
+      background: var(--border2);
+      margin: 28px 0;
+    }
+
+    /* ── Query status ── */
+    .query-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border2);
+      background: rgba(4,16,30,0.4);
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+
+    .query-status.ok {
+      border-color: rgba(16,185,129,0.2);
+      background: rgba(16,185,129,0.05);
+    }
+
+    .query-status.bad {
+      border-color: rgba(239,68,68,0.2);
+      background: rgba(239,68,68,0.05);
+    }
+
+    .query-status.loading {
+      border-color: rgba(14,165,160,0.2);
+      background: rgba(14,165,160,0.05);
+    }
+
+    .q-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--warn);
+      flex-shrink: 0;
+    }
+    .query-status.ok .q-dot { background: var(--ok); box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+    .query-status.bad .q-dot { background: var(--bad); }
+    .query-status.loading .q-dot {
+      background: var(--teal2);
+      animation: blink 0.8s ease-in-out infinite;
+    }
+
+    .q-text {
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .q-verdict {
+      margin-left: auto;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .query-status.ok .q-verdict { color: var(--ok); }
+    .query-status.bad .q-verdict { color: var(--bad); }
+
+    /* ── Output panels ── */
+    .out-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: rgba(4,16,30,0.6);
+      border: 1px solid var(--border2);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .panel:hover { border-color: rgba(14,165,160,0.2); }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border2);
+      background: rgba(7,24,40,0.5);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--teal3);
+    }
+
+    .panel-icon {
       font-size: 14px;
-      color: var(--text);
     }
 
-    .src{
-      margin-top: 10px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+    .panel-body {
+      padding: 20px;
     }
-    .src-item{
-      border:1px solid var(--border);
+
+    /* Answer */
+    .answer-text {
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: #d4e8f0;
+      white-space: pre-wrap;
+      font-weight: 300;
+    }
+
+    .answer-text.empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Copy button */
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .copy-btn:hover { border-color: var(--teal); color: var(--teal3); }
+
+    /* Sources */
+    .sources-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .source-card {
+      border: 1px solid var(--border2);
       border-radius: 14px;
-      padding: 12px;
-      background:#f8fafc;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
     }
-    .src-head{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      font-size: 13px;
-      font-weight:700;
+
+    .source-card:hover {
+      border-color: rgba(14,165,160,0.25);
+      transform: translateX(3px);
     }
-    .src-head span{
+
+    .source-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(7,24,40,0.6);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .source-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .source-name::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal2);
+      flex-shrink: 0;
+    }
+
+    .source-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .meta-chip {
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
       color: var(--muted);
-      font-weight:600;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: rgba(14,165,160,0.08);
+      border: 1px solid rgba(14,165,160,0.15);
     }
-    .src-ex{
-      margin-top:8px;
-      color: #1f2937;
-      font-size: 13px;
+
+    .source-excerpt {
+      padding: 12px 16px;
+      font-size: 12.5px;
+      color: #8daec2;
+      line-height: 1.65;
       white-space: pre-wrap;
-      line-height:1.5;
+      font-weight: 300;
+      border-top: 1px solid var(--border2);
     }
 
-    .foot{
-      margin-top: 18px;
-      font-size: 12px;
+    .empty-hint {
+      font-size: 13px;
       color: var(--muted);
-      text-align:center;
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
     }
 
-    @media (max-width: 920px){
-      .grid{ grid-template-columns: 1fr; }
-      .top{ flex-direction:column; align-items:flex-start; }
-      .worker-badge{ align-self:flex-start; }
-      .actions{ flex-wrap:wrap; }
+    /* ── Footer ── */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 40px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer-brand span { color: var(--teal3); }
+
+    .footer-disclaimer {
+      font-size: 10.5px;
+      color: rgba(122,154,181,0.6);
+      letter-spacing: 0.5px;
+      text-align: right;
+      max-width: 400px;
+    }
+
+    /* ── Animations ── */
+    .fade-in {
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 760px) {
+      .controls-grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+      .card { padding: 22px 18px; }
+      .shortcut-hint { display: none; }
+      .actions { flex-wrap: wrap; }
+    }
+
+    @media (max-width: 500px) {
+      .seg { flex-wrap: wrap; }
     }
   </style>
 </head>
 
 <body>
+
+  <!-- Background layers -->
+  <div class="bg-canvas">
+    <div class="bg-grid"></div>
+    <div class="bg-glow1"></div>
+    <div class="bg-glow2"></div>
+    <div class="bg-glow3"></div>
+    <div class="bg-scan"></div>
+  </div>
+
   <div class="wrap">
-    <div class="card">
-      <div class="top">
-        <div class="brand">
-          <div class="pill">💊</div>
-          <div class="title">
-            <h1>DoseGuide AI</h1>
-            <div class="sub">Protocol-bound answers with citations (Vector Store)</div>
-          </div>
+
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="28" cy="28" r="27" stroke="url(#ring)" stroke-width="1.5"/>
+            <rect x="22" y="14" width="12" height="28" rx="4" fill="url(#cross1)"/>
+            <rect x="14" y="22" width="28" height="12" rx="4" fill="url(#cross2)"/>
+            <circle cx="28" cy="28" r="4" fill="#0b2238"/>
+            <circle cx="28" cy="28" r="2.5" fill="url(#center)"/>
+            <defs>
+              <linearGradient id="ring" x1="0" y1="0" x2="56" y2="56">
+                <stop offset="0%" stop-color="#0ea5a0"/>
+                <stop offset="100%" stop-color="#c9a84c"/>
+              </linearGradient>
+              <linearGradient id="cross1" x1="22" y1="14" x2="34" y2="42" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0ea5a0" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#14cec8" stop-opacity="0.6"/>
+              </linearGradient>
+              <linearGradient id="cross2" x1="14" y1="22" x2="42" y2="34" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#14cec8" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#0ea5a0" stop-opacity="0.9"/>
+              </linearGradient>
+              <radialGradient id="center">
+                <stop offset="0%" stop-color="#e8c96d"/>
+                <stop offset="100%" stop-color="#c9a84c"/>
+              </radialGradient>
+            </defs>
+          </svg>
         </div>
 
-        <div class="worker-badge" id="workerBadge" title="Worker health status">
-          <span class="dot" id="workerDot"></span>
-          <span id="workerText">Worker: Checking…</span>
+        <div class="brand-text">
+          <h1>Dose<span>Guide</span> AI</h1>
+          <p>Clinical Intelligence · Evidence-Bound · Vector Retrieval</p>
         </div>
       </div>
 
-      <div class="grid">
-        <div>
+      <div class="status-badge" id="workerBadge">
+        <span class="badge-dot" id="workerDot"></span>
+        <span id="workerText">System · Checking…</span>
+      </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- Main Card -->
+    <div class="card">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+
+      <!-- Query Parameters -->
+      <div class="section-label"><span>Query Parameters</span></div>
+
+      <div class="controls-grid">
+        <div class="field">
           <label for="topic">Drug / Topic</label>
           <select id="topic">
-            <option value="">(Optional) None</option>
+            <option value="">(Optional) — All Topics</option>
           </select>
-          <div class="hint" id="catalogHint">Loading catalog…</div>
         </div>
 
-        <div>
-          <label for="language">Language</label>
+        <div class="field">
+          <label for="language">Response Language</label>
           <select id="language">
             <option value="English">English</option>
-            <option value="Arabic">Arabic</option>
+            <option value="Arabic">Arabic (العربية)</option>
           </select>
-          <div class="hint">Controls response language.</div>
         </div>
 
-        <div>
+        <div class="field">
           <label for="answerStyle">Answer Style</label>
           <select id="answerStyle">
             <option value="Recommended">Recommended</option>
-            <option value="Concise">Concise</option>
+            <option value="Bullet">Bullet Points</option>
             <option value="Detailed">Detailed</option>
-            <option value="Strict">Strict (citations required)</option>
+            <option value="Strict">Strict — Citations Required</option>
           </select>
-          <div class="hint">Controls tone/structure.</div>
         </div>
       </div>
 
-      <div class="modes">
-        <div class="mode-group">
-          <label style="margin:0;color:var(--muted);font-size:12px;">Output Mode</label>
-          <div class="seg" aria-label="Output mode selector">
-            <button type="button" class="active" data-mode="Hybrid">Hybrid</button>
-            <button type="button" data-mode="Short">Short</button>
-            <button type="button" data-mode="Verbatim">Verbatim</button>
-            <button type="button" data-mode="Source Only">Source Only</button>
+      <!-- Output Mode -->
+      <div class="modes-row">
+        <span class="modes-label">Output Mode</span>
+        <div class="seg" aria-label="Output mode selector">
+          <button type="button" class="active" data-mode="Hybrid">⚡ Hybrid</button>
+          <button type="button" data-mode="Short">Short</button>
+          <button type="button" data-mode="Verbatim">Verbatim</button>
+          <button type="button" data-mode="Source Only">Source Only</button>
+        </div>
+      </div>
+
+      <!-- Question -->
+      <div class="section-label"><span>Clinical Question</span></div>
+      <div class="question-wrap">
+        <textarea
+          id="question"
+          placeholder="Enter a clinical question — dosing, contraindications, monitoring parameters, drug interactions, renal/hepatic adjustments…"
+        ></textarea>
+        <span class="char-count" id="charCount">0</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-primary" id="askBtn" type="button">
+          <span class="btn-icon">🔎</span>
+          <span class="spinner"></span>
+          Ask DoseGuide
+        </button>
+        <button class="btn btn-ghost" id="clearBtn" type="button">
+          ✕ Clear
+        </button>
+        <span class="shortcut-hint">
+          Submit with <span class="kbd">⌘</span><span class="kbd">↵</span>
+        </span>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- Query Status -->
+      <div class="query-status" id="queryStatus">
+        <span class="q-dot" id="qDot"></span>
+        <span class="q-text" id="qText">Awaiting query — enter a clinical question above</span>
+        <span class="q-verdict" id="qVerdict"></span>
+      </div>
+
+      <!-- Output -->
+      <div class="out-grid" id="outGrid">
+
+        <!-- Answer Panel -->
+        <div class="panel fade-in">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">📋</span>
+              Clinical Response
+            </div>
+            <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+          </div>
+          <div class="panel-body">
+            <div class="answer-text empty" id="answerBox">Response will appear here after submitting a query.</div>
           </div>
         </div>
-      </div>
 
-      <div class="qbox">
-        <label for="question">Your Question</label>
-        <textarea id="question" placeholder="Ask a clinical question… (e.g., dosing, contraindications, monitoring, interactions)"></textarea>
-
-        <div class="actions">
-          <button class="btn primary" id="askBtn" type="button">
-            🔎 Ask DoseGuide
-          </button>
-          <button class="btn ghost" id="clearBtn" type="button">
-            Clear
-          </button>
-        </div>
-      </div>
-
-      <div class="status-row">
-        <div class="status-pill" id="statusPill">
-          <span class="dot" id="statusDot" style="box-shadow:none;background:var(--warn)"></span>
-          <span id="statusText">Status: Idle</span>
-        </div>
-        <div id="statusMsg"></div>
-      </div>
-
-      <div class="out">
-        <div class="panel">
-          <h3>Answer</h3>
-          <div class="answer" id="answerBox">—</div>
-        </div>
-
-        <div class="panel">
-          <h3>Reference Sources</h3>
-          <div class="src" id="sourcesBox">
-            <div class="hint">No sources yet.</div>
+        <!-- Sources Panel -->
+        <div class="panel fade-in">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">📚</span>
+              Reference Sources
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="sources-list" id="sourcesBox">
+              <p class="empty-hint">No sources retrieved yet.</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="foot">Innovation & Design by Mohammed Al-Ishaq</div>
+      </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-brand">Dose<span>Guide</span> AI · Clinical Engine</div>
+      <div class="footer-disclaimer">
+        For professional clinical reference only. Always verify dosing with current prescribing information and institutional protocols.
+      </div>
+    </footer>
+
   </div>
 
 <script>
-  // ---- UI State ----
+  // ── State ──
   let outputMode = "Hybrid";
 
-  // output mode buttons
+  // ── Mode selector ──
   document.querySelectorAll(".seg button").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".seg button").forEach(b => b.classList.remove("active"));
@@ -442,217 +957,209 @@
     });
   });
 
-  // clear button
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    document.getElementById("question").value = "";
-    setStatus("Idle", "warn", "");
-    setAnswer("—", []);
+  // ── Char counter ──
+  const questionEl = document.getElementById("question");
+  const charCount  = document.getElementById("charCount");
+  questionEl.addEventListener("input", () => {
+    charCount.textContent = questionEl.value.length;
   });
 
-  // status helpers
-  function setStatus(text, tone="warn", msg=""){
-    const pill = document.getElementById("statusPill");
-    const dot = document.getElementById("statusDot");
-    const st = document.getElementById("statusText");
-    const sm = document.getElementById("statusMsg");
+  // ── Clear ──
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    questionEl.value = "";
+    charCount.textContent = "0";
+    setQueryStatus("idle", "Awaiting query — enter a clinical question above", "");
+    setAnswer("", []);
+  });
 
-    pill.classList.remove("ok","bad","warn");
-    pill.classList.add(tone);
-    dot.style.background = tone === "ok" ? "var(--ok)" : (tone === "bad" ? "var(--bad)" : "var(--warn)");
-    st.textContent = "Status: " + text;
-    sm.textContent = msg || "";
+  // ── Copy ──
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const txt = document.getElementById("answerBox").textContent;
+    if (txt && txt !== "Response will appear here after submitting a query.") {
+      navigator.clipboard.writeText(txt).then(() => {
+        const btn = document.getElementById("copyBtn");
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = "Copy", 2000);
+      });
+    }
+  });
+
+  // ── Status helpers ──
+  function setQueryStatus(type, text, verdict) {
+    const el   = document.getElementById("queryStatus");
+    const dot  = document.getElementById("qDot");
+    const qtxt = document.getElementById("qText");
+    const qv   = document.getElementById("qVerdict");
+    el.classList.remove("ok", "bad", "loading");
+    if (type) el.classList.add(type);
+    qtxt.textContent = text || "";
+    qv.textContent   = verdict || "";
   }
 
-  function setWorker(ok, msg){
-    const dot = document.getElementById("workerDot");
-    const txt = document.getElementById("workerText");
-    dot.classList.remove("ok","bad");
+  function setWorker(ok, msg) {
+    const dot  = document.getElementById("workerDot");
+    const txt  = document.getElementById("workerText");
+    const badge = document.getElementById("workerBadge");
+    dot.classList.remove("ok", "bad");
     dot.classList.add(ok ? "ok" : "bad");
-    txt.textContent = ok ? "Worker: OK" : ("Worker: " + (msg || "Error"));
+    badge.classList.remove("ok", "bad");
+    badge.classList.add(ok ? "ok" : "bad");
+    txt.textContent = ok ? "System · Online" : ("System · " + (msg || "Offline"));
   }
 
-  // render answer + sources
-  function setAnswer(answerText, sources){
-    const a = document.getElementById("answerBox");
-    const sbox = document.getElementById("sourcesBox");
+  // ── Render answer & sources ──
+  function setAnswer(answerText, sources) {
+    const abox  = document.getElementById("answerBox");
+    const sbox  = document.getElementById("sourcesBox");
 
-    a.textContent = (answerText && String(answerText).trim()) ? String(answerText).trim() : "—";
+    const hasAnswer = answerText && String(answerText).trim();
+    abox.textContent = hasAnswer ? String(answerText).trim() : "Response will appear here after submitting a query.";
+    abox.classList.toggle("empty", !hasAnswer);
 
     sbox.innerHTML = "";
-    if (!sources || !Array.isArray(sources) || sources.length === 0){
-      const div = document.createElement("div");
-      div.className = "hint";
-      div.textContent = "No sources returned.";
-      sbox.appendChild(div);
+    if (!sources || !Array.isArray(sources) || sources.length === 0) {
+      const p = document.createElement("p");
+      p.className = "empty-hint";
+      p.textContent = "No reference sources returned.";
+      sbox.appendChild(p);
       return;
     }
 
-    sources.forEach((src) => {
-      const item = document.createElement("div");
-      item.className = "src-item";
+    sources.forEach((src, i) => {
+      const card = document.createElement("div");
+      card.className = "source-card fade-in";
+      card.style.animationDelay = `${i * 60}ms`;
 
-      const head = document.createElement("div");
-      head.className = "src-head";
-
-      const left = document.createElement("div");
-      left.textContent = src.filename || "Unknown file";
-
-      const right = document.createElement("div");
       const pg = (src.page === 0 || src.page) ? src.page : null;
-      right.innerHTML = `<span>evidence:</span> ${(src.evidence_ids || []).join(", ") || "—"} &nbsp; <span>page:</span> ${pg ?? "—"}`;
+      const ids = (src.evidence_ids || []).join(", ") || "—";
 
-      head.appendChild(left);
-      head.appendChild(right);
+      card.innerHTML = `
+        <div class="source-head">
+          <div class="source-name">${src.filename || "Unknown file"}</div>
+          <div class="source-meta">
+            ${ids !== "—" ? `<span class="meta-chip">EV: ${ids}</span>` : ""}
+            ${pg !== null ? `<span class="meta-chip">p.${pg}</span>` : ""}
+          </div>
+        </div>
+        <div class="source-excerpt">${src.excerpt || ""}</div>
+      `;
 
-      const ex = document.createElement("div");
-      ex.className = "src-ex";
-      ex.textContent = src.excerpt || "";
-
-      item.appendChild(head);
-      item.appendChild(ex);
-      sbox.appendChild(item);
+      sbox.appendChild(card);
     });
   }
 
-  // ---- optional: load catalog of topics ----
-  async function loadCatalog(){
+  // ── Load catalog ──
+  async function loadCatalog() {
     const sel = document.getElementById("topic");
-    const hint = document.getElementById("catalogHint");
-
-    // If you have an endpoint for catalog, keep it here.
-    // If not, it will gracefully show "Could not load catalog."
     const urls = ["/catalog", "/topics", "/drug_catalog"];
-    for (const u of urls){
-      try{
-        const r = await fetch(u, { method:"GET" });
+    for (const u of urls) {
+      try {
+        const r = await fetch(u, { method: "GET" });
         if (!r.ok) continue;
         const data = await r.json();
-
-        // Expect data like: { items: ["Warfarin","Heparin"] } or ["Warfarin",...]
         const items = Array.isArray(data) ? data : (data.items || data.catalog || []);
         if (!Array.isArray(items) || items.length === 0) continue;
-
-        // clear & repopulate
-        sel.innerHTML = `<option value="">(Optional) None</option>`;
+        sel.innerHTML = `<option value="">(Optional) — All Topics</option>`;
         items.forEach(x => {
           const opt = document.createElement("option");
           opt.value = String(x);
           opt.textContent = String(x);
           sel.appendChild(opt);
         });
-
-        hint.textContent = `Catalog loaded (${items.length}).`;
         return;
-      }catch(e){
-        // try next
-      }
+      } catch(e) {}
     }
-
-    hint.textContent = "Could not load catalog.";
   }
 
-  // ---- health check (best-effort) ----
-  async function checkWorker(){
-    const urls = ["/health", "/ask", "/"];
-    for (const u of urls){
-      try{
-        const r = await fetch(u, { method: u === "/ask" ? "OPTIONS" : "GET" });
-        // If the worker exists, at least one of these should return something reachable
-        if (r && (r.ok || r.status === 204 || r.status === 405)){
-          setWorker(true);
-          return;
-        }
-      }catch(e){}
-    }
-    // even if check fails, the worker may still work; don't block usage
-    setWorker(false, "Unknown");
+  // ── Health check ──
+  async function checkWorker() {
+    try {
+      const r = await fetch("/api/ask?health=1", { method: "GET" });
+      if (r.ok || r.status === 204) { setWorker(true); return; }
+    } catch(e) {}
+    // Try OPTIONS fallback
+    try {
+      const r = await fetch("/api/ask", { method: "OPTIONS" });
+      if (r.ok || r.status === 204) { setWorker(true); return; }
+    } catch(e) {}
+    setWorker(false, "Unreachable");
   }
 
-  // ---- ask handler ----
+  // ── Ask handler ──
   document.getElementById("askBtn").addEventListener("click", askDoseGuide);
-  document.getElementById("question").addEventListener("keydown", (e) => {
+  questionEl.addEventListener("keydown", e => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") askDoseGuide();
   });
 
-  async function askDoseGuide(){
-    const q = document.getElementById("question").value.trim();
-    const topic = document.getElementById("topic").value;
-    const language = document.getElementById("language").value;
+  async function askDoseGuide() {
+    const q           = questionEl.value.trim();
+    const topic       = document.getElementById("topic").value;
+    const language    = document.getElementById("language").value;
     const answerStyle = document.getElementById("answerStyle").value;
 
-    if (!q){
-      setStatus("Error", "bad", "Please enter a question.");
+    if (!q) {
+      setQueryStatus("bad", "Please enter a clinical question before submitting.", "ERROR");
       return;
     }
 
-    setStatus("Working…", "warn", "Sending to /ask");
-    setAnswer("…", []);
+    const askBtn = document.getElementById("askBtn");
+    askBtn.classList.add("loading");
+    setQueryStatus("loading", "Retrieving evidence from vector store…", "");
+    setAnswer("", []);
 
-    // Send a payload that is compatible with many worker implementations:
-    // (question/q/prompt) + (topic/drug) + (output_mode/mode) + (language) + (answer_style/style)
     const payload = {
       question: q,
-      q: q,
-      prompt: q,
-
+      q,
       topic: topic || null,
-      drug: topic || null,
-
+      drug:  topic || null,
       language,
       answer_style: answerStyle,
       style: answerStyle,
-
       output_mode: outputMode,
       mode: outputMode
     };
 
-    try{
-      const res = await fetch("/ask", {
+    try {
+      const res  = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
-      const text = await res.text();
-      let data = null;
-      try { data = JSON.parse(text); } catch(_e){}
+      const raw  = await res.text();
+      let data   = null;
+      try { data = JSON.parse(raw); } catch(_) {}
 
-      if (!res.ok){
-        setStatus("Error", "bad", `HTTP ${res.status}`);
-        setAnswer(data?.error || text || "Request failed.", data?.sources || data?.reference_sources || []);
+      askBtn.classList.remove("loading");
+
+      if (!res.ok) {
+        setQueryStatus("bad", `Request failed — HTTP ${res.status}`, "FAILED");
+        setAnswer(data?.error || raw || "Request failed.", []);
         return;
       }
 
-      // Normalize response shapes:
-      const answer =
-        data?.answer ??
-        data?.response ??
-        data?.text ??
-        (typeof data === "string" ? data : "");
+      const answer = data?.answer ?? data?.response ?? data?.text ?? (typeof data === "string" ? data : "");
+      const sources = data?.sources ?? data?.citations ?? data?.reference_sources ?? data?.references ?? [];
+      const verdict = data?.verdict || (res.ok ? "OK" : "ERROR");
 
-      const sources =
-        data?.sources ??
-        data?.reference_sources ??
-        data?.references ??
-        data?.ReferenceSources ??
-        data?.["Reference Sources"] ??
-        [];
-
-      const verdict = data?.verdict || data?.Verdict || (res.ok ? "OK" : "ERROR");
-      setStatus(verdict === "OK" ? "OK" : "Done", verdict === "OK" ? "ok" : "warn", "");
+      if (verdict === "OK") {
+        setQueryStatus("ok", "Evidence retrieved and answer generated successfully.", "OK");
+      } else {
+        setQueryStatus("idle", "Query processed — no matching evidence found in vector store.", "NOT FOUND");
+      }
 
       setAnswer(answer, sources);
 
-    }catch(err){
-      setStatus("Error", "bad", "Network / Worker error");
+    } catch(err) {
+      document.getElementById("askBtn").classList.remove("loading");
+      setQueryStatus("bad", "Network error — could not reach the worker.", "ERROR");
       setAnswer(String(err || "Unknown error"), []);
     }
   }
 
-  // init
+  // ── Init ──
   loadCatalog();
   checkWorker();
-  setStatus("Idle", "warn", "");
 </script>
 
 </body>
