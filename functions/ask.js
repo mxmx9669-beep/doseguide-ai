@@ -10,8 +10,7 @@ export async function onRequest(context) {
   // =========================
   const OPENAI_API_KEY = env.OPENAI_API_KEY;
   const VECTOR_STORE_ID = env.VECTOR_STORE_ID;
-  const MODEL = env.MODEL || "gpt-4.1-mini";
-
+const MODEL = "gpt-4o-mini";
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
