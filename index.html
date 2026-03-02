@@ -3,388 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THERAGUARD AI | Clinical Decision Intelligence</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>THERAGUARD AI | Clinical Intelligence Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --canvas: #f4f7f9;
-            --panel: #ffffff;
-            --brand: #0f172a;
-            --brand-accent: #2563eb;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-tertiary: #94a3b8;
-            --border: #e2e8f0;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --radius: 8px;
-            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --clinical-bg: #f0f2f5;
+            --clinical-panel: #ffffff;
+            --clinical-primary: #004a99;
+            --clinical-secondary: #0078d4;
+            --clinical-text: #1a1c1e;
+            --clinical-muted: #5f6368;
+            --clinical-border: #d1d9e0;
+            --clinical-accent: #eef6ff;
+            --severity-high: #d93025;
+            --severity-mid: #f29900;
+            --severity-low: #188038;
+            --radius-lg: 12px;
+            --radius-sm: 6px;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--canvas);
-            color: var(--text-primary);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Layout Structure */
-        .app-wrapper {
-            display: grid;
-            grid-template-columns: 380px 1fr;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--clinical-bg);
+            color: var(--clinical-text);
             height: 100vh;
+            display: flex;
             overflow: hidden;
         }
 
-        /* Sidebar / Input Zone */
-        .sidebar {
-            background: var(--panel);
-            border-right: 1px solid var(--border);
+        /* Side Navigation */
+        aside {
+            width: 420px;
+            background: var(--clinical-panel);
+            border-right: 1px solid var(--clinical-border);
             display: flex;
             flex-direction: column;
-            padding: 24px;
-            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.03);
+            z-index: 10;
         }
 
-        .brand-header {
+        .header {
+            padding: 30px;
+            border-bottom: 1px solid var(--clinical-border);
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 32px;
         }
 
-        .brand-logo {
-            width: 32px;
-            height: 32px;
-            background: var(--brand);
-            border-radius: 6px;
-            display: grid;
-            place-items: center;
+        .logo-box {
+            background: var(--clinical-primary);
             color: white;
-            font-weight: 700;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -1px;
         }
 
-        .brand-name {
-            font-weight: 700;
+        .header-title h1 {
             font-size: 1.1rem;
-            letter-spacing: -0.02em;
+            font-weight: 700;
+            color: var(--clinical-primary);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .input-group { margin-bottom: 24px; }
-        .input-label {
+        /* Input Form Area */
+        .config-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .form-section { margin-bottom: 24px; }
+        
+        label {
             display: block;
             font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-tertiary);
+            font-weight: 700;
+            color: var(--clinical-muted);
             margin-bottom: 8px;
-            letter-spacing: 0.05em;
-        }
-
-        select, textarea {
-            width: 100%;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            transition: border-color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
 
         textarea {
-            height: 300px;
+            width: 100%;
+            height: 320px;
+            border: 1px solid var(--clinical-border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.6;
             resize: none;
-            line-height: 1.5;
+            background: var(--clinical-accent);
+            transition: all 0.2s ease;
         }
 
-        select:focus, textarea:focus {
+        textarea:focus {
             outline: none;
-            border-color: var(--brand-accent);
+            border-color: var(--clinical-secondary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0,120,212,0.1);
         }
 
-        .mode-selector {
+        .control-row {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            background: var(--canvas);
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--clinical-border);
+            font-size: 0.85rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Mode Buttons */
+        .mode-strip {
+            display: flex;
+            background: var(--clinical-bg);
             padding: 4px;
-            border-radius: var(--radius);
+            border-radius: 8px;
+            margin-top: 10px;
         }
 
         .mode-btn {
+            flex: 1;
+            padding: 8px;
             border: none;
             background: transparent;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 500;
+            font-size: 0.75rem;
+            font-weight: 600;
             cursor: pointer;
-            color: var(--text-secondary);
-            transition: all 0.2s;
+            border-radius: 6px;
+            color: var(--clinical-muted);
         }
 
         .mode-btn.active {
-            background: var(--panel);
-            color: var(--brand-accent);
-            box-shadow: var(--shadow);
+            background: white;
+            color: var(--clinical-primary);
+            box-shadow: var(--shadow-sm);
         }
 
-        .action-btn {
-            background: var(--brand);
+        .analyze-btn {
+            background: var(--clinical-primary);
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: var(--radius);
-            font-weight: 600;
+            padding: 18px;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
             width: 100%;
-            transition: opacity 0.2s;
-            margin-top: auto;
+            margin-top: 20px;
+            transition: transform 0.1s;
         }
 
-        .action-btn:hover { opacity: 0.9; }
+        .analyze-btn:active { transform: scale(0.98); }
 
-        /* Main Workspace / Output Zone */
-        .workspace {
-            overflow-y: auto;
+        /* Main Display Workspace */
+        main {
+            flex: 1;
             padding: 40px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 32px;
+            gap: 24px;
         }
 
-        .workspace-empty {
+        .clinical-card {
+            background: var(--clinical-panel);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--clinical-border);
+            box-shadow: var(--shadow-sm);
+            padding: 32px;
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--clinical-accent);
+        }
+
+        .card-title {
+            font-weight: 700;
+            color: var(--clinical-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Result Specifics */
+        .biometrics-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .bio-box {
+            padding: 15px;
+            background: var(--clinical-accent);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .bio-label { font-size: 0.7rem; color: var(--clinical-muted); text-transform: uppercase; font-weight: 700; }
+        .bio-value { font-size: 1.2rem; font-weight: 700; color: var(--clinical-primary); margin-top: 4px; }
+
+        .verdict-container {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .citation-tag {
+            display: inline-block;
+            background: #e8eaed;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 20px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: var(--clinical-accent);
+        }
+
+        .locked { color: var(--severity-high); border: 1px solid var(--severity-high); }
+
+        .empty-state {
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
-            color: var(--text-tertiary);
+            color: var(--clinical-muted);
             text-align: center;
-        }
-
-        /* Result Components */
-        .result-container { display: none; max-width: 1000px; margin: 0 auto; width: 100%; }
-
-        .section-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-tertiary);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .metric-card {
-            background: var(--panel);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border-bottom: 3px solid var(--border);
-        }
-
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--brand);
-        }
-
-        .metric-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .verdict-panel {
-            background: var(--panel);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 32px;
-            margin-bottom: 32px;
-            white-space: pre-wrap;
-            font-size: 1rem;
-            color: var(--text-primary);
-            border-left: 4px solid var(--brand-accent);
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            border-radius: 99px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .status-ready { background: #e0f2fe; color: #0369a1; }
-        .status-locked { background: #fee2e2; color: #991b1b; }
-
-        .source-footer {
-            margin-top: 40px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
-            color: var(--text-secondary);
-            font-size: 0.85rem;
         }
 
         .loading-overlay {
             display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(244, 247, 249, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 100;
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 5;
             place-items: center;
+            border-radius: var(--radius-lg);
         }
 
-        .spinner {
+        .pulse {
             width: 40px;
             height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--brand-accent);
+            background: var(--clinical-primary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: pulse 1.5s infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 1000px) {
-            .app-wrapper { grid-template-columns: 1fr; }
-            .sidebar { height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-            .app-wrapper { overflow-y: auto; height: auto; }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+            100% { transform: scale(0.8); opacity: 0.5; }
         }
     </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loader">
-    <div class="spinner"></div>
-</div>
-
-<div class="app-wrapper">
-    <aside class="sidebar">
-        <div class="brand-header">
-            <div class="brand-logo">TG</div>
-            <div class="brand-name">TheraGuard AI</div>
-        </div>
-
-        <div class="input-group">
-            <label class="input-label">Focus Drug / Topic</label>
-            <select id="drug">
-                <option value="General Analysis">General Analysis</option>
-                <option value="warfarin">Warfarin</option>
-                <option value="insulin">Insulin</option>
-                <option value="amoxicillin">Amoxicillin</option>
-                <option value="vancomycin">Vancomycin</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label class="input-label">Patient Case Context</label>
-            <textarea id="question" placeholder="Paste comprehensive medical history, labs, and current medication list..."></textarea>
-        </div>
-
-        <div class="input-group">
-            <label class="input-label">Output Configuration</label>
-            <div class="mode-selector">
-                <button class="mode-btn active" onclick="setMode('Hybrid', this)">Hybrid</button>
-                <button class="mode-btn" onclick="setMode('Short', this)">Short</button>
-                <button class="mode-btn" onclick="setMode('Verbatim', this)">Verbatim</button>
-                <button class="mode-btn" onclick="setMode('Source', this)">Source</button>
+    <aside>
+        <div class="header">
+            <div class="logo-box">TG</div>
+            <div class="header-title">
+                <h1>TheraGuard AI</h1>
+                <p style="font-size: 0.7rem; color: var(--clinical-muted);">Clinical Protocol Engine</p>
             </div>
-            <input type="hidden" id="output_mode" value="Hybrid">
         </div>
 
-        <div class="input-group">
-            <label class="input-label">Linguistic Preference</label>
-            <select id="language">
-                <option value="en">English (Clinical Standard)</option>
-                <option value="ar">Arabic (Medical Translation)</option>
-            </select>
-        </div>
+        <div class="config-area">
+            <div class="form-section">
+                <label>Clinical Case Entry</label>
+                <textarea id="question" placeholder="Paste full patient case (History, Medications, Lab values)..."></textarea>
+            </div>
 
-        <div class="input-group" style="display:none;">
-            <select id="answer_style"><option value="Recommended">Recommended</option></select>
-        </div>
+            <div class="form-section">
+                <label>Analysis Mode</label>
+                <div class="mode-strip">
+                    <button class="mode-btn active" onclick="setMode('Hybrid', this)">HYBRID</button>
+                    <button class="mode-btn" onclick="setMode('Short', this)">SHORT</button>
+                    <button class="mode-btn" onclick="setMode('Verbatim', this)">VERBATIM</button>
+                </div>
+                <input type="hidden" id="output_mode" value="Hybrid">
+            </div>
 
-        <button class="action-btn" id="analyzeBtn">GENERATE ANALYSIS</button>
-        <button class="mode-btn" style="margin-top: 12px;" onclick="handleClear()">Reset Workspace</button>
+            <div class="control-row">
+                <div>
+                    <label>Language</label>
+                    <select id="language">
+                        <option value="en">English (US)</option>
+                        <option value="ar">Arabic (Medical)</option>
+                    </select>
+                </div>
+                <div style="display:none;">
+                    <select id="drug"><option value="case_analysis">Clinical Logic</option></select>
+                    <select id="answer_style"><option value="Recommended">Standard</option></select>
+                </div>
+            </div>
+
+            <button class="analyze-btn" id="analyzeBtn">RUN VALIDATION</button>
+            <p onclick="location.reload()" style="text-align:center; font-size: 0.75rem; margin-top: 15px; color: var(--clinical-muted); cursor: pointer; text-decoration: underline;">Clear Workspace</p>
+        </div>
     </aside>
 
-    <main class="workspace">
-        <div id="emptyState" class="workspace-empty">
-            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <p style="margin-top: 16px;">Awaiting case data for clinical validation</p>
+    <main id="workspace">
+        <div id="emptyState" class="empty-state">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🛡️</div>
+            <h2 style="font-weight: 500; color: var(--clinical-text);">Ready for Clinical Assessment</h2>
+            <p>Paste a medical case in the sidebar to begin protocol-locked analysis.</p>
         </div>
 
-        <div id="resultPanel" class="result-container">
-            <div id="statusArea">
-                <span id="lockedIndicator" class="status-badge status-locked" style="display:none">Protocol Locked</span>
-                <span id="statusLabel" class="status-badge status-ready">Analysis Complete</span>
+        <div id="resultCard" class="clinical-card" style="display: none;">
+            <div class="loading-overlay" id="loader">
+                <div class="pulse"></div>
             </div>
 
-            <div class="section-title">Extracted Biometrics</div>
-            <div id="metricsGrid" class="metrics-grid">
+            <div class="card-header">
+                <div class="card-title">👨‍⚕️ Clinical Findings</div>
+                <div id="statusBadge" class="status-badge">Processing...</div>
+            </div>
+
+            <div class="biometrics-strip" id="bioStrip">
                 </div>
 
-            <div class="section-title">Clinical Interventions & Verdict</div>
-            <div class="verdict-panel" id="verdictContent"></div>
+            <div class="verdict-container" id="verdictContent">
+                </div>
 
-            <div class="source-footer">
-                <div class="section-title">Evidence & Citations</div>
-                <div id="sourceContent"></div>
-            </div>
+            <div id="citationsArea">
+                </div>
         </div>
     </main>
-</div>
 
 <script>
+    // --- API Configuration ---
     const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
     const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
-    // --- Core Logic Integration ---
+    // --- State & Mode ---
+    function setMode(val, btn) {
+        document.getElementById('output_mode').value = val;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
 
-    async function handleAsk() {
+    // --- Logic & Fetching ---
+    async function performAnalysis() {
+        const caseText = document.getElementById('question').value;
+        if (!caseText.trim()) return alert("Case entry is empty.");
+
+        // UI Reset
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('resultCard').style.display = 'block';
+        document.getElementById('loader').style.display = 'grid';
+        document.getElementById('verdictContent').innerText = '';
+        document.getElementById('bioStrip').innerHTML = '';
+        document.getElementById('citationsArea').innerHTML = '';
+
         const payload = {
-            drug: document.getElementById('drug').value,
+            drug: "case_analysis",
             language: document.getElementById('language').value,
-            answer_style: document.getElementById('answer_style').value,
+            answer_style: "Recommended",
             output_mode: document.getElementById('output_mode').value,
-            question: document.getElementById('question').value
+            question: caseText
         };
 
-        if (!payload.question.trim()) {
-            alert("Please provide patient case details.");
-            return;
-        }
-
-        // UI Prep
-        toggleLoader(true);
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('resultPanel').style.display = 'block';
-        document.getElementById('verdictContent').innerText = "Analyzing patient data against clinical protocols...";
-        
         try {
             const response = await fetch(ASK_ENDPOINT, {
                 method: 'POST',
@@ -392,86 +400,60 @@
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-
             const data = await response.json();
-            const out = normalizeWorkerResponse(data);
-            
-            renderAnalysis(out, payload.question);
-        } catch (error) {
-            document.getElementById('verdictContent').innerHTML = `<span style="color:var(--danger)">Analysis Failed: ${error.message}</span>`;
+            const out = normalizeResponse(data);
+
+            renderOutput(out, caseText);
+        } catch (err) {
+            document.getElementById('verdictContent').innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
         } finally {
-            toggleLoader(false);
+            document.getElementById('loader').style.display = 'none';
         }
     }
 
-    function renderAnalysis(data, originalText) {
-        // Verdict
-        document.getElementById('verdictContent').innerText = data.verdict || "No findings generated.";
-        
-        // Citations
-        document.getElementById('sourceContent').innerText = data.source || "Clinical evidence synthesis applied.";
-        
-        // Protocol Lock
-        document.getElementById('lockedIndicator').style.display = data.locked ? 'inline-flex' : 'none';
-
-        // Auto-extract Metrics (Simulated Extraction for UI richness)
-        extractMetrics(originalText);
-    }
-
-    function extractMetrics(text) {
-        const grid = document.getElementById('metricsGrid');
-        grid.innerHTML = '';
-        
-        // Logic for extracting values from raw text
-        const find = (regex, label) => {
-            const match = text.match(regex);
-            if (match) {
-                const card = document.createElement('div');
-                card.className = 'metric-card';
-                card.innerHTML = `<div class="metric-value">${match[1]}</div><div class="metric-label">${label}</div>`;
-                grid.appendChild(card);
-            }
-        };
-
-        find(/Weight\s*[:=]\s*(\d+\s*kg)/i, 'Patient Weight');
-        find(/CrCl\s*[:=]\s*(\d+\s*ml\/min)/i, 'Est. CrCl');
-        find(/Age\s*[:=]\s*(\d+\s*yo)/i, 'Patient Age');
-        find(/BMI\s*[:=]\s*(\d+(\.\d+)?)/i, 'Body Mass Index');
-
-        if (grid.innerHTML === '') {
-            grid.innerHTML = '<div style="color:var(--text-tertiary); font-size:0.8rem;">No explicit biometric markers found in case text.</div>';
-        }
-    }
-
-    // --- Utilities (Retained from original logic) ---
-
-    function setMode(val, btn) {
-        document.getElementById('output_mode').value = val;
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    function toggleLoader(show) {
-        document.getElementById('loader').style.display = show ? 'grid' : 'none';
-    }
-
-    function handleClear() {
-        document.getElementById('question').value = '';
-        document.getElementById('resultPanel').style.display = 'none';
-        document.getElementById('emptyState').style.display = 'flex';
-    }
-
-    function normalizeWorkerResponse(data) {
+    function normalizeResponse(data) {
         const locked = Boolean(data.locked || data.protocol_locked || data?.result?.locked);
         const verdict = data.verdict || data.answer || data.reply || data.text || data?.result?.verdict || "";
         const source = data.source || data.sources || data.citations || data?.result?.source || "";
         return { locked, verdict, source };
     }
 
-    document.getElementById('analyzeBtn').addEventListener('click', handleAsk);
+    function renderOutput(data, rawText) {
+        // Text Results
+        document.getElementById('verdictContent').innerText = data.verdict;
+        document.getElementById('statusBadge').innerText = data.locked ? "🔒 PROTOCOL LOCKED" : "✅ VALIDATED";
+        if(data.locked) document.getElementById('statusBadge').classList.add('locked');
 
+        // References
+        if(data.source) {
+            document.getElementById('citationsArea').innerHTML = `<div class="citation-tag">Evidence Sources: ${data.source}</div>`;
+        }
+
+        // Automatic Key Parameter Detection (Simulated for UI)
+        detectParameters(rawText);
+    }
+
+    function detectParameters(text) {
+        const strip = document.getElementById('bioStrip');
+        const patterns = [
+            { label: 'Estimated CrCl', regex: /CrCl\s*[:=]\s*(\d+)/i, unit: 'mL/min' },
+            { label: 'Weight', regex: /(\d+)\s*kg/i, unit: 'kg' },
+            { label: 'Age', regex: /(\d+)\s*y/i, unit: 'yrs' },
+            { label: 'BMI', regex: /BMI\s*[:=]\s*(\d+)/i, unit: 'm²' }
+        ];
+
+        patterns.forEach(p => {
+            const match = text.match(p.regex);
+            if(match) {
+                const box = document.createElement('div');
+                box.className = 'bio-box';
+                box.innerHTML = `<div class="bio-label">${p.label}</div><div class="bio-value">${match[1]} ${p.unit}</div>`;
+                strip.appendChild(box);
+            }
+        });
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
 </script>
-
 </body>
 </html>
