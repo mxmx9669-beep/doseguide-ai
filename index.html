@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide AI · Protocol‑Locked Clinical Engine</title>
+  <title>DoseGuide AI · Clinical Decision Support</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: "Inter", -apple-system, sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f0f4f8;
       color: #0b1c33;
       line-height: 1.5;
@@ -29,156 +29,142 @@
       border-radius: 32px;
       box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25);
       overflow: hidden;
+      transition: all 0.2s ease;
     }
 
     .app-header {
+      background: #ffffff;
       padding: 24px 32px;
       border-bottom: 1px solid #e9eef3;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
       gap: 20px;
     }
 
     .logo-area { display: flex; align-items: center; gap: 14px; }
+
     .logo-icon {
       background: linear-gradient(135deg, #1a5c9e, #0d3b6f);
       width: 48px; height: 48px; border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 24px; font-weight: 700;
+      color: white; font-size: 26px; font-weight: 600;
+      box-shadow: 0 6px 12px rgba(20, 70, 130, 0.25);
     }
 
-    .logo-text h1 { font-size: 1.6rem; font-weight: 700; color: #1a3b5c; }
-    .logo-text span { font-size: 0.8rem; color: #5e7185; display: block; }
+    .logo-text h1 {
+      font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1a3b5c, #143059);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
 
-    .main-layout { display: grid; grid-template-columns: 300px 1fr; background: #fafcff; }
+    .logo-text span { font-size: 0.85rem; color: #5e7185; font-weight: 500; display: block; }
 
-    /* Configuration Panel */
+    .badge-clinical {
+      background: #e1ecfe; color: #1d4a8b; padding: 6px 16px;
+      border-radius: 40px; font-size: 0.8rem; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(29, 74, 139, 0.15);
+    }
+
+    .main-layout { display: grid; grid-template-columns: 280px 1fr; background: #fafcff; }
+
     .context-panel { background: #f5f9ff; border-right: 1px solid #dde3ea; padding: 28px 20px; }
-    .panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #5b6f87; margin-bottom: 24px; }
-    
-    .param-group { margin-bottom: 24px; }
-    .param-label { display: block; font-size: 0.85rem; font-weight: 600; color: #1f334a; margin-bottom: 8px; }
+
+    .panel-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #5b6f87; margin-bottom: 24px; }
+
+    .param-group { margin-bottom: 28px; }
+
+    .param-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #1f334a; margin-bottom: 10px; }
+
     .param-select {
-      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d4dce6;
-      font-size: 0.9rem; outline: none; background: white; cursor: pointer;
+      width: 100%; padding: 12px 16px; background: white; border: 1px solid #d4dce6;
+      border-radius: 14px; font-size: 0.95rem; color: #0f263b; font-weight: 500;
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2336547a" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-repeat: no-repeat; background-position: right 16px center;
     }
 
-    .mode-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mode-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
     .mode-pill {
-      flex: 1; padding: 8px; font-size: 0.75rem; font-weight: 600; text-align: center;
-      background: white; border: 1px solid #ccd7e6; border-radius: 8px; cursor: pointer;
-    }
-    .mode-pill.active { background: #1a4c8c; color: white; border-color: #1a4c8c; }
-
-    /* Document Library Display */
-    .doc-library {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 20px;
-      border: 1px solid #d4dce6;
-    }
-    .doc-title {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: #5b6f87;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .doc-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .doc-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.75rem;
-      padding: 6px 8px;
-      background: #f5f9ff;
-      border-radius: 6px;
-    }
-    .doc-present {
-      color: #166534;
-      background: #dcfce7;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.6rem;
-      font-weight: 600;
-    }
-    .doc-missing {
-      color: #991b1b;
-      background: #fee2e2;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.6rem;
-      font-weight: 600;
+      background: white; border: 1px solid #ccd7e6; border-radius: 30px;
+      padding: 8px 16px; font-size: 0.8rem; font-weight: 600; color: #2b405b;
+      cursor: pointer; transition: all 0.1s; flex: 1 0 auto; text-align: center;
     }
 
-    /* Interaction Panel */
+    .mode-pill.active { background: #1d4a8b; border-color: #1d4a8b; color: white; box-shadow: 0 4px 8px rgba(0, 55, 120, 0.2); }
+
     .interaction-panel { padding: 32px; }
+
+    .query-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+
+    .query-header h2 { font-size: 1.2rem; font-weight: 600; color: #13273f; }
+
     .question-box {
-      background: white; border: 1px solid #dbe1e9; border-radius: 20px;
-      padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-    }
-    textarea {
-      width: 100%; border: none; outline: none; font-size: 1rem;
-      min-height: 120px; font-family: inherit; resize: vertical;
+      background: #ffffff; border: 1px solid #dbe1e9; border-radius: 24px;
+      padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
 
-    .action-bar { display: flex; gap: 12px; align-items: center; }
+    .question-box textarea {
+      width: 100%; border: none; font-family: "Inter", sans-serif;
+      font-size: 1rem; line-height: 1.6; resize: vertical; min-height: 100px;
+      outline: none; color: #1a2c42;
+    }
+
+    .action-bar { display: flex; gap: 16px; align-items: center; margin-top: 10px; }
+
     .primary-btn {
-      background: #1a4c8c; color: white; border: none; padding: 14px 32px;
-      border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.2s;
+      background: #1a4c8c; border: none; color: white; font-weight: 600;
+      padding: 14px 34px; border-radius: 60px; font-size: 1rem;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 18px rgba(20, 70, 140, 0.35); cursor: pointer;
     }
-    .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .secondary-btn { background: none; border: 1px solid #ccd7e6; padding: 14px 24px; border-radius: 50px; cursor: pointer; }
 
-    /* Results Area */
-    .results-container { margin-top: 32px; display: none; }
-    .status-strip { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    
-    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .secondary-btn {
+      background: transparent; border: 1px solid #bcc9db; color: #334e70;
+      font-weight: 500; padding: 14px 28px; border-radius: 60px; cursor: pointer;
+    }
+
+    .results-container { margin-top: 40px; animation: fadeUp 0.25s ease; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .status-strip {
+      background: #f0f4fa; border-radius: 100px; padding: 8px 20px;
+      display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+    }
+
+    .status-badge { background: white; border-radius: 40px; padding: 4px 16px; font-weight: 600; }
+
+    .badge { padding: 4px 14px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; }
+    .badge-locked { background: #fee2e2; color: #991b1b; }
     .badge-ok { background: #dcfce7; color: #166534; }
-    .badge-warn { background: #fee2e2; color: #991b1b; }
-    .badge-info { background: #e0f2fe; color: #0369a1; }
-    .badge-locked { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-warn { background: #fef9c3; color: #854d0e; }
 
     .answer-card {
-      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px;
-      padding: 24px; margin-bottom: 24px;
+      background: #f5faff; border-radius: 24px; padding: 28px;
+      margin-bottom: 28px; border: 1px solid #d1e0f5;
     }
-    .answer-text { font-size: 1.05rem; line-height: 1.7; color: #0f172a; white-space: pre-wrap; }
 
-    .citation-item {
-      background: white; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 16px; margin-bottom: 12px; font-size: 0.9rem;
-    }
-    .citation-header { font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    .citation-file { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
-    .citation-meta { font-size: 0.75rem; color: #64748b; }
-    .citation-excerpt { color: #334155; font-style: italic; border-left: 3px solid #1a4c8c; padding-left: 12px; margin-top: 8px; }
+    .answer-card h3 { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: #3e6191; margin-bottom: 18px; }
 
-    .missing-warning {
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .sources-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; }
+
+    .citation-item { background: #fafdff; border-radius: 12px; border: 1px solid #e4ebf5; padding: 16px; margin-bottom: 12px; }
+
+    .citation-header { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; color: #3b5575; margin-bottom: 8px; }
+    .citation-header span:last-child { white-space: nowrap; }
+
+    .citation-excerpt { color: #193251; font-size: 0.95rem; border-left: 3px solid #b3c9e5; padding-left: 16px; white-space: pre-wrap; }
 
     .loader {
-      border: 3px solid #f3f3f3; border-top: 3px solid #1a4c8c;
-      border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;
-      display: inline-block; vertical-align: middle; margin-right: 8px;
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4);
+      border-top: 2px solid white; border-radius: 50%; animation: spin 0.7s linear infinite;
+      display: inline-block;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -186,142 +172,116 @@
 <body>
 
 <div class="app-card">
-  <header class="app-header">
+  <div class="app-header">
     <div class="logo-area">
       <div class="logo-icon">DG</div>
       <div class="logo-text">
         <h1>DoseGuide AI</h1>
-        <span>Protocol‑Locked · No External Knowledge</span>
+        <span>evidence-based dosing · clinical decision support</span>
       </div>
     </div>
-    <div class="badge badge-info" id="systemStatus">📚 Vector Store Active</div>
-  </header>
+    <div class="badge-clinical"><span>🔬</span> UpToDate® · Lexicomp® · AHFS</div>
+  </div>
 
   <div class="main-layout">
-    <aside class="context-panel">
-      <div class="panel-title">Analysis Parameters</div>
-      
+    <div class="context-panel">
+      <div class="panel-title">⚙️ query configuration</div>
+
       <div class="param-group">
-        <label class="param-label">Clinical Language</label>
+        <div class="param-label">Drug / topic</div>
+        <select class="param-select" id="drug">
+          <option value="">None</option>
+          <option value="warfarin">warfarin (Coumadin)</option>
+          <option value="insulin">insulin (all types)</option>
+          <option value="amoxicillin">amoxicillin</option>
+        </select>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">Language</div>
         <select class="param-select" id="language">
-          <option value="en">English (Clinical)</option>
-          <option value="ar">العربية (طبي)</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="ar">🇸🇦 العربية</option>
         </select>
       </div>
 
       <div class="param-group">
-        <label class="param-label">Output Mode</label>
+        <div class="param-label">Answer style</div>
+        <select class="param-select" id="answer_style">
+          <option value="Recommended" selected>Recommended</option>
+          <option value="Bullet">Bullet points</option>
+          <option value="Detailed">Detailed</option>
+        </select>
+      </div>
+
+      <div class="param-group">
+        <div class="param-label">Output mode</div>
         <div class="mode-pills" id="modeGroup">
-          <div class="mode-pill active" data-mode="hybrid">Hybrid</div>
-          <div class="mode-pill" data-mode="short">Short</div>
-          <div class="mode-pill" data-mode="verbatim">Verbatim</div>
+          <span class="mode-pill active" data-mode="Hybrid">Hybrid</span>
+          <span class="mode-pill" data-mode="Short">Short</span>
+          <span class="mode-pill" data-mode="Verbatim">Verbatim</span>
+          <span class="mode-pill" data-mode="Source">Source</span>
         </div>
-        <input type="hidden" id="output_mode" value="hybrid">
+        <input type="hidden" id="output_mode" value="Hybrid" />
+      </div>
+    </div>
+
+    <div class="interaction-panel">
+      <div class="query-header">
+        <h2>Clinical inquiry</h2>
+        <div class="status-badge" style="background:#e9edf2; color:#3f5670; font-size:0.75rem">⚕️ Professional Mode</div>
       </div>
 
-      <div class="param-group">
-        <label class="param-label">Source Mode</label>
-        <select class="param-select" id="source_mode">
-          <option value="required">🔒 Required (Strict Protocol)</option>
-          <option value="off">📖 Off (No Citations)</option>
-        </select>
-      </div>
-
-      <!-- Document Library Display (Static Example - Replace with dynamic if API provides) -->
-      <div class="doc-library">
-        <div class="doc-title">
-          <span>📚</span> Active Documents
-        </div>
-        <div class="doc-list">
-          <div class="doc-item">
-            <span style="flex:1;">HF Guideline 2024</span>
-            <span class="doc-present">PRESENT</span>
-          </div>
-          <div class="doc-item">
-            <span style="flex:1;">Diabetes Guideline</span>
-            <span class="doc-missing">MISSING</span>
-          </div>
-          <div class="doc-item">
-            <span style="flex:1;">HTN Guideline</span>
-            <span class="doc-missing">MISSING</span>
-          </div>
-          <div class="doc-item">
-            <span style="flex:1;">Lisinopril Monograph</span>
-            <span class="doc-present">PRESENT</span>
-          </div>
-          <div class="doc-item">
-            <span style="flex:1;">Metformin Monograph</span>
-            <span class="doc-missing">MISSING</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top: 20px; font-size:0.7rem; color:#5b6f87;">
-        ⚠️ Only documents marked PRESENT will be used
-      </div>
-    </aside>
-
-    <main class="interaction-panel">
       <div class="question-box">
-        <textarea id="question" placeholder="Ask a protocol-locked clinical question (e.g., What is the recommended therapy for heart failure with reduced EF?)"></textarea>
+        <textarea id="question" placeholder="e.g. What is the loading dose for a patient with renal impairment?"></textarea>
       </div>
 
       <div class="action-bar">
-        <button class="primary-btn" id="askBtn">Run Protocol Analysis</button>
+        <button class="primary-btn" id="askBtn"><span>Ask DoseGuide</span></button>
         <button class="secondary-btn" id="clearBtn">Clear</button>
       </div>
 
-      <section id="resultPanel" class="results-container">
+      <div id="resultPanel" class="results-container" style="display: none;">
         <div class="status-strip">
-          <span id="statusBadge" class="badge badge-info">Ready</span>
-          <span id="protocolLocked" class="badge badge-locked" style="display:none;">🔒 Protocol Locked</span>
-          <span id="missingDocWarning" class="badge badge-warn" style="display:none;">⚠️ Missing Guidelines</span>
-        </div>
-
-        <!-- Missing Guidelines Warning -->
-        <div id="missingGuidelinesContainer" class="missing-warning" style="display: none;">
-          <span style="font-size: 1.2rem;">⚠️</span>
-          <div>
-            <strong>No guideline available in current document library for:</strong>
-            <span id="missingConditionsList"></span>
-          </div>
+          <span id="statusText" class="status-badge">Ready</span>
+          <span id="verdictBadge" class="badge" style="display:none"></span>
+          <span id="lockedIndicator" class="badge badge-locked" style="display:none">🔒 Protocol Locked</span>
         </div>
 
         <div class="answer-card">
-          <h3 style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 12px;">Evidence Summary</h3>
-          <div class="answer-text" id="verdictContent"></div>
+          <h3>Evidence Summary</h3>
+          <div class="answer-text" id="verdictContent">Waiting...</div>
         </div>
 
-        <div id="sourcesSection">
-          <h3 style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 12px;">Cited References</h3>
-          <div id="sourceContent"></div>
+        <div class="sources-panel">
+          <h3 style="font-size: 0.85rem; margin-bottom:15px; color:#25415f">Cited References</h3>
+          <div id="sourceContent">No references yet.</div>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-  // Configuration
-  const ASK_ENDPOINT = "/ask"; 
+  /******************************************************************
+   * ✅ FIX #1: DO NOT call "/ask" on Pages domain unless you have a Pages Function.
+   * We call the Worker directly so it can read your Vector Store PDFs.
+   ******************************************************************/
+  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
+  const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
-  // DOM Elements
   const askBtn = document.getElementById('askBtn');
   const clearBtn = document.getElementById('clearBtn');
   const questionInput = document.getElementById('question');
   const resultPanel = document.getElementById('resultPanel');
+  const statusText = document.getElementById('statusText');
   const verdictContent = document.getElementById('verdictContent');
   const sourceContent = document.getElementById('sourceContent');
-  const statusBadge = document.getElementById('statusBadge');
-  const protocolLocked = document.getElementById('protocolLocked');
-  const missingDocWarning = document.getElementById('missingDocWarning');
-  const missingGuidelinesContainer = document.getElementById('missingGuidelinesContainer');
-  const missingConditionsList = document.getElementById('missingConditionsList');
+  const lockedIndicator = document.getElementById('lockedIndicator');
+  const verdictBadge = document.getElementById('verdictBadge');
   const outputModeInput = document.getElementById('output_mode');
-  const languageSelect = document.getElementById('language');
-  const sourceModeSelect = document.getElementById('source_mode');
 
-  // Handle Mode Selection
+  // Mode Selection
   document.querySelectorAll('.mode-pill').forEach(pill => {
     pill.addEventListener('click', function() {
       document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
@@ -330,37 +290,37 @@
     });
   });
 
-  // Clear Logic
   clearBtn.addEventListener('click', () => {
     questionInput.value = '';
     resultPanel.style.display = 'none';
+    statusText.innerText = 'Ready';
+    lockedIndicator.style.display = 'none';
+    verdictBadge.style.display = 'none';
+    sourceContent.innerHTML = 'No references yet.';
   });
 
-  // Main Ask Function
+  askBtn.addEventListener('click', handleAsk);
+
   async function handleAsk() {
     const question = questionInput.value.trim();
-    if (!question) return alert("Please enter a question.");
+    if (!question) { alert("Please enter a question."); return; }
 
-    // Update UI
-    askBtn.disabled = true;
-    askBtn.innerHTML = `<span class="loader"></span> Analyzing...`;
-    resultPanel.style.display = 'block';
-    verdictContent.innerText = "🔍 Searching protocol documents...";
-    sourceContent.innerHTML = "";
-    missingGuidelinesContainer.style.display = 'none';
-    statusBadge.className = "badge badge-info";
-    statusBadge.innerText = "Searching Vector Store";
-    protocolLocked.style.display = "none";
-    missingDocWarning.style.display = "none";
-
-    // Build Payload - ONLY using fields expected by backend
     const payload = {
       question: question,
-      language: languageSelect.value,
-      output_mode: outputModeInput.value,
-      source_mode: sourceModeSelect.value,
-      answer_style: "recommended" // Default as hidden field removed
+      drug: document.getElementById('drug').value || null,
+      language: document.getElementById('language').value,
+      answer_style: document.getElementById('answer_style').value,
+      output_mode: outputModeInput.value
     };
+
+    askBtn.disabled = true;
+    askBtn.innerHTML = `<span class="loader"></span><span> Analyzing...</span>`;
+    statusText.innerText = 'Analyzing...';
+    resultPanel.style.display = 'block';
+    verdictContent.innerText = 'Searching clinical sources...';
+    sourceContent.innerHTML = 'Loading...';
+    lockedIndicator.style.display = 'none';
+    verdictBadge.style.display = 'none';
 
     try {
       const response = await fetch(ASK_ENDPOINT, {
@@ -369,80 +329,155 @@
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error || "Server Communication Error");
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : { answer: await response.text() };
 
-      // Handle Response based on backend structure
-      if (data.verdict === "NOT_FOUND") {
-        statusBadge.className = "badge badge-warn";
-        statusBadge.innerText = "Not Found";
-        verdictContent.innerText = data.answer || "No matching information found in protocol documents.";
-        sourceContent.innerHTML = "<em>No citations available - query did not match any documents.</em>";
-        
-        if (data.applied_output?.source_mode === "required") {
-          protocolLocked.style.display = "inline-block";
-        }
-      } else {
-        statusBadge.className = "badge badge-ok";
-        statusBadge.innerText = "Validated";
-        verdictContent.innerText = data.answer || "Response generated from protocol documents.";
-        
-        // Show protocol locked badge if source_mode was required
-        if (data.applied_output?.source_mode === "required") {
-          protocolLocked.style.display = "inline-block";
-        }
-        
-        // Render Citations with complete metadata
-        if (data.citations && data.citations.length > 0) {
-          sourceContent.innerHTML = data.citations.map(c => `
-            <div class="citation-item">
-              <div class="citation-header">
-                <span class="citation-file">📄 ${c.filename || 'Unknown source'}</span>
-                <span class="citation-meta">${c.section ? 'Sec: ' + c.section : ''} ${c.page > 0 ? '· Page ' + c.page : ''}</span>
-              </div>
-              ${c.excerpt ? `<div class="citation-excerpt">"${c.excerpt}"</div>` : ''}
-            </div>
-          `).join('');
-        } else if (sourceModeSelect.value === "required") {
-          // If source_mode required but no citations, show warning
-          sourceContent.innerHTML = '<em class="badge badge-warn">⚠️ Source mode required but no citations returned</em>';
-        } else {
-          sourceContent.innerHTML = "<em>No specific citations attached (source_mode=off).</em>";
-        }
+      if (!response.ok) {
+        throw new Error(data?.error || `Server Error (HTTP ${response.status})`);
       }
 
-      // Check for missing guidelines in response (if backend supports)
-      if (data.missing_guidelines && data.missing_guidelines.length > 0) {
-        missingConditionsList.innerText = data.missing_guidelines.join(', ');
-        missingGuidelinesContainer.style.display = 'flex';
-        missingDocWarning.style.display = 'inline-block';
-      }
+      displayResult(data);
 
-    } catch (err) {
-      statusBadge.className = "badge badge-warn";
-      statusBadge.innerText = "Error";
-      verdictContent.innerHTML = `<span style="color:red">⚠️ System Error: ${err.message}</span>`;
+    } catch (error) {
+      statusText.innerText = 'Error';
+      verdictBadge.style.display = 'inline-block';
+      verdictBadge.className = 'badge badge-warn';
+      verdictBadge.textContent = '⚠️ Error';
+      verdictContent.innerHTML = `<div style="color:#dc2626;">❌ ${escapeHtml(error.message)}</div>`;
+      sourceContent.innerHTML = `<div style="color:#64748b; font-size:0.9rem;">Endpoint used: <b>${escapeHtml(ASK_ENDPOINT)}</b></div>`;
     } finally {
       askBtn.disabled = false;
-      askBtn.innerText = "Run Protocol Analysis";
+      askBtn.innerHTML = `<span>Ask DoseGuide</span>`;
     }
   }
 
-  askBtn.addEventListener('click', handleAsk);
+  /******************************************************************
+   * ✅ FIX #2: Normalize many possible Worker response shapes.
+   * Supports: {answer, citations[]} OR {verdict, source/sources/citations} etc.
+   ******************************************************************/
+  function normalizeResponse(data) {
+    const locked = Boolean(
+      data.locked ||
+      data.protocol_locked ||
+      data?.result?.locked ||
+      data?.result?.protocol_locked
+    );
 
-  // Keyboard Shortcut
-  questionInput.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleAsk();
-  });
+    const verdictFlag = data.verdict || data?.result?.verdict || null;
 
-  // Update UI based on source mode
-  sourceModeSelect.addEventListener('change', function() {
-    if (this.value === 'required') {
-      protocolLocked.style.display = 'none'; // Will show when response comes
+    const answer =
+      data.answer ||
+      data.text ||
+      data.reply ||
+      data.verdict_text ||
+      data?.result?.answer ||
+      data?.result?.text ||
+      data?.result?.reply ||
+      data?.result?.verdict ||
+      "";
+
+    // citations can be array OR string OR object
+    const citations =
+      data.citations ||
+      data?.result?.citations ||
+      data.sources ||
+      data.source ||
+      data?.result?.sources ||
+      data?.result?.source ||
+      null;
+
+    return { locked, verdictFlag, answer, citations };
+  }
+
+  function displayResult(raw) {
+    const out = normalizeResponse(raw);
+
+    // status / badge
+    const isNotFound =
+      out.verdictFlag === 'NOT_FOUND' ||
+      (typeof out.answer === "string" && out.answer.trim().toUpperCase() === "NOT_FOUND");
+
+    statusText.innerText = isNotFound ? 'Not Found' : 'OK';
+
+    verdictBadge.style.display = 'inline-block';
+    verdictBadge.className = isNotFound ? 'badge badge-warn' : 'badge badge-ok';
+    verdictBadge.textContent = isNotFound ? '⚠️ Not Found' : '✅ Found';
+
+    // answer
+    verdictContent.innerText = (out.answer && String(out.answer).trim())
+      ? String(out.answer)
+      : "No info found.";
+
+    // locked indicator
+    lockedIndicator.style.display = out.locked ? 'inline-block' : 'none';
+
+    // citations render
+    renderCitations(out.citations);
+  }
+
+  function renderCitations(citations) {
+    // 1) if array of objects {filename, page, excerpt, evidence_ids...}
+    if (Array.isArray(citations) && citations.length > 0) {
+      sourceContent.innerHTML = citations.map(c => {
+        const fname = c.filename || c.file || c.name || "Evidence";
+        const page = c.page || c.p || c.page_number || "";
+        const ids = Array.isArray(c.evidence_ids) ? c.evidence_ids.join(", ") : (c.evidence_ids || c.id || "");
+        const excerpt = c.excerpt || c.quote || c.text || "";
+
+        return `
+          <div class="citation-item">
+            <div class="citation-header">
+              <span>📄 ${escapeHtml(fname)} ${page ? '(p.' + escapeHtml(String(page)) + ')' : ''}</span>
+              <span>${escapeHtml(String(ids || ""))}</span>
+            </div>
+            <div class="citation-excerpt">${escapeHtml(String(excerpt || "")).replace(/\n/g, "<br>")}</div>
+          </div>
+        `;
+      }).join('');
+      return;
     }
-  });
-</script>
 
+    // 2) if citations is a string (like "E1, E2" or multi-line sources)
+    if (typeof citations === "string" && citations.trim()) {
+      sourceContent.innerHTML = `
+        <div class="citation-item">
+          <div class="citation-header">
+            <span>📎 Sources</span>
+            <span></span>
+          </div>
+          <div class="citation-excerpt">${escapeHtml(citations).replace(/\n/g, "<br>")}</div>
+        </div>
+      `;
+      return;
+    }
+
+    // 3) if citations is an object
+    if (citations && typeof citations === "object") {
+      sourceContent.innerHTML = `
+        <div class="citation-item">
+          <div class="citation-header">
+            <span>📎 Sources</span>
+            <span></span>
+          </div>
+          <div class="citation-excerpt">${escapeHtml(JSON.stringify(citations, null, 2)).replace(/\n/g, "<br>")}</div>
+        </div>
+      `;
+      return;
+    }
+
+    sourceContent.innerHTML = 'No references cited.';
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+</script>
 </body>
 </html>
