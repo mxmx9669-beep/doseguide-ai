@@ -1,459 +1,694 @@
+```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THERAGUARD AI | Clinical Intelligence Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --clinical-bg: #f0f2f5;
-            --clinical-panel: #ffffff;
-            --clinical-primary: #004a99;
-            --clinical-secondary: #0078d4;
-            --clinical-text: #1a1c1e;
-            --clinical-muted: #5f6368;
-            --clinical-border: #d1d9e0;
-            --clinical-accent: #eef6ff;
-            --severity-high: #d93025;
-            --severity-mid: #f29900;
-            --severity-low: #188038;
-            --radius-lg: 12px;
-            --radius-sm: 6px;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تَبَصَّن · منصة القرار السريري</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #0b3b5c;
+      --primary-light: #1e4f72;
+      --secondary: #2c7da0;
+      --accent: #61a5c2;
+      --danger: #a4161a;
+      --danger-light: #ba181b;
+      --warning: #e85d04;
+      --warning-light: #f48c06;
+      --success: #2d6a4f;
+      --success-light: #40916c;
+      --gray-50: #f8f9fa;
+      --gray-100: #e9ecef;
+      --gray-200: #dee2e6;
+      --gray-300: #ced4da;
+      --gray-400: #adb5bd;
+      --gray-500: #6c757d;
+      --gray-600: #495057;
+      --gray-700: #343a40;
+      --gray-800: #212529;
+      --gray-900: #1a1e21;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --font-main: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
 
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--clinical-bg);
-            color: var(--clinical-text);
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-        }
+    body {
+      font-family: var(--font-main);
+      background: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        /* Side Navigation */
-        aside {
-            width: 420px;
-            background: var(--clinical-panel);
-            border-right: 1px solid var(--clinical-border);
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.03);
-            z-index: 10;
-        }
+    .app {
+      width: 100%;
+      max-width: 1300px;
+      background: white;
+      border-radius: 24px;
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+    }
 
-        .header {
-            padding: 30px;
-            border-bottom: 1px solid var(--clinical-border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+    /* header بسيط */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-        .logo-box {
-            background: var(--clinical-primary);
-            color: white;
-            padding: 8px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 1.2rem;
-            letter-spacing: -1px;
-        }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-        .header-title h1 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--clinical-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .logo-icon {
+      font-size: 28px;
+    }
 
-        /* Input Form Area */
-        .config-area {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
 
-        .form-section { margin-bottom: 24px; }
-        
-        label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--clinical-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
+    .logo-text small {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      display: block;
+      font-weight: 400;
+    }
 
-        textarea {
-            width: 100%;
-            height: 320px;
-            border: 1px solid var(--clinical-border);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            resize: none;
-            background: var(--clinical-accent);
-            transition: all 0.2s ease;
-        }
+    .mode-badge {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
 
-        textarea:focus {
-            outline: none;
-            border-color: var(--clinical-secondary);
-            background: white;
-            box-shadow: 0 0 0 4px rgba(0,120,212,0.1);
-        }
+    /* بطاقة الإدخال */
+    .input-card {
+      padding: 28px;
+      border-bottom: 1px solid var(--gray-200);
+    }
 
-        .control-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 20px;
-        }
+    .input-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
 
-        select {
-            width: 100%;
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--clinical-border);
-            font-size: 0.85rem;
-            background: white;
-            cursor: pointer;
-        }
+    .input-header h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
 
-        /* Mode Buttons */
-        .mode-strip {
-            display: flex;
-            background: var(--clinical-bg);
-            padding: 4px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
+    .config-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      align-items: center;
+    }
 
-        .mode-btn {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            background: transparent;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 6px;
-            color: var(--clinical-muted);
-        }
+    .config-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gray-50);
+      padding: 6px 14px;
+      border-radius: 40px;
+      border: 1px solid var(--gray-200);
+    }
 
-        .mode-btn.active {
-            background: white;
-            color: var(--clinical-primary);
-            box-shadow: var(--shadow-sm);
-        }
+    .config-item label {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+    }
 
-        .analyze-btn {
-            background: var(--clinical-primary);
-            color: white;
-            border: none;
-            padding: 18px;
-            border-radius: var(--radius-lg);
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            transition: transform 0.1s;
-        }
+    select {
+      border: none;
+      background: transparent;
+      font-weight: 500;
+      color: var(--gray-800);
+      outline: none;
+      font-size: 0.9rem;
+    }
 
-        .analyze-btn:active { transform: scale(0.98); }
+    .case-textarea {
+      width: 100%;
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 18px;
+      font-size: 0.95rem;
+      resize: vertical;
+      min-height: 140px;
+      background: var(--gray-50);
+      margin-bottom: 20px;
+    }
 
-        /* Main Display Workspace */
-        main {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
+    .case-textarea:focus {
+      outline: 2px solid var(--secondary);
+      border-color: transparent;
+    }
 
-        .clinical-card {
-            background: var(--clinical-panel);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--clinical-border);
-            box-shadow: var(--shadow-sm);
-            padding: 32px;
-            position: relative;
-        }
+    .action-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--clinical-accent);
-        }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .card-title {
-            font-weight: 700;
-            color: var(--clinical-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
 
-        /* Result Specifics */
-        .biometrics-strip {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
+    .btn-secondary {
+      background: white;
+      border: 1px solid var(--gray-300);
+      padding: 14px 32px;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+    }
 
-        .bio-box {
-            padding: 15px;
-            background: var(--clinical-accent);
-            border-radius: 10px;
-            text-align: center;
-        }
+    /* منطقة النتائج */
+    .results-area {
+      padding: 28px;
+      background: var(--gray-50);
+    }
 
-        .bio-label { font-size: 0.7rem; color: var(--clinical-muted); text-transform: uppercase; font-weight: 700; }
-        .bio-value { font-size: 1.2rem; font-weight: 700; color: var(--clinical-primary); margin-top: 4px; }
+    .protocol-bar {
+      background: white;
+      border-radius: 40px;
+      padding: 14px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-right: 4px solid var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
 
-        .verdict-container {
-            font-size: 1.05rem;
-            line-height: 1.8;
-            white-space: pre-wrap;
-        }
+    .lock-badge {
+      background: var(--primary);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
 
-        .citation-tag {
-            display: inline-block;
-            background: #e8eaed;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            margin-top: 20px;
-        }
+    /* القيم المحتسبة */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
 
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            background: var(--clinical-accent);
-        }
+    .metric-card {
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      border: 1px solid var(--gray-200);
+    }
 
-        .locked { color: var(--severity-high); border: 1px solid var(--severity-high); }
+    .metric-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      letter-spacing: 0.3px;
+    }
 
-        .empty-state {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--clinical-muted);
-            text-align: center;
-        }
+    .metric-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+    }
 
-        .loading-overlay {
-            display: none;
-            position: absolute;
-            inset: 0;
-            background: rgba(255,255,255,0.8);
-            z-index: 5;
-            place-items: center;
-            border-radius: var(--radius-lg);
-        }
+    .metric-unit {
+      font-size: 0.7rem;
+      color: var(--gray-400);
+    }
 
-        .pulse {
-            width: 40px;
-            height: 40px;
-            background: var(--clinical-primary);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
+    /* التدخلات */
+    .interventions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
 
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 0.2; }
-            100% { transform: scale(0.8); opacity: 0.5; }
-        }
-    </style>
+    .interventions-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      background: white;
+      border: 1px solid var(--gray-200);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .intervention-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--gray-200);
+      border-right-width: 6px;
+    }
+
+    .severity-high {
+      border-right-color: var(--danger);
+    }
+
+    .severity-moderate {
+      border-right-color: var(--warning);
+    }
+
+    .severity-low {
+      border-right-color: var(--success);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .severity-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 3px 12px;
+      border-radius: 30px;
+      text-transform: uppercase;
+    }
+
+    .severity-tag.high {
+      background: var(--danger-light);
+      color: white;
+    }
+
+    .severity-tag.moderate {
+      background: var(--warning);
+      color: white;
+    }
+
+    .severity-tag.low {
+      background: var(--success);
+      color: white;
+    }
+
+    .category-tag {
+      background: var(--gray-200);
+      padding: 3px 10px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+    }
+
+    .rationale {
+      color: var(--gray-600);
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
+    .citation-block {
+      background: var(--gray-100);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 0.8rem;
+      border: 1px solid var(--gray-200);
+    }
+
+    .citation-file {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .citation-meta {
+      color: var(--gray-500);
+      font-size: 0.7rem;
+      margin: 4px 0 8px;
+    }
+
+    .citation-excerpt {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      border-right: 2px solid var(--secondary);
+      font-style: italic;
+    }
+
+    .missing-warning {
+      background: #fff4e5;
+      border-right: 4px solid var(--warning);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--gray-200);
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
 </head>
 <body>
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <span class="logo-icon">⚕️</span>
+      <div class="logo-text">
+        تَبَصَّن
+        <small>قرار سريري · protocol‑locked</small>
+      </div>
+    </div>
+    <div class="mode-badge" id="modeDisplay">حالة سريرية</div>
+  </div>
 
-    <aside>
-        <div class="header">
-            <div class="logo-box">TG</div>
-            <div class="header-title">
-                <h1>TheraGuard AI</h1>
-                <p style="font-size: 0.7rem; color: var(--clinical-muted);">Clinical Protocol Engine</p>
-            </div>
-        </div>
+  <div class="input-card">
+    <div class="input-header">
+      <h2>📋 أدخل الحالة</h2>
+    </div>
 
-        <div class="config-area">
-            <div class="form-section">
-                <label>Clinical Case Entry</label>
-                <textarea id="question" placeholder="Paste full patient case (History, Medications, Lab values)..."></textarea>
-            </div>
+    <div class="config-row">
+      <div class="config-item">
+        <label>اللغة</label>
+        <select id="languageSelect">
+          <option value="ar">العربية</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>نمط الإخراج</label>
+        <select id="outputModeSelect">
+          <option value="hybrid" selected>مختلط</option>
+          <option value="short">مختصر (نقاط)</option>
+          <option value="verbatim">حرفي (نصوص)</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>المصادر</label>
+        <select id="sourceModeSelect">
+          <option value="required" selected>إلزامية</option>
+          <option value="off">دون عرض</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>الأسلوب</label>
+        <select id="styleSelect">
+          <option value="recommended">توصيات</option>
+          <option value="concise">مركز</option>
+          <option value="detailed">تفصيلي</option>
+        </select>
+      </div>
+    </div>
 
-            <div class="form-section">
-                <label>Analysis Mode</label>
-                <div class="mode-strip">
-                    <button class="mode-btn active" onclick="setMode('Hybrid', this)">HYBRID</button>
-                    <button class="mode-btn" onclick="setMode('Short', this)">SHORT</button>
-                    <button class="mode-btn" onclick="setMode('Verbatim', this)">VERBATIM</button>
-                </div>
-                <input type="hidden" id="output_mode" value="Hybrid">
-            </div>
+    <textarea id="caseInput" class="case-textarea" placeholder="مثال: 65 سنة، ذكر، طول 175 سم، وزن 95 كغ، SCr 1.4 مغ/دل. التشخيص: قصور قلب، سكري، فرط ضغط. الأدوية: ليسينوبريل 10 ملغ يومياً، ميتفورمين 1000 ملغ مرتين، إيبوبروفين 400 ملغ عند اللزوم. المختبر: K+ 4.8، HbA1c 7.2%">65 سنة، ذكر، طول 175 سم، وزن 95 كغ، SCr 1.4 مغ/دل. التشخيص: قصور قلب، سكري، فرط ضغط. الأدوية: ليسينوبريل 10 ملغ يومياً، ميتفورمين 1000 ملغ مرتين، إيبوبروفين 400 ملغ عند اللزوم. المختبر: K+ 4.8، HbA1c 7.2%</textarea>
 
-            <div class="control-row">
-                <div>
-                    <label>Language</label>
-                    <select id="language">
-                        <option value="en">English (US)</option>
-                        <option value="ar">Arabic (Medical)</option>
-                    </select>
-                </div>
-                <div style="display:none;">
-                    <select id="drug"><option value="case_analysis">Clinical Logic</option></select>
-                    <select id="answer_style"><option value="Recommended">Standard</option></select>
-                </div>
-            </div>
+    <div class="action-row">
+      <button class="btn-primary" id="analyzeBtn">
+        <span>🔍</span> تحليل الحالة
+      </button>
+      <button class="btn-secondary" id="clearBtn">مسح</button>
+    </div>
+  </div>
 
-            <button class="analyze-btn" id="analyzeBtn">RUN VALIDATION</button>
-            <p onclick="location.reload()" style="text-align:center; font-size: 0.75rem; margin-top: 15px; color: var(--clinical-muted); cursor: pointer; text-decoration: underline;">Clear Workspace</p>
-        </div>
-    </aside>
+  <div class="results-area" id="resultsArea" style="display: block;">
+    <!-- protocol bar -->
+    <div class="protocol-bar">
+      <span class="lock-badge">🔒 protocol‑locked</span>
+      <span style="font-size:0.9rem;">جميع الإجابات مقيدة بالوثائق المرفوعة</span>
+      <span style="margin-right: auto; font-size:0.75rem; color:var(--gray-500);" id="configStatus">نمط: مختلط · مصادر إلزامية</span>
+    </div>
 
-    <main id="workspace">
-        <div id="emptyState" class="empty-state">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🛡️</div>
-            <h2 style="font-weight: 500; color: var(--clinical-text);">Ready for Clinical Assessment</h2>
-            <p>Paste a medical case in the sidebar to begin protocol-locked analysis.</p>
-        </div>
+    <!-- computed metrics -->
+    <div class="metrics-grid" id="metricsGrid"></div>
 
-        <div id="resultCard" class="clinical-card" style="display: none;">
-            <div class="loading-overlay" id="loader">
-                <div class="pulse"></div>
-            </div>
+    <!-- missing guidelines warning -->
+    <div id="missingWarning" class="missing-warning" style="display: none;">
+      <span style="font-size:1.5rem;">⚠️</span>
+      <div>
+        <strong>لا يوجد دليل إرشادي في المكتبة الحالية</strong><br>
+        <span id="missingConditions"></span>
+      </div>
+    </div>
 
-            <div class="card-header">
-                <div class="card-title">👨‍⚕️ Clinical Findings</div>
-                <div id="statusBadge" class="status-badge">Processing...</div>
-            </div>
+    <!-- interventions -->
+    <div class="interventions-header">
+      <h3>⚡ التدخلات السريرية</h3>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">الكل</button>
+        <button class="filter-btn" data-filter="high">عالية</button>
+        <button class="filter-btn" data-filter="moderate">متوسطة</button>
+        <button class="filter-btn" data-filter="low">منخفضة</button>
+      </div>
+    </div>
 
-            <div class="biometrics-strip" id="bioStrip">
-                </div>
+    <div id="interventionsContainer">
+      <div style="background: white; border-radius: 20px; padding: 40px; text-align: center; color: var(--gray-400); border: 2px dashed var(--gray-200);">
+        ⚕️ أدخل الحالة وانقر "تحليل"
+      </div>
+    </div>
 
-            <div class="verdict-container" id="verdictContent">
-                </div>
-
-            <div id="citationsArea">
-                </div>
-        </div>
-    </main>
+    <div class="footer">
+      <span>📚 جميع الاستشهادات تتضمن: اسم الملف · العنوان · رقم الصفحة · النص الحرفي</span>
+      <span id="timestamp">محدث الآن</span>
+    </div>
+  </div>
+</div>
 
 <script>
-    // --- API Configuration ---
-    const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
-    const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
+  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
+  const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
-    // --- State & Mode ---
-    function setMode(val, btn) {
-        document.getElementById('output_mode').value = val;
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
+  // عناصر الواجهة
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const caseInput = document.getElementById('caseInput');
+  const languageSelect = document.getElementById('languageSelect');
+  const outputModeSelect = document.getElementById('outputModeSelect');
+  const sourceModeSelect = document.getElementById('sourceModeSelect');
+  const styleSelect = document.getElementById('styleSelect');
+  const metricsGrid = document.getElementById('metricsGrid');
+  const missingWarning = document.getElementById('missingWarning');
+  const missingConditions = document.getElementById('missingConditions');
+  const interventionsContainer = document.getElementById('interventionsContainer');
+  const configStatus = document.getElementById('configStatus');
+  const timestamp = document.getElementById('timestamp');
+  const modeDisplay = document.getElementById('modeDisplay');
 
-    // --- Logic & Fetching ---
-    async function performAnalysis() {
-        const caseText = document.getElementById('question').value;
-        if (!caseText.trim()) return alert("Case entry is empty.");
+  // تحديث عرض الإعدادات
+  function updateConfigDisplay() {
+    const outputMap = { hybrid: 'مختلط', short: 'مختصر', verbatim: 'حرفي' };
+    const sourceMap = { required: 'مصادر إلزامية', off: 'بدون مصادر' };
+    configStatus.innerText = `نمط: ${outputMap[outputModeSelect.value]} · ${sourceMap[sourceModeSelect.value]}`;
+    modeDisplay.innerText = outputMap[outputModeSelect.value] + ' · ' + sourceMap[sourceModeSelect.value];
+  }
 
-        // UI Reset
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('resultCard').style.display = 'block';
-        document.getElementById('loader').style.display = 'grid';
-        document.getElementById('verdictContent').innerText = '';
-        document.getElementById('bioStrip').innerHTML = '';
-        document.getElementById('citationsArea').innerHTML = '';
+  outputModeSelect.addEventListener('change', updateConfigDisplay);
+  sourceModeSelect.addEventListener('change', updateConfigDisplay);
+  updateConfigDisplay();
 
-        const payload = {
-            drug: "case_analysis",
-            language: document.getElementById('language').value,
-            answer_style: "Recommended",
-            output_mode: document.getElementById('output_mode').value,
-            question: caseText
-        };
+  // مسح
+  clearBtn.addEventListener('click', () => {
+    caseInput.value = '';
+    metricsGrid.innerHTML = '';
+    missingWarning.style.display = 'none';
+    interventionsContainer.innerHTML = `
+      <div style="background: white; border-radius: 20px; padding: 40px; text-align: center; color: var(--gray-400); border: 2px dashed var(--gray-200);">
+        ⚕️ أدخل الحالة وانقر "تحليل"
+      </div>
+    `;
+    timestamp.innerText = 'محدث الآن';
+  });
 
-        try {
-            const response = await fetch(ASK_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+  // تحليل
+  analyzeBtn.addEventListener('click', async () => {
+    const caseText = caseInput.value.trim();
+    if (!caseText) return alert('الرجاء إدخال نص الحالة');
 
-            const data = await response.json();
-            const out = normalizeResponse(data);
+    // حالة التحميل
+    interventionsContainer.innerHTML = `
+      <div style="background: white; border-radius: 20px; padding: 40px; text-align: center;">
+        <span style="font-size: 2rem;">⏳</span><br>جاري التحليل...
+      </div>
+    `;
 
-            renderOutput(out, caseText);
-        } catch (err) {
-            document.getElementById('verdictContent').innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
-        } finally {
-            document.getElementById('loader').style.display = 'none';
-        }
-    }
+    const payload = {
+      mode: 'case_analysis',
+      case_text: caseText,
+      language: languageSelect.value,
+      answer_style: styleSelect.value,
+      output_mode: outputModeSelect.value,
+      source_mode: sourceModeSelect.value
+    };
 
-    function normalizeResponse(data) {
-        const locked = Boolean(data.locked || data.protocol_locked || data?.result?.locked);
-        const verdict = data.verdict || data.answer || data.reply || data.text || data?.result?.verdict || "";
-        const source = data.source || data.sources || data.citations || data?.result?.source || "";
-        return { locked, verdict, source };
-    }
+    try {
+      const response = await fetch(ASK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    function renderOutput(data, rawText) {
-        // Text Results
-        document.getElementById('verdictContent').innerText = data.verdict;
-        document.getElementById('statusBadge').innerText = data.locked ? "🔒 PROTOCOL LOCKED" : "✅ VALIDATED";
-        if(data.locked) document.getElementById('statusBadge').classList.add('locked');
+      const data = await response.json();
 
-        // References
-        if(data.source) {
-            document.getElementById('citationsArea').innerHTML = `<div class="citation-tag">Evidence Sources: ${data.source}</div>`;
-        }
+      // عرض القيم المحتسبة (نتائج فقط، بدون خطوات)
+      if (data.clinical?.computed) {
+        const c = data.clinical.computed;
+        metricsGrid.innerHTML = `
+          <div class="metric-card">
+            <div class="metric-label">BMI</div>
+            <div class="metric-value">${c.bmi || '—'}</div>
+            <div class="metric-unit">${c.bmi_category || ''}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">الوزن المثالي</div>
+            <div class="metric-value">${c.ibw_kg || '—'}</div>
+            <div class="metric-unit">كغ</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">الوزن المعدل</div>
+            <div class="metric-value">${c.adjbw_kg || '—'}</div>
+            <div class="metric-unit">كغ</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">الوزن المستخدم</div>
+            <div class="metric-value">${c.weight_for_crcl || '—'}</div>
+            <div class="metric-unit">${c.weight_rule || ''}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">CrCl</div>
+            <div class="metric-value">${c.crcl_mLmin || '—'}</div>
+            <div class="metric-unit">مل/د · ${c.crcl_method || ''}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">مرحلة CKD</div>
+            <div class="metric-value">${c.ckd_stage || '—'}</div>
+            <div class="metric-unit"></div>
+          </div>
+        `;
+      } else {
+        metricsGrid.innerHTML = '';
+      }
 
-        // Automatic Key Parameter Detection (Simulated for UI)
-        detectParameters(rawText);
-    }
+      // تحذير المبادئ التوجيهية المفقودة
+      if (data.clinical?.missing_guidelines?.length > 0) {
+        const conditions = data.clinical.missing_guidelines.map(m => m.condition).join('، ');
+        missingConditions.innerText = conditions;
+        missingWarning.style.display = 'flex';
+      } else {
+        missingWarning.style.display = 'none';
+      }
 
-    function detectParameters(text) {
-        const strip = document.getElementById('bioStrip');
-        const patterns = [
-            { label: 'Estimated CrCl', regex: /CrCl\s*[:=]\s*(\d+)/i, unit: 'mL/min' },
-            { label: 'Weight', regex: /(\d+)\s*kg/i, unit: 'kg' },
-            { label: 'Age', regex: /(\d+)\s*y/i, unit: 'yrs' },
-            { label: 'BMI', regex: /BMI\s*[:=]\s*(\d+)/i, unit: 'm²' }
-        ];
-
-        patterns.forEach(p => {
-            const match = text.match(p.regex);
-            if(match) {
-                const box = document.createElement('div');
-                box.className = 'bio-box';
-                box.innerHTML = `<div class="bio-label">${p.label}</div><div class="bio-value">${match[1]} ${p.unit}</div>`;
-                strip.appendChild(box);
-            }
+      // عرض التدخلات
+      let html = '';
+      if (data.clinical?.interventions?.length > 0) {
+        data.clinical.interventions.forEach(iv => {
+          const severityClass = iv.severity ? iv.severity.toLowerCase() : 'moderate';
+          html += `
+            <div class="intervention-card severity-${severityClass}">
+              <div class="card-header">
+                <span class="title">⚡ ${iv.title || 'تدخل'}</span>
+                <span class="severity-tag ${severityClass}">${iv.severity || 'متوسطة'}</span>
+                <span class="category-tag">${iv.category || ''}</span>
+              </div>
+              <div class="rationale">${iv.rationale || ''}</div>
+              ${iv.action ? `<div style="margin-bottom:12px;"><strong>الإجراء:</strong> ${iv.action}</div>` : ''}
+              ${iv.evidence ? iv.evidence.map(e => `
+                <div class="citation-block">
+                  <div class="citation-file">📄 ${e.file}</div>
+                  <div class="citation-meta">${e.section} · صفحة ${e.page}</div>
+                  <div class="citation-excerpt">“${e.excerpt}”</div>
+                </div>
+              `).join('') : ''}
+            </div>
+          `;
         });
-    }
+      } else {
+        html = `
+          <div class="missing-warning" style="margin-top:0;">
+            <span>📭</span> لم يتم العثور على تدخلات في الوثائق الحالية.
+          </div>
+        `;
+      }
 
-    document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
+      interventionsContainer.innerHTML = html;
+      timestamp.innerText = `آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')}`;
+
+    } catch (err) {
+      interventionsContainer.innerHTML = `
+        <div class="missing-warning" style="background: var(--danger-light); color: white;">
+          <span>❌</span> خطأ: ${err.message}
+        </div>
+      `;
+    }
+  });
 </script>
 </body>
 </html>
+```
