@@ -1,803 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THERAGUARD AI · Protocol-Locked Clinical Engine</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoseGuide AI · Clinical Decision Support</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --bg-primary: #f5f7fb;
-            --bg-card: #ffffff;
-            --bg-sidebar: #0f172a;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --text-inverse: #f8fafc;
-            --accent-primary: #2563eb;
-            --accent-secondary: #3b82f6;
-            --accent-light: #dbeafe;
-            --border-light: #e2e8f0;
-            --border-strong: #cbd5e1;
-            --severity-high: #dc2626;
-            --severity-high-bg: #fee2e2;
-            --severity-moderate: #f59e0b;
-            --severity-moderate-bg: #fef3c7;
-            --severity-low: #10b981;
-            --severity-low-bg: #d1fae5;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --radius-xl: 16px;
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #0b1c33;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
 
-        body {
-            font-family: var(--font-sans);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-            line-height: 1.5;
-        }
+    .app-card {
+      max-width: 1100px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
 
-        .app {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            height: 100vh;
-        }
+    .app-header {
+      background: #ffffff;
+      padding: 24px 32px;
+      border-bottom: 1px solid #e9eef3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
 
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            background: var(--bg-sidebar);
-            color: var(--text-inverse);
-            overflow-y: auto;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-        }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
 
-        .sidebar-header {
-            padding: 28px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+    .logo-icon {
+      background: linear-gradient(135deg, #1a5c9e, #0d3b6f);
+      width: 48px; height: 48px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 26px; font-weight: 600;
+      box-shadow: 0 6px 12px rgba(20, 70, 130, 0.25);
+    }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
+    .logo-text h1 {
+      font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1a3b5c, #143059);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
 
-        .logo-icon {
-            background: var(--accent-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 20px;
-        }
+    .logo-text span { font-size: 0.85rem; color: #5e7185; font-weight: 500; display: block; }
 
-        .logo-text h1 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-        }
+    .badge-clinical {
+      background: #e1ecfe; color: #1d4a8b; padding: 6px 16px;
+      border-radius: 40px; font-size: 0.8rem; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(29, 74, 139, 0.15);
+    }
 
-        .logo-text p {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 2px;
-        }
+    .main-layout { display: grid; grid-template-columns: 280px 1fr; background: #fafcff; }
 
-        .protocol-badge {
-            background: rgba(37, 99, 235, 0.2);
-            color: var(--accent-light);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 12px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
+    .context-panel { background: #f5f9ff; border-right: 1px solid #dde3ea; padding: 28px 20px; }
 
-        /* Input Section */
-        .input-section {
-            padding: 24px;
-        }
+    .panel-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #5b6f87; margin-bottom: 24px; }
 
-        .input-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: #94a3b8;
-            margin-bottom: 12px;
-        }
+    .param-group { margin-bottom: 28px; }
 
-        .case-input {
-            width: 100%;
-            height: 260px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            line-height: 1.6;
-            color: #e2e8f0;
-            resize: none;
-            margin-bottom: 20px;
-        }
+    .param-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #1f334a; margin-bottom: 10px; }
 
-        .case-input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-        }
+    .param-select {
+      width: 100%; padding: 12px 16px; background: white; border: 1px solid #d4dce6;
+      border-radius: 14px; font-size: 0.95rem; color: #0f263b; font-weight: 500;
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2336547a" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-repeat: no-repeat; background-position: right 16px center;
+    }
 
-        /* Controls */
-        .control-group {
-            margin-bottom: 20px;
-        }
+    .mode-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 
-        .control-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #94a3b8;
-            margin-bottom: 8px;
-            letter-spacing: 0.03em;
-        }
+    .mode-pill {
+      background: white; border: 1px solid #ccd7e6; border-radius: 30px;
+      padding: 8px 16px; font-size: 0.8rem; font-weight: 600; color: #2b405b;
+      cursor: pointer; transition: all 0.1s; flex: 1 0 auto; text-align: center;
+    }
 
-        .mode-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            background: #1e293b;
-            padding: 4px;
-            border-radius: var(--radius-md);
-        }
+    .mode-pill.active { background: #1d4a8b; border-color: #1d4a8b; color: white; box-shadow: 0 4px 8px rgba(0, 55, 120, 0.2); }
 
-        .mode-btn {
-            padding: 8px;
-            border: none;
-            background: transparent;
-            color: #94a3b8;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all 0.1s;
-        }
+    .interaction-panel { padding: 32px; }
 
-        .mode-btn.active {
-            background: var(--accent-primary);
-            color: white;
-        }
+    .query-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
+    .query-header h2 { font-size: 1.2rem; font-weight: 600; color: #13273f; }
 
-        select {
-            width: 100%;
-            padding: 10px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: var(--radius-md);
-            color: white;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
+    .question-box {
+      background: #ffffff; border: 1px solid #dbe1e9; border-radius: 24px;
+      padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
 
-        select option {
-            background: #1e293b;
-        }
+    .question-box textarea {
+      width: 100%; border: none; font-family: "Inter", sans-serif;
+      font-size: 1rem; line-height: 1.6; resize: vertical; min-height: 100px;
+      outline: none; color: #1a2c42;
+    }
 
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 16px 0;
-            padding: 10px;
-            background: #1e293b;
-            border-radius: var(--radius-md);
-        }
+    .action-bar { display: flex; gap: 16px; align-items: center; margin-top: 10px; }
 
-        .checkbox-item input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            accent-color: var(--accent-primary);
-        }
+    .primary-btn {
+      background: #1a4c8c; border: none; color: white; font-weight: 600;
+      padding: 14px 34px; border-radius: 60px; font-size: 1rem;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 18px rgba(20, 70, 140, 0.35); cursor: pointer;
+    }
 
-        .checkbox-item label {
-            font-size: 0.8rem;
-            color: #e2e8f0;
-            cursor: pointer;
-        }
+    .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .analyze-btn {
-            width: 100%;
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: var(--radius-lg);
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 24px;
-            transition: background 0.2s;
-        }
+    .secondary-btn {
+      background: transparent; border: 1px solid #bcc9db; color: #334e70;
+      font-weight: 500; padding: 14px 28px; border-radius: 60px; cursor: pointer;
+    }
 
-        .analyze-btn:hover {
-            background: #1d4ed8;
-        }
+    .results-container { margin-top: 40px; animation: fadeUp 0.25s ease; }
 
-        .clear-link {
-            text-align: center;
-            margin-top: 16px;
-            font-size: 0.7rem;
-            color: #64748b;
-            cursor: pointer;
-            text-decoration: underline;
-        }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ===== MAIN CONTENT ===== */
-        .main {
-            overflow-y: auto;
-            padding: 32px;
-        }
+    .status-strip {
+      background: #f0f4fa; border-radius: 100px; padding: 8px 20px;
+      display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+    }
 
-        .empty-state {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            text-align: center;
-        }
+    .status-badge { background: white; border-radius: 40px; padding: 4px 16px; font-weight: 600; }
 
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
+    .badge { padding: 4px 14px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; }
+    .badge-locked { background: #fee2e2; color: #991b1b; }
+    .badge-ok { background: #dcfce7; color: #166534; }
+    .badge-warn { background: #fef9c3; color: #854d0e; }
 
-        .empty-state h2 {
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
+    .answer-card {
+      background: #f5faff; border-radius: 24px; padding: 28px;
+      margin-bottom: 28px; border: 1px solid #d1e0f5;
+    }
 
-        .result-card {
-            background: white;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            padding: 32px;
-            position: relative;
-        }
+    .answer-card h3 { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: #3e6191; margin-bottom: 18px; }
 
-        .loader-overlay {
-            display: none;
-            position: absolute;
-            inset: 0;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(4px);
-            z-index: 10;
-            border-radius: var(--radius-xl);
-            align-items: center;
-            justify-content: center;
-        }
+    .sources-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; }
 
-        .pulse-loader {
-            width: 50px;
-            height: 50px;
-            background: var(--accent-primary);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
+    .citation-item { background: #fafdff; border-radius: 12px; border: 1px solid #e4ebf5; padding: 16px; margin-bottom: 12px; }
 
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 0.2; }
-            100% { transform: scale(0.8); opacity: 0.5; }
-        }
+    .citation-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: #3b5575; margin-bottom: 8px; }
 
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--border-light);
-        }
+    .citation-excerpt { color: #193251; font-size: 0.95rem; border-left: 3px solid #b3c9e5; padding-left: 16px; }
 
-        .result-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .config-badge {
-            background: var(--accent-light);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--accent-primary);
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .metric-card {
-            background: var(--bg-primary);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            text-align: center;
-        }
-
-        .metric-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 600;
-            letter-spacing: 0.03em;
-        }
-
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            line-height: 1.2;
-            margin: 4px 0;
-        }
-
-        .metric-unit {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        .warning-box {
-            background: var(--severity-moderate-bg);
-            border-left: 4px solid var(--severity-moderate);
-            padding: 16px;
-            border-radius: var(--radius-md);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .interventions-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .intervention-card {
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            border-right-width: 6px;
-            transition: transform 0.1s;
-        }
-
-        .intervention-card:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .intervention-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .intervention-title {
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .severity-tag {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .severity-high {
-            background: var(--severity-high-bg);
-            color: var(--severity-high);
-            border: 1px solid var(--severity-high);
-        }
-
-        .severity-moderate {
-            background: var(--severity-moderate-bg);
-            color: var(--severity-moderate);
-            border: 1px solid var(--severity-moderate);
-        }
-
-        .severity-low {
-            background: var(--severity-low-bg);
-            color: var(--severity-low);
-            border: 1px solid var(--severity-low);
-        }
-
-        .category-badge {
-            background: var(--border-light);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-        }
-
-        .rationale {
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-        }
-
-        .action-box {
-            background: var(--accent-light);
-            padding: 12px;
-            border-radius: var(--radius-md);
-            margin-bottom: 16px;
-            font-weight: 500;
-            border-left: 3px solid var(--accent-primary);
-        }
-
-        .citation-block {
-            background: var(--bg-primary);
-            padding: 16px;
-            border-radius: var(--radius-md);
-            margin-top: 12px;
-            border-left: 3px solid var(--accent-primary);
-        }
-
-        .citation-file {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--accent-primary);
-            font-weight: 600;
-        }
-
-        .citation-meta {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin: 4px 0 8px;
-        }
-
-        .citation-excerpt {
-            font-size: 0.8rem;
-            background: white;
-            padding: 10px;
-            border-radius: var(--radius-sm);
-            font-style: italic;
-        }
-
-        .footer-note {
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-light);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .not-found {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-            background: var(--bg-primary);
-            border-radius: var(--radius-lg);
-        }
-    </style>
+    .loader {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4);
+      border-top: 2px solid white; border-radius: 50%; animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-    <div class="app">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon">⚕️</div>
-                    <div class="logo-text">
-                        <h1>THERAGUARD AI</h1>
-                        <p>Clinical Intelligence · Protocol‑Locked</p>
-                    </div>
-                </div>
-                <div class="protocol-badge">🔒 Strict Document Boundary</div>
-            </div>
 
-            <div class="input-section">
-                <div class="input-label">
-                    <span>📋</span> Patient Case (Free Text)
-                </div>
-                <textarea id="caseInput" class="case-input" placeholder="Example: 65 year old male, height 175cm, weight 95kg, SCr 1.4 mg/dL. Diagnoses: Heart failure, Diabetes, Hypertension. Medications: Lisinopril 10mg daily, Metformin 1000mg BID, Ibuprofen 400mg PRN. Labs: K+ 4.8, HbA1c 7.2%">65 year old male, height 175cm, weight 95kg, SCr 1.4 mg/dL. Diagnoses: Heart failure, Diabetes, Hypertension. Medications: Lisinopril 10mg daily, Metformin 1000mg BID, Ibuprofen 400mg PRN. Labs: K+ 4.8, HbA1c 7.2%</textarea>
+<div class="app-card">
+  <div class="app-header">
+    <div class="logo-area">
+      <div class="logo-icon">DG</div>
+      <div class="logo-text">
+        <h1>DoseGuide AI</h1>
+        <span>evidence-based dosing · clinical decision support</span>
+      </div>
+    </div>
+    <div class="badge-clinical"><span>🔬</span> UpToDate® · Lexicomp® · AHFS</div>
+  </div>
 
-                <div class="control-group">
-                    <div class="control-label">Output Mode</div>
-                    <div class="mode-selector" id="modeSelector">
-                        <button class="mode-btn active" data-mode="hybrid">Hybrid</button>
-                        <button class="mode-btn" data-mode="short">Short</button>
-                        <button class="mode-btn" data-mode="verbatim">Verbatim</button>
-                    </div>
-                    <input type="hidden" id="outputMode" value="hybrid">
-                </div>
+  <div class="main-layout">
+    <div class="context-panel">
+      <div class="panel-title">⚙️ query configuration</div>
+      
+      <div class="param-group">
+        <div class="param-label">Drug / topic</div>
+        <select class="param-select" id="drug">
+          <option value="">None</option>
+          <option value="warfarin">warfarin (Coumadin)</option>
+          <option value="insulin">insulin (all types)</option>
+          <option value="amoxicillin">amoxicillin</option>
+        </select>
+      </div>
 
-                <div class="row">
-                    <div>
-                        <div class="control-label">Language</div>
-                        <select id="language">
-                            <option value="en">English</option>
-                            <option value="ar">Arabic</option>
-                        </select>
-                    </div>
-                    <div>
-                        <div class="control-label">Style</div>
-                        <select id="answerStyle">
-                            <option value="recommended">Recommended</option>
-                            <option value="concise">Concise</option>
-                            <option value="detailed">Detailed</option>
-                        </select>
-                    </div>
-                </div>
+      <div class="param-group">
+        <div class="param-label">Language</div>
+        <select class="param-select" id="language">
+          <option value="en">🇬🇧 English</option>
+          <option value="ar">🇸🇦 العربية</option>
+        </select>
+      </div>
 
-                <div class="checkbox-item">
-                    <input type="checkbox" id="sourceRequired" checked>
-                    <label for="sourceRequired">🔒 Require full citations (file + section + page)</label>
-                </div>
+      <div class="param-group">
+        <div class="param-label">Answer style</div>
+        <select class="param-select" id="answer_style">
+          <option value="Recommended" selected>Recommended</option>
+          <option value="Bullet">Bullet points</option>
+          <option value="Detailed">Detailed</option>
+        </select>
+      </div>
 
-                <button class="analyze-btn" id="analyzeBtn">
-                    <span>🔍</span> Analyze Case
-                </button>
-
-                <div class="clear-link" onclick="clearWorkspace()">Clear workspace</div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main" id="main">
-            <div id="emptyState" class="empty-state">
-                <div class="empty-state-icon">🛡️</div>
-                <h2>Ready for Clinical Assessment</h2>
-                <p>Enter a patient case in the sidebar to begin protocol-locked analysis</p>
-            </div>
-
-            <div id="resultCard" class="result-card" style="display: none;">
-                <div class="loader-overlay" id="loader">
-                    <div class="pulse-loader"></div>
-                </div>
-
-                <div class="result-header">
-                    <div class="result-title">
-                        <span>⚕️</span> Clinical Findings
-                    </div>
-                    <div id="configDisplay" class="config-badge">hybrid · sources required</div>
-                </div>
-
-                <!-- Computed Metrics -->
-                <div class="metrics-grid" id="metricsGrid"></div>
-
-                <!-- Missing Guidelines Warning -->
-                <div id="missingWarning" class="warning-box" style="display: none;"></div>
-
-                <!-- Interventions -->
-                <div id="interventionsContainer" class="interventions-container"></div>
-
-                <!-- Footer -->
-                <div class="footer-note">
-                    <span id="citationCount">All citations include exact file + section + page + excerpt</span>
-                    <span id="timestamp"></span>
-                </div>
-            </div>
-        </main>
+      <div class="param-group">
+        <div class="param-label">Output mode</div>
+        <div class="mode-pills" id="modeGroup">
+          <span class="mode-pill active" data-mode="Hybrid">Hybrid</span>
+          <span class="mode-pill" data-mode="Short">Short</span>
+          <span class="mode-pill" data-mode="Verbatim">Verbatim</span>
+          <span class="mode-pill" data-mode="Source">Source</span>
+        </div>
+        <input type="hidden" id="output_mode" value="Hybrid" />
+      </div>
     </div>
 
-    <script>
-        // Configuration
-        const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
-        const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
+    <div class="interaction-panel">
+      <div class="query-header">
+        <h2>Clinical inquiry</h2>
+        <div class="status-badge" style="background:#e9edf2; color:#3f5670; font-size:0.75rem">⚕️ Professional Mode</div>
+      </div>
 
-        // DOM Elements
-        const caseInput = document.getElementById('caseInput');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const emptyState = document.getElementById('emptyState');
-        const resultCard = document.getElementById('resultCard');
-        const loader = document.getElementById('loader');
-        const configDisplay = document.getElementById('configDisplay');
-        const metricsGrid = document.getElementById('metricsGrid');
-        const missingWarning = document.getElementById('missingWarning');
-        const interventionsContainer = document.getElementById('interventionsContainer');
-        const citationCount = document.getElementById('citationCount');
-        const timestamp = document.getElementById('timestamp');
-        const outputMode = document.getElementById('outputMode');
-        const language = document.getElementById('language');
-        const answerStyle = document.getElementById('answerStyle');
-        const sourceRequired = document.getElementById('sourceRequired');
+      <div class="question-box">
+        <textarea id="question" placeholder="e.g. What is the loading dose for a patient with renal impairment?"></textarea>
+      </div>
 
-        // Mode selector
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                outputMode.value = this.dataset.mode;
-                updateConfigDisplay();
-            });
-        });
+      <div class="action-bar">
+        <button class="primary-btn" id="askBtn"><span>Ask DoseGuide</span></button>
+        <button class="secondary-btn" id="clearBtn">Clear</button>
+      </div>
 
-        function updateConfigDisplay() {
-            const mode = outputMode.value;
-            const source = sourceRequired.checked ? 'required' : 'off';
-            configDisplay.textContent = `${mode} · sources ${source}`;
-        }
+      <div id="resultPanel" class="results-container" style="display: none;">
+        <div class="status-strip">
+          <span id="statusText" class="status-badge">Ready</span>
+          <span id="verdictBadge" class="badge" style="display:none"></span>
+          <span id="lockedIndicator" class="badge badge-locked" style="display:none">🔒 Protocol Locked</span>
+        </div>
 
-        sourceRequired.addEventListener('change', updateConfigDisplay);
-        updateConfigDisplay();
+        <div class="answer-card">
+          <h3>Evidence Summary</h3>
+          <div class="answer-text" id="verdictContent">Waiting...</div>
+        </div>
 
-        // Clear workspace
-        window.clearWorkspace = function() {
-            emptyState.style.display = 'flex';
-            resultCard.style.display = 'none';
-            caseInput.value = '';
-        };
+        <div class="sources-panel">
+          <h3 style="font-size: 0.85rem; margin-bottom:15px; color:#25415f">Cited References</h3>
+          <div id="sourceContent">No references yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        // Analyze
-        analyzeBtn.addEventListener('click', async () => {
-            const text = caseInput.value.trim();
-            if (!text) {
-                alert('Please enter a patient case');
-                return;
-            }
+<script>
+  const ASK_ENDPOINT = "/ask"; 
+  const askBtn = document.getElementById('askBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const questionInput = document.getElementById('question');
+  const resultPanel = document.getElementById('resultPanel');
+  const statusText = document.getElementById('statusText');
+  const verdictContent = document.getElementById('verdictContent');
+  const sourceContent = document.getElementById('sourceContent');
+  const lockedIndicator = document.getElementById('lockedIndicator');
+  const verdictBadge = document.getElementById('verdictBadge');
+  const outputModeInput = document.getElementById('output_mode');
 
-            // Show results panel
-            emptyState.style.display = 'none';
-            resultCard.style.display = 'block';
-            loader.style.display = 'flex';
-            
-            // Clear previous results
-            metricsGrid.innerHTML = '';
-            missingWarning.style.display = 'none';
-            interventionsContainer.innerHTML = '';
+  // Mode Selection
+  document.querySelectorAll('.mode-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      outputModeInput.value = this.dataset.mode;
+    });
+  });
 
-            const payload = {
-                mode: 'case_analysis',
-                case_text: text,
-                language: language.value,
-                answer_style: answerStyle.value,
-                output_mode: outputMode.value,
-                source_mode: sourceRequired.checked ? 'required' : 'off'
-            };
+  clearBtn.addEventListener('click', () => {
+    questionInput.value = '';
+    resultPanel.style.display = 'none';
+    statusText.innerText = 'Ready';
+    lockedIndicator.style.display = 'none';
+    verdictBadge.style.display = 'none';
+  });
 
-            try {
-                const response = await fetch(ASK_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+  askBtn.addEventListener('click', handleAsk);
 
-                const data = await response.json();
+  async function handleAsk() {
+    const question = questionInput.value.trim();
+    if (!question) { alert("Please enter a question."); return; }
 
-                // Display computed metrics
-                if (data.clinical?.computed) {
-                    const c = data.clinical.computed;
-                    let metricsHtml = '';
-                    
-                    if (c.bmi) metricsHtml += `<div class="metric-card"><div class="metric-label">BMI</div><div class="metric-value">${c.bmi}</div><div class="metric-unit">${c.bmi_category || ''}</div></div>`;
-                    if (c.ibw_kg) metricsHtml += `<div class="metric-card"><div class="metric-label">IBW</div><div class="metric-value">${c.ibw_kg}</div><div class="metric-unit">kg</div></div>`;
-                    if (c.adjbw_kg) metricsHtml += `<div class="metric-card"><div class="metric-label">AdjBW</div><div class="metric-value">${c.adjbw_kg}</div><div class="metric-unit">kg</div></div>`;
-                    if (c.weight_for_crcl) metricsHtml += `<div class="metric-card"><div class="metric-label">Weight (CrCl)</div><div class="metric-value">${c.weight_for_crcl}</div><div class="metric-unit">kg</div></div>`;
-                    if (c.crcl_mLmin) metricsHtml += `<div class="metric-card"><div class="metric-label">CrCl</div><div class="metric-value">${c.crcl_mLmin}</div><div class="metric-unit">mL/min</div></div>`;
-                    if (c.ckd_stage) metricsHtml += `<div class="metric-card"><div class="metric-label">CKD Stage</div><div class="metric-value">${c.ckd_stage}</div></div>`;
-                    
-                    metricsGrid.innerHTML = metricsHtml;
-                }
+    const payload = {
+      question: question,
+      drug: document.getElementById('drug').value || null,
+      language: document.getElementById('language').value,
+      answer_style: document.getElementById('answer_style').value,
+      output_mode: outputModeInput.value
+    };
 
-                // Missing guidelines warning
-                if (data.clinical?.missing_guidelines?.length > 0) {
-                    const conditions = data.clinical.missing_guidelines.map(m => m.condition).join(', ');
-                    missingWarning.innerHTML = `
-                        <span style="font-size:1.2rem;">⚠️</span>
-                        <div>
-                            <strong>No guideline available in current document library:</strong><br>
-                            ${conditions}
-                        </div>
-                    `;
-                    missingWarning.style.display = 'flex';
-                }
+    askBtn.disabled = true;
+    askBtn.innerHTML = `<span class="loader"></span><span> Analyzing...</span>`;
+    statusText.innerText = 'Analyzing...';
+    resultPanel.style.display = 'block';
+    verdictContent.innerText = 'Searching clinical sources...';
+    sourceContent.innerHTML = 'Loading...';
 
-                // Interventions
-                if (data.clinical?.interventions?.length > 0) {
-                    let interventionsHtml = '';
-                    
-                    data.clinical.interventions.forEach(iv => {
-                        const severityClass = iv.severity === 'HIGH' ? 'severity-high' : 
-                                             iv.severity === 'MODERATE' ? 'severity-moderate' : 'severity-low';
-                        
-                        interventionsHtml += `
-                            <div class="intervention-card" style="border-left-color: ${
-                                iv.severity === 'HIGH' ? 'var(--severity-high)' : 
-                                iv.severity === 'MODERATE' ? 'var(--severity-moderate)' : 
-                                'var(--severity-low)'
-                            }">
-                                <div class="intervention-header">
-                                    <span class="intervention-title">⚡ ${iv.title || 'Intervention'}</span>
-                                    <span class="severity-tag ${severityClass}">${iv.severity || 'MODERATE'}</span>
-                                    <span class="category-badge">${iv.category || ''}</span>
-                                </div>
-                                <div class="rationale">${iv.rationale || ''}</div>
-                                ${iv.action ? `<div class="action-box">🩺 Action: ${iv.action}</div>` : ''}
-                                ${iv.evidence ? iv.evidence.map(e => `
-                                    <div class="citation-block">
-                                        <div class="citation-file">📄 ${e.file}</div>
-                                        <div class="citation-meta">${e.section || ''} · Page ${e.page || ''}</div>
-                                        <div class="citation-excerpt">“${e.excerpt || ''}”</div>
-                                    </div>
-                                `).join('') : ''}
-                            </div>
-                        `;
-                    });
-                    
-                    interventionsContainer.innerHTML = interventionsHtml;
-                    
-                    // Count total citations
-                    const totalCitations = data.clinical.interventions.reduce((acc, iv) => acc + (iv.evidence?.length || 0), 0);
-                    citationCount.textContent = `${totalCitations} complete citations (file + section + page + excerpt)`;
-                } else {
-                    interventionsContainer.innerHTML = `
-                        <div class="not-found">
-                            📭 No interventions found in current document library
-                        </div>
-                    `;
-                }
+    try {
+      const response = await fetch(ASK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Server Error");
+      displayResult(data);
+    } catch (error) {
+      verdictContent.innerHTML = `<div style="color:#dc2626;">❌ ${error.message}</div>`;
+    } finally {
+      askBtn.disabled = false;
+      askBtn.innerHTML = `<span>Ask DoseGuide</span>`;
+    }
+  }
 
-                timestamp.textContent = `Updated ${new Date().toLocaleTimeString()}`;
-
-            } catch (error) {
-                interventionsContainer.innerHTML = `
-                    <div style="background: var(--severity-high-bg); color: var(--severity-high); padding: 20px; border-radius: 8px;">
-                        ❌ Error: ${error.message}
-                    </div>
-                `;
-            } finally {
-                loader.style.display = 'none';
-            }
-        });
-    </script>
+  function displayResult(data) {
+    statusText.innerText = data.verdict === 'NOT_FOUND' ? 'Not Found' : 'OK';
+    if (data.verdict === 'NOT_FOUND') {
+      verdictBadge.style.display = 'inline-block';
+      verdictBadge.className = 'badge badge-warn';
+      verdictBadge.textContent = '⚠️ Not Found';
+    } else {
+      verdictBadge.style.display = 'inline-block';
+      verdictBadge.className = 'badge badge-ok';
+      verdictBadge.textContent = '✅ Found';
+    }
+    verdictContent.innerText = data.answer || "No info found.";
+    
+    if (data.citations && data.citations.length > 0) {
+      sourceContent.innerHTML = data.citations.map(c => `
+        <div class="citation-item">
+          <div class="citation-header">
+            <span>📄 ${c.filename} ${c.page ? '(p.'+c.page+')' : ''}</span>
+            <span>${c.evidence_ids ? c.evidence_ids.join(', ') : ''}</span>
+          </div>
+          <div class="citation-excerpt">${c.excerpt}</div>
+        </div>
+      `).join('');
+    } else { sourceContent.innerHTML = 'No references cited.'; }
+    
+    lockedIndicator.style.display = data.locked ? 'inline-block' : 'none';
+  }
+</script>
 </body>
 </html>
