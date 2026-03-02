@@ -11,7 +11,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: "Inter", -apple-system, sans-serif;
       background: #f0f4f8;
       color: #0b1c33;
       line-height: 1.5;
@@ -29,141 +29,93 @@
       border-radius: 32px;
       box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25);
       overflow: hidden;
-      transition: all 0.2s ease;
     }
 
     .app-header {
-      background: #ffffff;
       padding: 24px 32px;
       border-bottom: 1px solid #e9eef3;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
       gap: 20px;
     }
 
     .logo-area { display: flex; align-items: center; gap: 14px; }
-
     .logo-icon {
       background: linear-gradient(135deg, #1a5c9e, #0d3b6f);
       width: 48px; height: 48px; border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 26px; font-weight: 600;
-      box-shadow: 0 6px 12px rgba(20, 70, 130, 0.25);
+      color: white; font-size: 24px; font-weight: 700;
     }
 
-    .logo-text h1 {
-      font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #1a3b5c, #143059);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+    .logo-text h1 { font-size: 1.6rem; font-weight: 700; color: #1a3b5c; }
+    .logo-text span { font-size: 0.8rem; color: #5e7185; display: block; }
 
-    .logo-text span { font-size: 0.85rem; color: #5e7185; font-weight: 500; display: block; }
+    .main-layout { display: grid; grid-template-columns: 300px 1fr; background: #fafcff; }
 
-    .badge-clinical {
-      background: #e1ecfe; color: #1d4a8b; padding: 6px 16px;
-      border-radius: 40px; font-size: 0.8rem; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 6px;
-      border: 1px solid rgba(29, 74, 139, 0.15);
-    }
-
-    .main-layout { display: grid; grid-template-columns: 280px 1fr; background: #fafcff; }
-
+    /* Configuration Panel */
     .context-panel { background: #f5f9ff; border-right: 1px solid #dde3ea; padding: 28px 20px; }
-
-    .panel-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #5b6f87; margin-bottom: 24px; }
-
-    .param-group { margin-bottom: 28px; }
-
-    .param-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #1f334a; margin-bottom: 10px; }
-
+    .panel-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #5b6f87; margin-bottom: 24px; }
+    
+    .param-group { margin-bottom: 24px; }
+    .param-label { display: block; font-size: 0.85rem; font-weight: 600; color: #1f334a; margin-bottom: 8px; }
     .param-select {
-      width: 100%; padding: 12px 16px; background: white; border: 1px solid #d4dce6;
-      border-radius: 14px; font-size: 0.95rem; color: #0f263b; font-weight: 500;
-      outline: none; cursor: pointer; appearance: none;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2336547a" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
-      background-repeat: no-repeat; background-position: right 16px center;
+      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #d4dce6;
+      font-size: 0.9rem; outline: none; background: white; cursor: pointer;
     }
 
-    .mode-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-
+    .mode-pills { display: flex; flex-wrap: wrap; gap: 6px; }
     .mode-pill {
-      background: white; border: 1px solid #ccd7e6; border-radius: 30px;
-      padding: 8px 16px; font-size: 0.8rem; font-weight: 600; color: #2b405b;
-      cursor: pointer; transition: all 0.1s; flex: 1 0 auto; text-align: center;
+      flex: 1; padding: 8px; font-size: 0.75rem; font-weight: 600; text-align: center;
+      background: white; border: 1px solid #ccd7e6; border-radius: 8px; cursor: pointer;
     }
+    .mode-pill.active { background: #1a4c8c; color: white; border-color: #1a4c8c; }
 
-    .mode-pill.active { background: #1d4a8b; border-color: #1d4a8b; color: white; box-shadow: 0 4px 8px rgba(0, 55, 120, 0.2); }
-
+    /* Interaction Panel */
     .interaction-panel { padding: 32px; }
-
-    .query-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-
-    .query-header h2 { font-size: 1.2rem; font-weight: 600; color: #13273f; }
-
     .question-box {
-      background: #ffffff; border: 1px solid #dbe1e9; border-radius: 24px;
-      padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      background: white; border: 1px solid #dbe1e9; border-radius: 20px;
+      padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+    textarea {
+      width: 100%; border: none; outline: none; font-size: 1rem;
+      min-height: 120px; font-family: inherit; resize: vertical;
     }
 
-    .question-box textarea {
-      width: 100%; border: none; font-family: "Inter", sans-serif;
-      font-size: 1rem; line-height: 1.6; resize: vertical; min-height: 100px;
-      outline: none; color: #1a2c42;
-    }
-
-    .action-bar { display: flex; gap: 16px; align-items: center; margin-top: 10px; }
-
+    .action-bar { display: flex; gap: 12px; align-items: center; }
     .primary-btn {
-      background: #1a4c8c; border: none; color: white; font-weight: 600;
-      padding: 14px 34px; border-radius: 60px; font-size: 1rem;
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: 0 8px 18px rgba(20, 70, 140, 0.35); cursor: pointer;
+      background: #1a4c8c; color: white; border: none; padding: 14px 32px;
+      border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
+    .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .secondary-btn { background: none; border: 1px solid #ccd7e6; padding: 14px 24px; border-radius: 50px; cursor: pointer; }
 
-    .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .secondary-btn {
-      background: transparent; border: 1px solid #bcc9db; color: #334e70;
-      font-weight: 500; padding: 14px 28px; border-radius: 60px; cursor: pointer;
-    }
-
-    .results-container { margin-top: 40px; animation: fadeUp 0.25s ease; }
-
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    .status-strip {
-      background: #f0f4fa; border-radius: 100px; padding: 8px 20px;
-      display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
-    }
-
-    .status-badge { background: white; border-radius: 40px; padding: 4px 16px; font-weight: 600; }
-
-    .badge { padding: 4px 14px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; }
-    .badge-locked { background: #fee2e2; color: #991b1b; }
+    /* Results Area */
+    .results-container { margin-top: 32px; display: none; }
+    .status-strip { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
     .badge-ok { background: #dcfce7; color: #166534; }
-    .badge-warn { background: #fef9c3; color: #854d0e; }
+    .badge-warn { background: #fee2e2; color: #991b1b; }
+    .badge-info { background: #e0f2fe; color: #0369a1; }
 
     .answer-card {
-      background: #f5faff; border-radius: 24px; padding: 28px;
-      margin-bottom: 28px; border: 1px solid #d1e0f5;
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px;
+      padding: 24px; margin-bottom: 24px;
     }
+    .answer-text { font-size: 1.05rem; line-height: 1.7; color: #0f172a; white-space: pre-wrap; }
 
-    .answer-card h3 { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: #3e6191; margin-bottom: 18px; }
-
-    .sources-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; }
-
-    .citation-item { background: #fafdff; border-radius: 12px; border: 1px solid #e4ebf5; padding: 16px; margin-bottom: 12px; }
-
-    .citation-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: #3b5575; margin-bottom: 8px; }
-
-    .citation-excerpt { color: #193251; font-size: 0.95rem; border-left: 3px solid #b3c9e5; padding-left: 16px; }
+    .citation-item {
+      background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 16px; margin-bottom: 12px; font-size: 0.9rem;
+    }
+    .citation-header { font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .citation-excerpt { color: #64748b; font-style: italic; border-left: 3px solid #cbd5e1; padding-left: 12px; margin-top: 8px; }
 
     .loader {
-      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4);
-      border-top: 2px solid white; border-radius: 50%; animation: spin 0.7s linear infinite;
-      display: inline-block;
+      border: 3px solid #f3f3f3; border-top: 3px solid #1a4c8c;
+      border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;
+      display: inline-block; vertical-align: middle; margin-right: 8px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -171,110 +123,99 @@
 <body>
 
 <div class="app-card">
-  <div class="app-header">
+  <header class="app-header">
     <div class="logo-area">
       <div class="logo-icon">DG</div>
       <div class="logo-text">
         <h1>DoseGuide AI</h1>
-        <span>evidence-based dosing · clinical decision support</span>
+        <span>Clinical Evidence Engine · Protocol Bound</span>
       </div>
     </div>
-    <div class="badge-clinical"><span>🔬</span> UpToDate® · Lexicomp® · AHFS</div>
-  </div>
+    <div class="badge badge-info">🧬 System Ready</div>
+  </header>
 
   <div class="main-layout">
-    <div class="context-panel">
-      <div class="panel-title">⚙️ query configuration</div>
+    <aside class="context-panel">
+      <div class="panel-title">Analysis Parameters</div>
       
       <div class="param-group">
-        <div class="param-label">Drug / topic</div>
-        <select class="param-select" id="drug">
-          <option value="">None</option>
-          <option value="warfarin">warfarin (Coumadin)</option>
-          <option value="insulin">insulin (all types)</option>
-          <option value="amoxicillin">amoxicillin</option>
-        </select>
-      </div>
-
-      <div class="param-group">
-        <div class="param-label">Language</div>
+        <label class="param-label">Clinical Language</label>
         <select class="param-select" id="language">
-          <option value="en">🇬🇧 English</option>
-          <option value="ar">🇸🇦 العربية</option>
+          <option value="en">English (Clinical)</option>
+          <option value="ar">العربية (طبي)</option>
         </select>
       </div>
 
       <div class="param-group">
-        <div class="param-label">Answer style</div>
-        <select class="param-select" id="answer_style">
-          <option value="Recommended" selected>Recommended</option>
-          <option value="Bullet">Bullet points</option>
-          <option value="Detailed">Detailed</option>
-        </select>
-      </div>
-
-      <div class="param-group">
-        <div class="param-label">Output mode</div>
+        <label class="param-label">Output Mode</label>
         <div class="mode-pills" id="modeGroup">
-          <span class="mode-pill active" data-mode="Hybrid">Hybrid</span>
-          <span class="mode-pill" data-mode="Short">Short</span>
-          <span class="mode-pill" data-mode="Verbatim">Verbatim</span>
-          <span class="mode-pill" data-mode="Source">Source</span>
+          <div class="mode-pill active" data-mode="hybrid">Hybrid</div>
+          <div class="mode-pill" data-mode="short">Short</div>
+          <div class="mode-pill" data-mode="verbatim">Verbatim</div>
         </div>
-        <input type="hidden" id="output_mode" value="Hybrid" />
-      </div>
-    </div>
-
-    <div class="interaction-panel">
-      <div class="query-header">
-        <h2>Clinical inquiry</h2>
-        <div class="status-badge" style="background:#e9edf2; color:#3f5670; font-size:0.75rem">⚕️ Professional Mode</div>
+        <input type="hidden" id="output_mode" value="hybrid">
       </div>
 
+      <div class="param-group">
+        <label class="param-label">Source Validation</label>
+        <select class="param-select" id="source_mode">
+          <option value="required">Strict (Protocol Only)</option>
+          <option value="off">Relaxed (General Knowledge)</option>
+        </select>
+      </div>
+
+      <div class="param-group" style="display:none">
+         <select id="answer_style"><option value="recommended">Recommended</option></select>
+         <select id="drug"><option value="general">General</option></select>
+      </div>
+    </aside>
+
+    <main class="interaction-panel">
       <div class="question-box">
-        <textarea id="question" placeholder="e.g. What is the loading dose for a patient with renal impairment?"></textarea>
+        <textarea id="question" placeholder="Ask a clinical question (e.g., Warfarin loading dose for renal patients)..."></textarea>
       </div>
 
       <div class="action-bar">
-        <button class="primary-btn" id="askBtn"><span>Ask DoseGuide</span></button>
+        <button class="primary-btn" id="askBtn">Run Clinical Analysis</button>
         <button class="secondary-btn" id="clearBtn">Clear</button>
       </div>
 
-      <div id="resultPanel" class="results-container" style="display: none;">
+      <section id="resultPanel" class="results-container">
         <div class="status-strip">
-          <span id="statusText" class="status-badge">Ready</span>
-          <span id="verdictBadge" class="badge" style="display:none"></span>
-          <span id="lockedIndicator" class="badge badge-locked" style="display:none">🔒 Protocol Locked</span>
+          <span id="statusBadge" class="badge">Status</span>
+          <span id="protocolLocked" class="badge badge-warn" style="display:none">🔒 Protocol Locked</span>
         </div>
 
         <div class="answer-card">
-          <h3>Evidence Summary</h3>
-          <div class="answer-text" id="verdictContent">Waiting...</div>
+          <h3 style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 12px;">Evidence Summary</h3>
+          <div class="answer-text" id="verdictContent"></div>
         </div>
 
-        <div class="sources-panel">
-          <h3 style="font-size: 0.85rem; margin-bottom:15px; color:#25415f">Cited References</h3>
-          <div id="sourceContent">No references yet.</div>
+        <div id="sourcesSection">
+          <h3 style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 12px;">Cited References</h3>
+          <div id="sourceContent"></div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   </div>
 </div>
 
 <script>
+  // Configuration
   const ASK_ENDPOINT = "/ask"; 
+
+  // DOM Elements
   const askBtn = document.getElementById('askBtn');
   const clearBtn = document.getElementById('clearBtn');
   const questionInput = document.getElementById('question');
   const resultPanel = document.getElementById('resultPanel');
-  const statusText = document.getElementById('statusText');
   const verdictContent = document.getElementById('verdictContent');
   const sourceContent = document.getElementById('sourceContent');
-  const lockedIndicator = document.getElementById('lockedIndicator');
-  const verdictBadge = document.getElementById('verdictBadge');
+  const statusBadge = document.getElementById('statusBadge');
+  const protocolLocked = document.getElementById('protocolLocked');
   const outputModeInput = document.getElementById('output_mode');
 
-  // Mode Selection
+  // Handle Mode Selection
   document.querySelectorAll('.mode-pill').forEach(pill => {
     pill.addEventListener('click', function() {
       document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
@@ -283,34 +224,36 @@
     });
   });
 
+  // Clear Logic
   clearBtn.addEventListener('click', () => {
     questionInput.value = '';
     resultPanel.style.display = 'none';
-    statusText.innerText = 'Ready';
-    lockedIndicator.style.display = 'none';
-    verdictBadge.style.display = 'none';
   });
 
-  askBtn.addEventListener('click', handleAsk);
-
+  // Main Ask Function
   async function handleAsk() {
     const question = questionInput.value.trim();
-    if (!question) { alert("Please enter a question."); return; }
+    if (!question) return alert("Please enter a question.");
 
+    // Update UI
+    askBtn.disabled = true;
+    askBtn.innerHTML = `<span class="loader"></span> Analyzing...`;
+    resultPanel.style.display = 'block';
+    verdictContent.innerText = "Processing clinical data...";
+    sourceContent.innerHTML = "";
+    statusBadge.className = "badge badge-info";
+    statusBadge.innerText = "Searching Vector Store";
+    protocolLocked.style.display = "none";
+
+    // Build Payload to match Backend structure
     const payload = {
       question: question,
-      drug: document.getElementById('drug').value || null,
       language: document.getElementById('language').value,
+      output_mode: outputModeInput.value,
+      source_mode: document.getElementById('source_mode').value,
       answer_style: document.getElementById('answer_style').value,
-      output_mode: outputModeInput.value
+      drug: document.getElementById('drug').value
     };
-
-    askBtn.disabled = true;
-    askBtn.innerHTML = `<span class="loader"></span><span> Analyzing...</span>`;
-    statusText.innerText = 'Analyzing...';
-    resultPanel.style.display = 'block';
-    verdictContent.innerText = 'Searching clinical sources...';
-    sourceContent.innerHTML = 'Loading...';
 
     try {
       const response = await fetch(ASK_ENDPOINT, {
@@ -318,44 +261,60 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Server Error");
-      displayResult(data);
-    } catch (error) {
-      verdictContent.innerHTML = `<div style="color:#dc2626;">❌ ${error.message}</div>`;
+      
+      if (!response.ok) throw new Error(data.error || "Server Communication Error");
+
+      // Handle Result (Matches Backend Verdicts)
+      if (data.verdict === "NOT_FOUND") {
+        statusBadge.className = "badge badge-warn";
+        statusBadge.innerText = "Not Found";
+        verdictContent.innerText = data.answer || "No matching clinical protocols found in the library.";
+        sourceContent.innerHTML = "<em>Analysis failed to meet source_mode criteria.</em>";
+      } else {
+        statusBadge.className = "badge badge-ok";
+        statusBadge.innerText = "Validated";
+        verdictContent.innerText = data.answer;
+        
+        // Render Citations
+        if (data.citations && data.citations.length > 0) {
+          sourceContent.innerHTML = data.citations.map(c => `
+            <div class="citation-item">
+              <div class="citation-header">
+                <span>📄 ${c.filename} · Sec: ${c.section}</span>
+                <span>Page: ${c.page > 0 ? c.page : 'N/A'}</span>
+              </div>
+              <div class="citation-excerpt">"${c.excerpt}..."</div>
+            </div>
+          `).join('');
+        } else {
+          sourceContent.innerHTML = "<em>No specific citations attached.</em>";
+        }
+      }
+
+      // Display Lock if protocol mentioned in Backend
+      if (data.applied_output && data.applied_output.source_mode === "required") {
+         protocolLocked.style.display = "inline-block";
+      }
+
+    } catch (err) {
+      statusBadge.className = "badge badge-warn";
+      statusBadge.innerText = "Error";
+      verdictContent.innerHTML = `<span style="color:red">⚠️ System Error: ${err.message}</span>`;
     } finally {
       askBtn.disabled = false;
-      askBtn.innerHTML = `<span>Ask DoseGuide</span>`;
+      askBtn.innerText = "Run Clinical Analysis";
     }
   }
 
-  function displayResult(data) {
-    statusText.innerText = data.verdict === 'NOT_FOUND' ? 'Not Found' : 'OK';
-    if (data.verdict === 'NOT_FOUND') {
-      verdictBadge.style.display = 'inline-block';
-      verdictBadge.className = 'badge badge-warn';
-      verdictBadge.textContent = '⚠️ Not Found';
-    } else {
-      verdictBadge.style.display = 'inline-block';
-      verdictBadge.className = 'badge badge-ok';
-      verdictBadge.textContent = '✅ Found';
-    }
-    verdictContent.innerText = data.answer || "No info found.";
-    
-    if (data.citations && data.citations.length > 0) {
-      sourceContent.innerHTML = data.citations.map(c => `
-        <div class="citation-item">
-          <div class="citation-header">
-            <span>📄 ${c.filename} ${c.page ? '(p.'+c.page+')' : ''}</span>
-            <span>${c.evidence_ids ? c.evidence_ids.join(', ') : ''}</span>
-          </div>
-          <div class="citation-excerpt">${c.excerpt}</div>
-        </div>
-      `).join('');
-    } else { sourceContent.innerHTML = 'No references cited.'; }
-    
-    lockedIndicator.style.display = data.locked ? 'inline-block' : 'none';
-  }
+  askBtn.addEventListener('click', handleAsk);
+
+  // Shortcut Support
+  questionInput.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleAsk();
+  });
 </script>
+
 </body>
 </html>
