@@ -1,692 +1,477 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide Clinical · Protocol-Locked</title>
-  <style>
-    /* ===== MODERN CLINICAL UI ===== */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THERAGUARD AI | Clinical Decision Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --canvas: #f4f7f9;
+            --panel: #ffffff;
+            --brand: #0f172a;
+            --brand-accent: #2563eb;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-tertiary: #94a3b8;
+            --border: #e2e8f0;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --radius: 8px;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
 
-    :root {
-      --primary: #0b3b5c;
-      --primary-light: #1e4f72;
-      --secondary: #2c7da0;
-      --accent: #61a5c2;
-      --danger: #a4161a;
-      --danger-light: #ba181b;
-      --warning: #e85d04;
-      --warning-light: #f48c06;
-      --success: #2d6a4f;
-      --success-light: #40916c;
-      --gray-50: #f8f9fa;
-      --gray-100: #e9ecef;
-      --gray-200: #dee2e6;
-      --gray-300: #ced4da;
-      --gray-400: #adb5bd;
-      --gray-500: #6c757d;
-      --gray-700: #495057;
-      --gray-900: #212529;
-      --border-radius: 8px;
-      --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--gray-100);
-      color: var(--gray-900);
-      padding: 24px;
-      line-height: 1.5;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--canvas);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
 
-    .app {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+        /* Layout Structure */
+        .app-wrapper {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    /* header + document library bar */
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
+        /* Sidebar / Input Zone */
+        .sidebar {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+        }
 
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
 
-    .logo-icon {
-      background: var(--primary);
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 20px;
-    }
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--brand);
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 700;
+        }
 
-    .logo-text h1 {
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: var(--primary);
-      line-height: 1.2;
-    }
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+        }
 
-    .logo-text small {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      display: block;
-    }
+        .input-group { margin-bottom: 24px; }
+        .input-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
 
-    .doc-library {
-      background: white;
-      padding: 12px 20px;
-      border-radius: 40px;
-      box-shadow: var(--box-shadow);
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
+        select, textarea {
+            width: 100%;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+        }
 
-    .doc-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-    }
+        textarea {
+            height: 300px;
+            resize: none;
+            line-height: 1.5;
+        }
 
-    .doc-badge span:first-child {
-      font-weight: 600;
-      color: var(--gray-700);
-    }
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--brand-accent);
+        }
 
-    .doc-files {
-      display: flex;
-      gap: 12px;
-    }
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            background: var(--canvas);
+            padding: 4px;
+            border-radius: var(--radius);
+        }
 
-    .file-pill {
-      background: var(--gray-100);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+        .mode-btn {
+            border: none;
+            background: transparent;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
 
-    .file-pill.missing {
-      background: #fff1f0;
-      color: var(--danger);
-      border: 1px dashed var(--danger-light);
-    }
+        .mode-btn.active {
+            background: var(--panel);
+            color: var(--brand-accent);
+            box-shadow: var(--shadow);
+        }
 
-    .file-pill.present {
-      background: #e3f2fd;
-      color: var(--primary);
-      border: 1px solid var(--secondary);
-    }
+        .action-btn {
+            background: var(--brand);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+            margin-top: auto;
+        }
 
-    /* main grid: left (case input) + right (results) */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
+        .action-btn:hover { opacity: 0.9; }
 
-    /* cards */
-    .card {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 24px;
-      box-shadow: var(--box-shadow);
-    }
+        /* Main Workspace / Output Zone */
+        .workspace {
+            overflow-y: auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
 
-    .card-title {
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 16px;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 2px solid var(--gray-200);
-      padding-bottom: 12px;
-    }
+        .workspace-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-tertiary);
+            text-align: center;
+        }
 
-    /* case input form */
-    .case-textarea {
-      width: 100%;
-      border: 1px solid var(--gray-300);
-      border-radius: var(--border-radius);
-      padding: 16px;
-      font-family: inherit;
-      font-size: 0.95rem;
-      resize: vertical;
-      min-height: 180px;
-      margin-bottom: 16px;
-    }
+        /* Result Components */
+        .result-container { display: none; max-width: 1000px; margin: 0 auto; width: 100%; }
 
-    .case-textarea:focus {
-      outline: 2px solid var(--secondary);
-      border-color: transparent;
-    }
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .row-2col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
 
-    .select-control {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: var(--border-radius);
-      border: 1px solid var(--gray-300);
-      background: white;
-      font-size: 0.9rem;
-    }
+        .metric-card {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border-bottom: 3px solid var(--border);
+        }
 
-    .action-buttons {
-      display: flex;
-      gap: 12px;
-    }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: var(--border-radius);
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      flex: 2;
-      transition: background 0.2s;
-    }
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
 
-    .btn-primary:hover {
-      background: var(--primary-light);
-    }
+        .verdict-panel {
+            background: var(--panel);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px;
+            margin-bottom: 32px;
+            white-space: pre-wrap;
+            font-size: 1rem;
+            color: var(--text-primary);
+            border-left: 4px solid var(--brand-accent);
+        }
 
-    .btn-secondary {
-      background: white;
-      border: 1px solid var(--gray-300);
-      padding: 14px 24px;
-      border-radius: var(--border-radius);
-      font-weight: 500;
-      cursor: pointer;
-      flex: 1;
-    }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
 
-    .btn-secondary:hover {
-      background: var(--gray-100);
-    }
+        .status-ready { background: #e0f2fe; color: #0369a1; }
+        .status-locked { background: #fee2e2; color: #991b1b; }
 
-    /* extracted fields panel */
-    .extracted-panel {
-      background: var(--gray-50);
-      border-radius: var(--border-radius);
-      padding: 16px;
-      margin-top: 16px;
-      border: 1px solid var(--gray-200);
-    }
+        .source-footer {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
 
-    .extracted-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 12px;
-    }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(244, 247, 249, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            place-items: center;
+        }
 
-    .extracted-item {
-      background: white;
-      padding: 12px;
-      border-radius: 6px;
-      border-left: 3px solid var(--secondary);
-    }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--brand-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-    .extracted-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      color: var(--gray-500);
-      letter-spacing: 0.5px;
-    }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-    .extracted-value {
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-top: 4px;
-    }
-
-    .computed-badge {
-      background: #d3f0df;
-      color: var(--success);
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 20px;
-      display: inline-block;
-      margin-left: 8px;
-    }
-
-    /* results area */
-    .coverage-warning {
-      background: #fff4e5;
-      border-left: 4px solid var(--warning);
-      padding: 16px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .intervention-group {
-      margin-bottom: 24px;
-    }
-
-    .group-header {
-      font-weight: 600;
-      font-size: 1rem;
-      margin-bottom: 12px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--gray-200);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .intervention-card {
-      background: white;
-      border: 1px solid var(--gray-200);
-      border-radius: var(--border-radius);
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-
-    .intervention-title {
-      font-weight: 600;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .severity-high {
-      background: var(--danger);
-      color: white;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .severity-moderate {
-      background: var(--warning);
-      color: white;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: 600;
-    }
-
-    .severity-low {
-      background: var(--gray-400);
-      color: white;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-    }
-
-    .rationale {
-      color: var(--gray-700);
-      margin: 8px 0;
-      font-size: 0.9rem;
-    }
-
-    .citation-block {
-      background: var(--gray-50);
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      margin-top: 12px;
-      border-left: 2px solid var(--secondary);
-    }
-
-    .citation-file {
-      font-family: monospace;
-      background: var(--gray-200);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    .missing-doc-message {
-      color: var(--danger);
-      font-style: italic;
-      padding: 20px;
-      text-align: center;
-      background: #fff5f5;
-      border-radius: var(--border-radius);
-    }
-
-    .footer-note {
-      text-align: center;
-      margin-top: 24px;
-      color: var(--gray-500);
-      font-size: 0.8rem;
-    }
-  </style>
+        @media (max-width: 1000px) {
+            .app-wrapper { grid-template-columns: 1fr; }
+            .sidebar { height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .app-wrapper { overflow-y: auto; height: auto; }
+        }
+    </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- top bar with document library -->
-  <div class="top-bar">
-    <div class="logo-area">
-      <div class="logo-icon">⚕️</div>
-      <div class="logo-text">
-        <h1>DoseGuide Clinical</h1>
-        <small>protocol‑locked · evidence‑bound</small>
-      </div>
-    </div>
-    <div class="doc-library" id="docLibrary">
-      <div class="doc-badge"><span>📚 active documents</span></div>
-      <div class="doc-files" id="docFilesContainer">
-        <!-- filled dynamically from config or API -->
-        <div class="file-pill present">📄 HF guideline (HF.pdf)</div>
-        <div class="file-pill present">📄 Lisinopril monograph</div>
-        <div class="file-pill present">📄 Ibuprofen monograph</div>
-        <div class="file-pill missing">⚠️ Diabetes guideline</div>
-      </div>
-    </div>
-  </div>
+<div class="loading-overlay" id="loader">
+    <div class="spinner"></div>
+</div>
 
-  <!-- main grid: left column = case input + extracted fields, right column = results -->
-  <div class="main-grid">
-    <!-- LEFT: case entry -->
-    <div class="card">
-      <div class="card-title"><span>📋 patient case</span></div>
-      <textarea id="caseInput" class="case-textarea" placeholder="Paste patient case: e.g. 65 year old male, height 175cm, weight 95kg, SCr 1.4 mg/dL. Diagnoses: Heart failure, Diabetes, HTN. Meds: Lisinopril 10mg, Metformin 1000mg, Ibuprofen PRN. Labs: K+ 4.8, HbA1c 7.2%">65 year old male, height 175cm, weight 95kg, SCr 1.4 mg/dL. Diagnoses: Heart failure, Diabetes, HTN. Meds: Lisinopril 10mg, Metformin 1000mg, Ibuprofen PRN. Labs: K+ 4.8, HbA1c 7.2%</textarea>
-      
-      <div class="row-2col">
-        <div>
-          <label style="font-size:0.8rem; color:var(--gray-500);">language</label>
-          <select id="language" class="select-control">
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
-          </select>
+<div class="app-wrapper">
+    <aside class="sidebar">
+        <div class="brand-header">
+            <div class="brand-logo">TG</div>
+            <div class="brand-name">TheraGuard AI</div>
         </div>
-        <div>
-          <label style="font-size:0.8rem; color:var(--gray-500);">output style</label>
-          <select id="answer_style" class="select-control">
-            <option value="Recommended">Recommended</option>
-            <option value="Bullet">Bullet</option>
-            <option value="Detailed">Detailed</option>
-          </select>
+
+        <div class="input-group">
+            <label class="input-label">Focus Drug / Topic</label>
+            <select id="drug">
+                <option value="General Analysis">General Analysis</option>
+                <option value="warfarin">Warfarin</option>
+                <option value="insulin">Insulin</option>
+                <option value="amoxicillin">Amoxicillin</option>
+                <option value="vancomycin">Vancomycin</option>
+            </select>
         </div>
-      </div>
 
-      <!-- mode tabs (exactly as existing) -->
-      <div style="margin-bottom:16px;">
-        <div style="display:flex; gap:4px; background:#f1f5f9; padding:4px; border-radius:8px;" id="modeGroup">
-          <button type="button" class="mode-btn" style="flex:1; border:none; background:white; padding:8px; border-radius:6px; font-weight:600; color:#0b3b5c;" onclick="setMode('Hybrid')">Hybrid</button>
-          <button type="button" class="mode-btn" style="flex:1; border:none; background:transparent; padding:8px;" onclick="setMode('Short')">Short</button>
-          <button type="button" class="mode-btn" style="flex:1; border:none; background:transparent; padding:8px;" onclick="setMode('Verbatim')">Verbatim</button>
-          <button type="button" class="mode-btn" style="flex:1; border:none; background:transparent; padding:8px;" onclick="setMode('Source')">Source</button>
+        <div class="input-group">
+            <label class="input-label">Patient Case Context</label>
+            <textarea id="question" placeholder="Paste comprehensive medical history, labs, and current medication list..."></textarea>
         </div>
-        <input type="hidden" id="output_mode" value="Hybrid" />
-      </div>
 
-      <div class="action-buttons">
-        <button class="btn-primary" id="analyzeBtn">🔍 analyze case</button>
-        <button class="btn-secondary" id="clearBtn">clear</button>
-      </div>
+        <div class="input-group">
+            <label class="input-label">Output Configuration</label>
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('Hybrid', this)">Hybrid</button>
+                <button class="mode-btn" onclick="setMode('Short', this)">Short</button>
+                <button class="mode-btn" onclick="setMode('Verbatim', this)">Verbatim</button>
+                <button class="mode-btn" onclick="setMode('Source', this)">Source</button>
+            </div>
+            <input type="hidden" id="output_mode" value="Hybrid">
+        </div>
 
-      <!-- extracted fields panel (simulated from case, would come from API) -->
-      <div class="extracted-panel" id="extractedPanel" style="display: none;">
-        <div style="font-weight:600; margin-bottom:8px;">🧬 extracted + computed</div>
-        <div class="extracted-grid" id="extractedGrid"></div>
-      </div>
-    </div>
+        <div class="input-group">
+            <label class="input-label">Linguistic Preference</label>
+            <select id="language">
+                <option value="en">English (Clinical Standard)</option>
+                <option value="ar">Arabic (Medical Translation)</option>
+            </select>
+        </div>
 
-    <!-- RIGHT: results & interventions -->
-    <div class="card" id="resultsCard">
-      <div class="card-title"><span>⚡ clinical interventions</span></div>
-      
-      <!-- protocol locked badge (dynamic) -->
-      <div id="protocolBadge" style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-        <span id="lockedIndicator" style="background:#fee2e2; color:#991b1b; padding:4px 12px; border-radius:20px; font-size:0.75rem; display:none;">🔒 protocol-locked</span>
-      </div>
+        <div class="input-group" style="display:none;">
+            <select id="answer_style"><option value="Recommended">Recommended</option></select>
+        </div>
 
-      <!-- missing guideline warning (shown when needed) -->
-      <div id="missingGuidelineWarning" class="coverage-warning" style="display: none;">
-        <span style="font-size:1.2rem;">⚠️</span>
-        <div><strong>No guideline available in current document library</strong><br> <span id="missingConditionText">Diabetes</span> – recommendations cannot be generated.</div>
-      </div>
+        <button class="action-btn" id="analyzeBtn">GENERATE ANALYSIS</button>
+        <button class="mode-btn" style="margin-top: 12px;" onclick="handleClear()">Reset Workspace</button>
+    </aside>
 
-      <!-- intervention groups container -->
-      <div id="interventionsContainer">
-        <!-- will be populated by JS -->
-        <div style="color: var(--gray-400); text-align: center; padding: 40px 0;">↑ enter case and click analyze</div>
-      </div>
+    <main class="workspace">
+        <div id="emptyState" class="workspace-empty">
+            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p style="margin-top: 16px;">Awaiting case data for clinical validation</p>
+        </div>
 
-      <!-- citations footer (always show latest citations) -->
-      <div style="margin-top:24px; border-top:1px dashed var(--gray-300); padding-top:16px;">
-        <div style="font-size:0.8rem; font-weight:600; margin-bottom:8px;">📌 evidence citations</div>
-        <div id="citationsFooter" style="font-size:0.75rem; color:var(--gray-500); background:var(--gray-50); padding:12px; border-radius:6px;"></div>
-      </div>
-    </div>
-  </div>
+        <div id="resultPanel" class="result-container">
+            <div id="statusArea">
+                <span id="lockedIndicator" class="status-badge status-locked" style="display:none">Protocol Locked</span>
+                <span id="statusLabel" class="status-badge status-ready">Analysis Complete</span>
+            </div>
 
-  <div class="footer-note">
-    ⚕️ protocol‑locked · only answers from uploaded PDFs · missing guidelines are clearly reported
-  </div>
+            <div class="section-title">Extracted Biometrics</div>
+            <div id="metricsGrid" class="metrics-grid">
+                </div>
+
+            <div class="section-title">Clinical Interventions & Verdict</div>
+            <div class="verdict-panel" id="verdictContent"></div>
+
+            <div class="source-footer">
+                <div class="section-title">Evidence & Citations</div>
+                <div id="sourceContent"></div>
+            </div>
+        </div>
+    </main>
 </div>
 
 <script>
-  // ------------------------------------------------------------
-  // CONFIGURATION – USE YOUR EXISTING WORKER BASE
-  // ------------------------------------------------------------
-  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev"; // <-- your exact worker
-  const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
+    const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
+    const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
-  // mock active document library (in real app, could come from /status endpoint)
-  const ACTIVE_DOCS = {
-    guidelines: [
-      { name: 'Heart Failure (ACC_AHA_HF_2022.pdf)', present: true },
-      { name: 'Diabetes', present: false },
-      { name: 'Hypertension', present: false }
-    ],
-    monographs: [
-      { name: 'Lisinopril monograph', present: true },
-      { name: 'Ibuprofen monograph', present: true },
-      { name: 'Metformin monograph', present: false }
-    ]
-  };
+    // --- Core Logic Integration ---
 
-  // helper: show missing guideline warning based on diagnoses that appear in case but have no doc
-  function updateMissingGuidelineWarning(caseText, citations) {
-    const warningDiv = document.getElementById('missingGuidelineWarning');
-    const missingSpan = document.getElementById('missingConditionText');
-    
-    // simple keyword detection (demo: if "diabetes" in case and no diabetes guideline in citations)
-    const hasDiabetes = caseText.toLowerCase().includes('diabetes');
-    const hasDiabetesGuideline = citations.some(c => 
-      c.filename && c.filename.toLowerCase().includes('diabetes')
-    );
-    
-    if (hasDiabetes && !hasDiabetesGuideline) {
-      missingSpan.innerText = 'Diabetes';
-      warningDiv.style.display = 'flex';
-    } else {
-      warningDiv.style.display = 'none';
-    }
-  }
+    async function handleAsk() {
+        const payload = {
+            drug: document.getElementById('drug').value,
+            language: document.getElementById('language').value,
+            answer_style: document.getElementById('answer_style').value,
+            output_mode: document.getElementById('output_mode').value,
+            question: document.getElementById('question').value
+        };
 
-  // render extracted fields (dummy from case – you can later use API)
-  function renderExtractedFields(caseText) {
-    const panel = document.getElementById('extractedPanel');
-    const grid = document.getElementById('extractedGrid');
-    
-    // naive extraction for demo – in real app would come from backend
-    const ageMatch = caseText.match(/(\d+)\s*year/);
-    const weightMatch = caseText.match(/(\d+)\s*kg/);
-    const scrMatch = caseText.match(/SCr\s*([\d.]+)/);
-    
-    if (ageMatch || weightMatch || scrMatch) {
-      panel.style.display = 'block';
-      let html = '';
-      
-      // compute CrCl if possible
-      if (ageMatch && weightMatch && scrMatch) {
-        const age = parseInt(ageMatch[1]);
-        const weight = parseInt(weightMatch[1]);
-        const scr = parseFloat(scrMatch[1]);
-        const crcl = ((140 - age) * weight) / (72 * scr);
-        html += `<div class="extracted-item"><span class="extracted-label">Age</span><div class="extracted-value">${age} y</div></div>`;
-        html += `<div class="extracted-item"><span class="extracted-label">Weight</span><div class="extracted-value">${weight} kg</div></div>`;
-        html += `<div class="extracted-item"><span class="extracted-label">SCr</span><div class="extracted-value">${scr} mg/dL</div></div>`;
-        html += `<div class="extracted-item"><span class="extracted-label">CrCl (C-G)</span><div class="extracted-value">${Math.round(crcl)} mL/min <span class="computed-badge">computed</span></div></div>`;
-      } else {
-        html = '<div class="extracted-item">insufficient data for computation</div>';
-      }
-      grid.innerHTML = html;
-    } else {
-      panel.style.display = 'none';
-    }
-  }
+        if (!payload.question.trim()) {
+            alert("Please provide patient case details.");
+            return;
+        }
 
-  // main analyze function – uses EXACT same endpoint and payload as original
-  async function handleAnalyze() {
-    const caseText = document.getElementById('caseInput').value;
-    if (!caseText.trim()) {
-      alert('Please enter a patient case.');
-      return;
+        // UI Prep
+        toggleLoader(true);
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('resultPanel').style.display = 'block';
+        document.getElementById('verdictContent').innerText = "Analyzing patient data against clinical protocols...";
+        
+        try {
+            const response = await fetch(ASK_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+            const data = await response.json();
+            const out = normalizeWorkerResponse(data);
+            
+            renderAnalysis(out, payload.question);
+        } catch (error) {
+            document.getElementById('verdictContent').innerHTML = `<span style="color:var(--danger)">Analysis Failed: ${error.message}</span>`;
+        } finally {
+            toggleLoader(false);
+        }
     }
 
-    // prepare payload – exactly same fields as original
-    const payload = {
-      drug: '',                      // original field, keep even if empty
-      language: document.getElementById('language').value,
-      answer_style: document.getElementById('answer_style').value,
-      output_mode: document.getElementById('output_mode').value,
-      question: caseText              // reuse question field for case text (backward compatible)
-    };
+    function renderAnalysis(data, originalText) {
+        // Verdict
+        document.getElementById('verdictContent').innerText = data.verdict || "No findings generated.";
+        
+        // Citations
+        document.getElementById('sourceContent').innerText = data.source || "Clinical evidence synthesis applied.";
+        
+        // Protocol Lock
+        document.getElementById('lockedIndicator').style.display = data.locked ? 'inline-flex' : 'none';
 
-    // UI loading
-    document.getElementById('interventionsContainer').innerHTML = '<div style="text-align:center; padding:20px;">⏳ analyzing case...</div>';
-    document.getElementById('citationsFooter').innerHTML = '';
-    document.getElementById('lockedIndicator').style.display = 'none';
-
-    try {
-      const response = await fetch(ASK_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-      
-      // normalize response using your existing format
-      const answer = data.answer || data.verdict || 'No answer';
-      const citations = data.citations || [];
-
-      // update missing guideline warning
-      updateMissingGuidelineWarning(caseText, citations);
-
-      // render interventions (mock structure – you can evolve this)
-      let interventionsHtml = '';
-      
-      // if answer contains "not found" style
-      if (answer.includes('No information found') || answer.includes('لم يتم العثور')) {
-        interventionsHtml = `<div class="missing-doc-message">📭 No relevant information found in current document library.</div>`;
-      } else {
-        // otherwise create a simple intervention card from the answer
-        interventionsHtml = `
-          <div class="intervention-group">
-            <div class="group-header">🩺 findings from documents</div>
-            <div class="intervention-card">
-              <div class="intervention-title">
-                <span>📄 guideline response</span>
-              </div>
-              <div class="rationale">${answer.replace(/\n/g, '<br>')}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      // build citations footer
-      let citationsHtml = '';
-      if (citations.length > 0) {
-        citationsHtml = citations.map(c => 
-          `<div style="margin-bottom:6px;"><span class="citation-file">${c.filename || 'source'}</span> ${c.excerpt ? '– ' + c.excerpt.substring(0,80)+'…' : ''}</div>`
-        ).join('');
-        document.getElementById('lockedIndicator').style.display = 'inline-block';
-      } else {
-        citationsHtml = 'no citations returned';
-        document.getElementById('lockedIndicator').style.display = 'none';
-      }
-
-      document.getElementById('interventionsContainer').innerHTML = interventionsHtml;
-      document.getElementById('citationsFooter').innerHTML = citationsHtml;
-
-      // extract and show computed fields
-      renderExtractedFields(caseText);
-
-    } catch (err) {
-      document.getElementById('interventionsContainer').innerHTML = `<div style="color:var(--danger);">❌ error: ${err.message}</div>`;
+        // Auto-extract Metrics (Simulated Extraction for UI richness)
+        extractMetrics(originalText);
     }
-  }
 
-  // original setMode (unchanged)
-  function setMode(val) {
-    document.getElementById('output_mode').value = val;
-    const buttons = document.querySelectorAll('.mode-btn');
-    buttons.forEach(btn => {
-      btn.classList.toggle('active', btn.innerText === val);
-      if (btn.innerText === val) {
-        btn.style.background = 'white';
-        btn.style.fontWeight = '600';
-        btn.style.color = '#0b3b5c';
-      } else {
-        btn.style.background = 'transparent';
-        btn.style.fontWeight = '400';
-        btn.style.color = 'inherit';
-      }
-    });
-  }
+    function extractMetrics(text) {
+        const grid = document.getElementById('metricsGrid');
+        grid.innerHTML = '';
+        
+        // Logic for extracting values from raw text
+        const find = (regex, label) => {
+            const match = text.match(regex);
+            if (match) {
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `<div class="metric-value">${match[1]}</div><div class="metric-label">${label}</div>`;
+                grid.appendChild(card);
+            }
+        };
 
-  // clear
-  function handleClear() {
-    document.getElementById('caseInput').value = '';
-    document.getElementById('interventionsContainer').innerHTML = '<div style="color: var(--gray-400); text-align: center; padding: 40px 0;">↑ enter case and click analyze</div>';
-    document.getElementById('citationsFooter').innerHTML = '';
-    document.getElementById('extractedPanel').style.display = 'none';
-    document.getElementById('missingGuidelineWarning').style.display = 'none';
-    document.getElementById('lockedIndicator').style.display = 'none';
-  }
+        find(/Weight\s*[:=]\s*(\d+\s*kg)/i, 'Patient Weight');
+        find(/CrCl\s*[:=]\s*(\d+\s*ml\/min)/i, 'Est. CrCl');
+        find(/Age\s*[:=]\s*(\d+\s*yo)/i, 'Patient Age');
+        find(/BMI\s*[:=]\s*(\d+(\.\d+)?)/i, 'Body Mass Index');
 
-  // attach events
-  document.getElementById('analyzeBtn').addEventListener('click', handleAnalyze);
-  document.getElementById('clearBtn').addEventListener('click', handleClear);
-  // initialize mode
-  setMode('Hybrid');
+        if (grid.innerHTML === '') {
+            grid.innerHTML = '<div style="color:var(--text-tertiary); font-size:0.8rem;">No explicit biometric markers found in case text.</div>';
+        }
+    }
+
+    // --- Utilities (Retained from original logic) ---
+
+    function setMode(val, btn) {
+        document.getElementById('output_mode').value = val;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function toggleLoader(show) {
+        document.getElementById('loader').style.display = show ? 'grid' : 'none';
+    }
+
+    function handleClear() {
+        document.getElementById('question').value = '';
+        document.getElementById('resultPanel').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'flex';
+    }
+
+    function normalizeWorkerResponse(data) {
+        const locked = Boolean(data.locked || data.protocol_locked || data?.result?.locked);
+        const verdict = data.verdict || data.answer || data.reply || data.text || data?.result?.verdict || "";
+        const source = data.source || data.sources || data.citations || data?.result?.source || "";
+        return { locked, verdict, source };
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', handleAsk);
+
 </script>
+
 </body>
 </html>
