@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide AI · Clinical Decision Support</title>
+  <title>DoseGuide AI · Protocol‑Locked Clinical Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -71,6 +71,55 @@
     }
     .mode-pill.active { background: #1a4c8c; color: white; border-color: #1a4c8c; }
 
+    /* Document Library Display */
+    .doc-library {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 20px;
+      border: 1px solid #d4dce6;
+    }
+    .doc-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #5b6f87;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .doc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      padding: 6px 8px;
+      background: #f5f9ff;
+      border-radius: 6px;
+    }
+    .doc-present {
+      color: #166534;
+      background: #dcfce7;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.6rem;
+      font-weight: 600;
+    }
+    .doc-missing {
+      color: #991b1b;
+      background: #fee2e2;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.6rem;
+      font-weight: 600;
+    }
+
     /* Interaction Panel */
     .interaction-panel { padding: 32px; }
     .question-box {
@@ -92,12 +141,13 @@
 
     /* Results Area */
     .results-container { margin-top: 32px; display: none; }
-    .status-strip { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .status-strip { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     
     .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
     .badge-ok { background: #dcfce7; color: #166534; }
     .badge-warn { background: #fee2e2; color: #991b1b; }
     .badge-info { background: #e0f2fe; color: #0369a1; }
+    .badge-locked { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
     .answer-card {
       background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px;
@@ -109,8 +159,21 @@
       background: white; border: 1px solid #e2e8f0; border-radius: 12px;
       padding: 16px; margin-bottom: 12px; font-size: 0.9rem;
     }
-    .citation-header { font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; justify-content: space-between; }
-    .citation-excerpt { color: #64748b; font-style: italic; border-left: 3px solid #cbd5e1; padding-left: 12px; margin-top: 8px; }
+    .citation-header { font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .citation-file { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    .citation-meta { font-size: 0.75rem; color: #64748b; }
+    .citation-excerpt { color: #334155; font-style: italic; border-left: 3px solid #1a4c8c; padding-left: 12px; margin-top: 8px; }
+
+    .missing-warning {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
     .loader {
       border: 3px solid #f3f3f3; border-top: 3px solid #1a4c8c;
@@ -128,10 +191,10 @@
       <div class="logo-icon">DG</div>
       <div class="logo-text">
         <h1>DoseGuide AI</h1>
-        <span>Clinical Evidence Engine · Protocol Bound</span>
+        <span>Protocol‑Locked · No External Knowledge</span>
       </div>
     </div>
-    <div class="badge badge-info">🧬 System Ready</div>
+    <div class="badge badge-info" id="systemStatus">📚 Vector Store Active</div>
   </header>
 
   <div class="main-layout">
@@ -157,33 +220,71 @@
       </div>
 
       <div class="param-group">
-        <label class="param-label">Source Validation</label>
+        <label class="param-label">Source Mode</label>
         <select class="param-select" id="source_mode">
-          <option value="required">Strict (Protocol Only)</option>
-          <option value="off">Relaxed (General Knowledge)</option>
+          <option value="required">🔒 Required (Strict Protocol)</option>
+          <option value="off">📖 Off (No Citations)</option>
         </select>
       </div>
 
-      <div class="param-group" style="display:none">
-         <select id="answer_style"><option value="recommended">Recommended</option></select>
-         <select id="drug"><option value="general">General</option></select>
+      <!-- Document Library Display (Static Example - Replace with dynamic if API provides) -->
+      <div class="doc-library">
+        <div class="doc-title">
+          <span>📚</span> Active Documents
+        </div>
+        <div class="doc-list">
+          <div class="doc-item">
+            <span style="flex:1;">HF Guideline 2024</span>
+            <span class="doc-present">PRESENT</span>
+          </div>
+          <div class="doc-item">
+            <span style="flex:1;">Diabetes Guideline</span>
+            <span class="doc-missing">MISSING</span>
+          </div>
+          <div class="doc-item">
+            <span style="flex:1;">HTN Guideline</span>
+            <span class="doc-missing">MISSING</span>
+          </div>
+          <div class="doc-item">
+            <span style="flex:1;">Lisinopril Monograph</span>
+            <span class="doc-present">PRESENT</span>
+          </div>
+          <div class="doc-item">
+            <span style="flex:1;">Metformin Monograph</span>
+            <span class="doc-missing">MISSING</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; font-size:0.7rem; color:#5b6f87;">
+        ⚠️ Only documents marked PRESENT will be used
       </div>
     </aside>
 
     <main class="interaction-panel">
       <div class="question-box">
-        <textarea id="question" placeholder="Ask a clinical question (e.g., Warfarin loading dose for renal patients)..."></textarea>
+        <textarea id="question" placeholder="Ask a protocol-locked clinical question (e.g., What is the recommended therapy for heart failure with reduced EF?)"></textarea>
       </div>
 
       <div class="action-bar">
-        <button class="primary-btn" id="askBtn">Run Clinical Analysis</button>
+        <button class="primary-btn" id="askBtn">Run Protocol Analysis</button>
         <button class="secondary-btn" id="clearBtn">Clear</button>
       </div>
 
       <section id="resultPanel" class="results-container">
         <div class="status-strip">
-          <span id="statusBadge" class="badge">Status</span>
-          <span id="protocolLocked" class="badge badge-warn" style="display:none">🔒 Protocol Locked</span>
+          <span id="statusBadge" class="badge badge-info">Ready</span>
+          <span id="protocolLocked" class="badge badge-locked" style="display:none;">🔒 Protocol Locked</span>
+          <span id="missingDocWarning" class="badge badge-warn" style="display:none;">⚠️ Missing Guidelines</span>
+        </div>
+
+        <!-- Missing Guidelines Warning -->
+        <div id="missingGuidelinesContainer" class="missing-warning" style="display: none;">
+          <span style="font-size: 1.2rem;">⚠️</span>
+          <div>
+            <strong>No guideline available in current document library for:</strong>
+            <span id="missingConditionsList"></span>
+          </div>
         </div>
 
         <div class="answer-card">
@@ -213,7 +314,12 @@
   const sourceContent = document.getElementById('sourceContent');
   const statusBadge = document.getElementById('statusBadge');
   const protocolLocked = document.getElementById('protocolLocked');
+  const missingDocWarning = document.getElementById('missingDocWarning');
+  const missingGuidelinesContainer = document.getElementById('missingGuidelinesContainer');
+  const missingConditionsList = document.getElementById('missingConditionsList');
   const outputModeInput = document.getElementById('output_mode');
+  const languageSelect = document.getElementById('language');
+  const sourceModeSelect = document.getElementById('source_mode');
 
   // Handle Mode Selection
   document.querySelectorAll('.mode-pill').forEach(pill => {
@@ -239,20 +345,21 @@
     askBtn.disabled = true;
     askBtn.innerHTML = `<span class="loader"></span> Analyzing...`;
     resultPanel.style.display = 'block';
-    verdictContent.innerText = "Processing clinical data...";
+    verdictContent.innerText = "🔍 Searching protocol documents...";
     sourceContent.innerHTML = "";
+    missingGuidelinesContainer.style.display = 'none';
     statusBadge.className = "badge badge-info";
     statusBadge.innerText = "Searching Vector Store";
     protocolLocked.style.display = "none";
+    missingDocWarning.style.display = "none";
 
-    // Build Payload to match Backend structure
+    // Build Payload - ONLY using fields expected by backend
     const payload = {
       question: question,
-      language: document.getElementById('language').value,
+      language: languageSelect.value,
       output_mode: outputModeInput.value,
-      source_mode: document.getElementById('source_mode').value,
-      answer_style: document.getElementById('answer_style').value,
-      drug: document.getElementById('drug').value
+      source_mode: sourceModeSelect.value,
+      answer_style: "recommended" // Default as hidden field removed
     };
 
     try {
@@ -266,36 +373,50 @@
       
       if (!response.ok) throw new Error(data.error || "Server Communication Error");
 
-      // Handle Result (Matches Backend Verdicts)
+      // Handle Response based on backend structure
       if (data.verdict === "NOT_FOUND") {
         statusBadge.className = "badge badge-warn";
         statusBadge.innerText = "Not Found";
-        verdictContent.innerText = data.answer || "No matching clinical protocols found in the library.";
-        sourceContent.innerHTML = "<em>Analysis failed to meet source_mode criteria.</em>";
+        verdictContent.innerText = data.answer || "No matching information found in protocol documents.";
+        sourceContent.innerHTML = "<em>No citations available - query did not match any documents.</em>";
+        
+        if (data.applied_output?.source_mode === "required") {
+          protocolLocked.style.display = "inline-block";
+        }
       } else {
         statusBadge.className = "badge badge-ok";
         statusBadge.innerText = "Validated";
-        verdictContent.innerText = data.answer;
+        verdictContent.innerText = data.answer || "Response generated from protocol documents.";
         
-        // Render Citations
+        // Show protocol locked badge if source_mode was required
+        if (data.applied_output?.source_mode === "required") {
+          protocolLocked.style.display = "inline-block";
+        }
+        
+        // Render Citations with complete metadata
         if (data.citations && data.citations.length > 0) {
           sourceContent.innerHTML = data.citations.map(c => `
             <div class="citation-item">
               <div class="citation-header">
-                <span>📄 ${c.filename} · Sec: ${c.section}</span>
-                <span>Page: ${c.page > 0 ? c.page : 'N/A'}</span>
+                <span class="citation-file">📄 ${c.filename || 'Unknown source'}</span>
+                <span class="citation-meta">${c.section ? 'Sec: ' + c.section : ''} ${c.page > 0 ? '· Page ' + c.page : ''}</span>
               </div>
-              <div class="citation-excerpt">"${c.excerpt}..."</div>
+              ${c.excerpt ? `<div class="citation-excerpt">"${c.excerpt}"</div>` : ''}
             </div>
           `).join('');
+        } else if (sourceModeSelect.value === "required") {
+          // If source_mode required but no citations, show warning
+          sourceContent.innerHTML = '<em class="badge badge-warn">⚠️ Source mode required but no citations returned</em>';
         } else {
-          sourceContent.innerHTML = "<em>No specific citations attached.</em>";
+          sourceContent.innerHTML = "<em>No specific citations attached (source_mode=off).</em>";
         }
       }
 
-      // Display Lock if protocol mentioned in Backend
-      if (data.applied_output && data.applied_output.source_mode === "required") {
-         protocolLocked.style.display = "inline-block";
+      // Check for missing guidelines in response (if backend supports)
+      if (data.missing_guidelines && data.missing_guidelines.length > 0) {
+        missingConditionsList.innerText = data.missing_guidelines.join(', ');
+        missingGuidelinesContainer.style.display = 'flex';
+        missingDocWarning.style.display = 'inline-block';
       }
 
     } catch (err) {
@@ -304,15 +425,22 @@
       verdictContent.innerHTML = `<span style="color:red">⚠️ System Error: ${err.message}</span>`;
     } finally {
       askBtn.disabled = false;
-      askBtn.innerText = "Run Clinical Analysis";
+      askBtn.innerText = "Run Protocol Analysis";
     }
   }
 
   askBtn.addEventListener('click', handleAsk);
 
-  // Shortcut Support
+  // Keyboard Shortcut
   questionInput.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleAsk();
+  });
+
+  // Update UI based on source mode
+  sourceModeSelect.addEventListener('change', function() {
+    if (this.value === 'required') {
+      protocolLocked.style.display = 'none'; // Will show when response comes
+    }
   });
 </script>
 
