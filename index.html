@@ -143,7 +143,6 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    /* SOAP Output Styling */
     .soap-output {
       background: #ffffff;
       border-radius: 20px;
@@ -155,6 +154,8 @@
       white-space: pre-wrap;
       color: #1a2c42;
       direction: ltr;
+      max-height: 600px;
+      overflow-y: auto;
     }
     .finding-badge {
       display: inline-block;
@@ -167,6 +168,8 @@
     .badge-critical { background: #fee2e2; color: #991b1b; }
     .badge-high { background: #fef3c7; color: #92400e; }
     .badge-moderate { background: #e0f2fe; color: #075985; }
+    .badge-stable { background: #dcfce7; color: #166534; }
+    
     .status-bar {
       background: #f0f4fa;
       border-radius: 60px;
@@ -184,6 +187,19 @@
       margin-bottom: 20px;
       border: 1px solid #ffe2b3;
     }
+    .findings-container {
+      margin-bottom: 20px;
+    }
+    .finding-item {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-right: 4px solid;
+    }
+    .finding-item.critical { border-right-color: #dc2626; }
+    .finding-item.high { border-right-color: #f59e0b; }
+    .finding-item.moderate { border-right-color: #3b82f6; }
   </style>
 </head>
 <body>
@@ -210,13 +226,16 @@
         id="caseInput" 
         class="case-input" 
         placeholder="الصق هنا تقرير المريض، التحاليل، الأدوية، التاريخ المرضي..."
-      >17-02-2026 Test Result Reference Conclusion TOTAL PROTEIN 73 g/L [66-83] Normal Show Chart Multi NotesReport LIVER FUNCTION TEST Multi NotesReport Total Protein 73 g/L [66-83] Normal Show Chart Albumin Serum 29 g/L [35-52] Low Abnormal Show Chart Alkaline Phosphatase 370 U/L [30-120] High Abnormal Show Chart Ast(Sgot) 2303 U/L [1-49] High Abnormal Show Chart Alt(Sgpt) 18 U/L [1-49] Normal Show Chart Ggt 217 U/L [1-54] High Abnormal Show Chart Total Bilirubin 36.2 umol/L [5-21] High Abnormal Show Chart Direct Bilirubin 21.4 umol/L [0-3.39] High Abnormal Show Chart GLYCOCYLATED HEMOGLOBIN ( HBA1C) 9.2 % [4-5.8] Diabetic Show Chart Multi NotesReport LIPID PROFILE - PROFILE Multi NotesReport Kidney Function test Multi NotesReport Glucose Random 8.5 mmol/L [4.1-7.8] Pre Diabetic Show Chart Urea 33.3 mmol/L [2.8-7.2] High Abnormal Show Chart Creatinine 434 umol/L [59-104] High Abnormal Show Chart Sodium 125 mmol/L [136-146] Low Abnormal Show Chart Potassium 5.45 mmol/L [3.5-5.1] High Abnormal Show Chart Chloride 86 mmol/L [101-109] Low Abnormal Show Chart AUTOMATED BLOOD COUNT - PROFILE (C.B.C) Multi NotesReport W.B.C. 15.4 10^3/uL [4-10] High Abnormal Show Chart R.B.C. 4.06 x10^12 [4.5-5.5] Low Abnormal Show Chart Haemoglobin 11.3 g/dL [13-17] Low Abnormal Show Chart Hematocrit 34.2 % [40-50] Low Abnormal Show Chart Mcv 84.2 FL [83-101] Normal Show Chart Mch 27.8 PG [27-32] Normal Show Chart Mchc 33 % [31.5-34.5] Normal Show Chart Platelet Count 523 X10^3/UL [150-400] High Abnormal Show Chart Neuts % 91.3 % [40-75] High Show Chart Lymph % 5.6 % [20-45] Low Show Chart Mono % 2.7 % [2-10] Normal Show Chart Eos % 0.1 % [0-6] Show Chart Baso% 0.3 % [0-2] Normal Show Chart Neut # 14.06 10^3/uL [2-7] High Abnormal Show Chart Lymphs # 0.86 10^3/uL [1-4] Low Abnormal Show Chart Mono # 0.42 10^3/uL [0.2-1] Normal Show Chart Eos # 0.02 10^3/uL [0.02-0.5] Normal Show Chart Baso # 0.05 10^3/uL [0-0.1] Normal Show Chart Red Cell Distribution Width - Sd 45.9 FL [35-44] High Abnormal Show Chart Red Cell Distribution Width-Cv 15.1 % [11.6-14.4] High Abnormal Show Chart LDH 4973 U/L [1-248] High Abnormal Show Chart Multi NotesReport COAGULATION - PROFILE Multi NotesReport Pt Patient 26.8 SEC [10-13] High Abnormal Show Chart Aptt Patient 37.4 SEC [24-38] Normal Show Chart Inr P 2.23 Ratio [0.9-1.2] High Abnormal Show Chart هذا التحاليل Started Drug Details Prescriber Diagnosis Status End Date Medication Type Repeats Chat 2/17/2026 Paracetamol 10 Mg / Ml Injection Vial-1vial : 1000 MG IV NFUSION WHEN REQURED THREE TIMES For 2 Days Ahmed Abduallah Alshreef Completed 2/19/2026 Acute Schedule 2/17/2026 Piperacillin+Tazobactam 2.25 Gm. Vial : 2.25 GRAM INTRAVENIOUS EVERY EIGHT HOURES For 7 Days Ahmed Abduallah Alshreef Started 2/24/2026 Acute Schedule 2/17/2026 Noradrenaline 4mg/4ml (High Alert) Amp(I.V)-10 Ampoule : 10 MG INTRAVENIOUS [Over 1 Minute ] 1 HOURLY For 1 Day Bandar Abdullah Al Otabi Started 2/18/2026 Acute هاذا الادويه SEEN BY DR MOHD ALTAYIB: B: A 94-YEAR-OLD MALE BEDRIDDEN K/C OF: - DM ON INSULIN AND OHA - HTN - CKD, Hx OF AKI IN TOP CKD AFTER CONTRAST, S/P TEMPORARY SESSION OF DIALYSIS - CHRONIC ANEMIA - PSYCHIATRIC ISSUE PREVIOUSLY ADMITTED AS ACS-NSTEMI ** DISCUSSED IN HEART TEAM MEETING CONSENSUS WAS FOR CONSERATIVE MANEGEMENT AS PT IS ELDERY WITH PSYCHIATRIC AND HX OF AKI IN TOP CKD AFTER CONTRAST WITH TEMPORARY SESSION OF DIALYSIS OLD ECG ON ADMISSION: SINUS TACHYCARDIA HR 107 RBBB( NEW CHANGE, ARCHIVE IN 2/2/2025 WAS NORMAL) OLD BEDSIDE ECHO MARKED TACHYCARDIA DURING THE STUDY, AVEARGE LV SYSTOLIC FUNCTION, EF>55%, NO RWMA, DDI, NO SIGNIFICANT VALVULAR LESION, NO MASSESS, NO EFFUSION PATIENT ON: Acetylsalicylic Acid 81 MG PO OD. Clopidogrel 75 MG PO OD. Rosuvastatin 20 MG PO OD. Bisoprolol 2.5 MG PO OD. Furosemide 40 Mg PO BID. Esomeprazole 20mg PO OD. Nifedipine 60mg PO OD. Empagliflozin 10mg PO OD. CAME WITH DECREASE LEVEL OF CONSIOUSNESS YESTERDAY ASS WITH VOMITNG ONCE PT ON OZEMPIC > RECEIVE HIGHER DOSE THAN USUAL LAST NIGHT HE HAS EPISODE OF HYPOGLYCEMIA > 60 MG /DL HAS ABDOMINAL PAIN , LT LOWER ABD , NO CHANGE BOWEL HABIT HAS ONE EPISODE OF HEMATOURIA ? NO CHEST PAIN OR SOB NO LOC NO WEAKNESS NO FEVER O/E: INTUBATED, MV FIO2 70 RR 17 VITAL: BP: 125/63 NORAD 4 HR: 68 OSAT: 99 AFEBRILE CVS: S1 S2 CHEST : CORSE CREAPTATION LOWER LUNGS ABD: SOFT LAX , DISTENDED + LOWER LIMB EDEMA INVESTIGATION : WBC: 17.11 HB: 11.5 PLT : 474 CREAT : 343 BUN: 24.7 NA: 123 K: 4.9 VBG: PH: 7.31 CO: 31.7 K: 5 LAC: 7 HCO: 16.2 2ND VBG: PH: 7.29 CO: 35.9 K: 4.8 LAC: 6.3 HCO: 16.7 ECG: RBBB ( OLD CHANGE ) CXR: CONGESTION , CARDIOMEGALY BED SIDED ECHO: PRESERVED EF, NO RWMA, THERE IS SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE. US KUB: Both kidneys show increased echogeneicity grade II nephropathy Both kidneys shows normal size, contour & location . Bilaterally no stones nor hydronephrosis. Urinary bladder is empty .</textarea>
+      ></textarea>
       
       <div class="action-bar">
         <button class="primary-btn" id="analyzeBtn">
           <span class="btn-text">🔍 فحص الحالة</span>
         </button>
         <button class="secondary-btn" id="clearBtn">🗑️ مسح</button>
+      </div>
+      <div style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 8px;">
+        * سيتم تحليل الحالة واستخراج SOAP note + التدخلات الدوائية
       </div>
     </div>
 
@@ -239,6 +258,9 @@
         <div style="font-weight:600; margin-bottom:8px;">⚠️ أدوية غير موجودة في قاعدة البروتوكول:</div>
         <div id="missingMedsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
       </div>
+
+      <!-- النتائج -->
+      <div id="findingsContainer" class="findings-container" style="display: none;"></div>
 
       <!-- SOAP Note -->
       <div id="soapOutput" class="soap-output" dir="ltr">
@@ -268,9 +290,11 @@ Follow-up Plan:
 </div>
 
 <script>
+  // ========== التكوين ==========
   const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
   const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
+  // ========== العناصر ==========
   const caseInput = document.getElementById('caseInput');
   const analyzeBtn = document.getElementById('analyzeBtn');
   const clearBtn = document.getElementById('clearBtn');
@@ -281,7 +305,14 @@ Follow-up Plan:
   const missingCount = document.getElementById('missingCount');
   const missingMedsSection = document.getElementById('missingMedsSection');
   const missingMedsList = document.getElementById('missingMedsList');
+  const findingsContainer = document.getElementById('findingsContainer');
 
+  // ========== وضع نص تجريبي ==========
+  window.addEventListener('load', () => {
+    caseInput.value = `17-02-2026 Test Result Reference Conclusion TOTAL PROTEIN 73 g/L [66-83] Normal Show Chart Multi NotesReport LIVER FUNCTION TEST Multi NotesReport Total Protein 73 g/L [66-83] Normal Show Chart Albumin Serum 29 g/L [35-52] Low Abnormal Show Chart Alkaline Phosphatase 370 U/L [30-120] High Abnormal Show Chart Ast(Sgot) 2303 U/L [1-49] High Abnormal Show Chart Alt(Sgpt) 18 U/L [1-49] Normal Show Chart Ggt 217 U/L [1-54] High Abnormal Show Chart Total Bilirubin 36.2 umol/L [5-21] High Abnormal Show Chart Direct Bilirubin 21.4 umol/L [0-3.39] High Abnormal Show Chart GLYCOCYLATED HEMOGLOBIN ( HBA1C) 9.2 % [4-5.8] Diabetic Show Chart Multi NotesReport LIPID PROFILE - PROFILE Multi NotesReport Kidney Function test Multi NotesReport Glucose Random 8.5 mmol/L [4.1-7.8] Pre Diabetic Show Chart Urea 33.3 mmol/L [2.8-7.2] High Abnormal Show Chart Creatinine 434 umol/L [59-104] High Abnormal Show Chart Sodium 125 mmol/L [136-146] Low Abnormal Show Chart Potassium 5.45 mmol/L [3.5-5.1] High Abnormal Show Chart Chloride 86 mmol/L [101-109] Low Abnormal Show Chart AUTOMATED BLOOD COUNT - PROFILE (C.B.C) Multi NotesReport W.B.C. 15.4 10^3/uL [4-10] High Abnormal Show Chart R.B.C. 4.06 x10^12 [4.5-5.5] Low Abnormal Show Chart Haemoglobin 11.3 g/dL [13-17] Low Abnormal Show Chart Hematocrit 34.2 % [40-50] Low Abnormal Show Chart Mcv 84.2 FL [83-101] Normal Show Chart Mch 27.8 PG [27-32] Normal Show Chart Mchc 33 % [31.5-34.5] Normal Show Chart Platelet Count 523 X10^3/UL [150-400] High Abnormal Show Chart Neuts % 91.3 % [40-75] High Show Chart Lymph % 5.6 % [20-45] Low Show Chart Mono % 2.7 % [2-10] Normal Show Chart Eos % 0.1 % [0-6] Show Chart Baso% 0.3 % [0-2] Normal Show Chart Neut # 14.06 10^3/uL [2-7] High Abnormal Show Chart Lymphs # 0.86 10^3/uL [1-4] Low Abnormal Show Chart Mono # 0.42 10^3/uL [0.2-1] Normal Show Chart Eos # 0.02 10^3/uL [0.02-0.5] Normal Show Chart Baso # 0.05 10^3/uL [0-0.1] Normal Show Chart Red Cell Distribution Width - Sd 45.9 FL [35-44] High Abnormal Show Chart Red Cell Distribution Width-Cv 15.1 % [11.6-14.4] High Abnormal Show Chart LDH 4973 U/L [1-248] High Abnormal Show Chart Multi NotesReport COAGULATION - PROFILE Multi NotesReport Pt Patient 26.8 SEC [10-13] High Abnormal Show Chart Aptt Patient 37.4 SEC [24-38] Normal Show Chart Inr P 2.23 Ratio [0.9-1.2] High Abnormal Show Chart هذا التحاليل Started Drug Details Prescriber Diagnosis Status End Date Medication Type Repeats Chat 2/17/2026 Paracetamol 10 Mg / Ml Injection Vial-1vial : 1000 MG IV NFUSION WHEN REQURED THREE TIMES For 2 Days Ahmed Abduallah Alshreef Completed 2/19/2026 Acute Schedule 2/17/2026 Piperacillin+Tazobactam 2.25 Gm. Vial : 2.25 GRAM INTRAVENIOUS EVERY EIGHT HOURES For 7 Days Ahmed Abduallah Alshreef Started 2/24/2026 Acute Schedule 2/17/2026 Noradrenaline 4mg/4ml (High Alert) Amp(I.V)-10 Ampoule : 10 MG INTRAVENIOUS [Over 1 Minute ] 1 HOURLY For 1 Day Bandar Abdullah Al Otabi Started 2/18/2026 Acute هاذا الادويه SEEN BY DR MOHD ALTAYIB: B: A 94-YEAR-OLD MALE BEDRIDDEN K/C OF: - DM ON INSULIN AND OHA - HTN - CKD, Hx OF AKI IN TOP CKD AFTER CONTRAST, S/P TEMPORARY SESSION OF DIALYSIS - CHRONIC ANEMIA - PSYCHIATRIC ISSUE PREVIOUSLY ADMITTED AS ACS-NSTEMI ** DISCUSSED IN HEART TEAM MEETING CONSENSUS WAS FOR CONSERATIVE MANEGEMENT AS PT IS ELDERY WITH PSYCHIATRIC AND HX OF AKI IN TOP CKD AFTER CONTRAST WITH TEMPORARY SESSION OF DIALYSIS OLD ECG ON ADMISSION: SINUS TACHYCARDIA HR 107 RBBB( NEW CHANGE, ARCHIVE IN 2/2/2025 WAS NORMAL) OLD BEDSIDE ECHO MARKED TACHYCARDIA DURING THE STUDY, AVEARGE LV SYSTOLIC FUNCTION, EF>55%, NO RWMA, DDI, NO SIGNIFICANT VALVULAR LESION, NO MASSESS, NO EFFUSION PATIENT ON: Acetylsalicylic Acid 81 MG PO OD. Clopidogrel 75 MG PO OD. Rosuvastatin 20 MG PO OD. Bisoprolol 2.5 MG PO OD. Furosemide 40 Mg PO BID. Esomeprazole 20mg PO OD. Nifedipine 60mg PO OD. Empagliflozin 10mg PO OD. CAME WITH DECREASE LEVEL OF CONSIOUSNESS YESTERDAY ASS WITH VOMITNG ONCE PT ON OZEMPIC > RECEIVE HIGHER DOSE THAN USUAL LAST NIGHT HE HAS EPISODE OF HYPOGLYCEMIA > 60 MG /DL HAS ABDOMINAL PAIN , LT LOWER ABD , NO CHANGE BOWEL HABIT HAS ONE EPISODE OF HEMATOURIA ? NO CHEST PAIN OR SOB NO LOC NO WEAKNESS NO FEVER O/E: INTUBATED, MV FIO2 70 RR 17 VITAL: BP: 125/63 NORAD 4 HR: 68 OSAT: 99 AFEBRILE CVS: S1 S2 CHEST : CORSE CREAPTATION LOWER LUNGS ABD: SOFT LAX , DISTENDED + LOWER LIMB EDEMA INVESTIGATION : WBC: 17.11 HB: 11.5 PLT : 474 CREAT : 343 BUN: 24.7 NA: 123 K: 4.9 VBG: PH: 7.31 CO: 31.7 K: 5 LAC: 7 HCO: 16.2 2ND VBG: PH: 7.29 CO: 35.9 K: 4.8 LAC: 6.3 HCO: 16.7 ECG: RBBB ( OLD CHANGE ) CXR: CONGESTION , CARDIOMEGALY BED SIDED ECHO: PRESERVED EF, NO RWMA, THERE IS SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE. US KUB: Both kidneys show increased echogeneicity grade II nephropathy Both kidneys shows normal size, contour & location . Bilaterally no stones nor hydronephrosis. Urinary bladder is empty .`;
+  });
+
+  // ========== أحداث الأزرار ==========
   analyzeBtn.addEventListener('click', analyzeCase);
   clearBtn.addEventListener('click', clearAll);
 
@@ -299,14 +330,20 @@ Follow-up Plan:
     // إخفاء النتائج القديمة
     statusBar.style.display = 'none';
     missingMedsSection.style.display = 'none';
+    findingsContainer.style.display = 'none';
+    findingsContainer.innerHTML = '';
     soapOutput.innerText = 'جاري تحليل الحالة واستخراج البيانات...';
 
     try {
+      // ✅ إرسال البيانات بالشكل الصحيح
       const payload = {
-        mode: 'case_analysis',
-        case_text: caseText,
+        question: caseText,        // الخادم ينتظر هذا الحقل
+        mode: 'case_analysis',      // نميز أنها حالة سريرية
+        case_text: caseText,        // نحتفظ بالنص الكامل للتحليل
         language: 'en'
       };
+
+      console.log('إرسال:', payload);
 
       const response = await fetch(ASK_ENDPOINT, {
         method: 'POST',
@@ -315,15 +352,17 @@ Follow-up Plan:
       });
 
       const data = await response.json();
+      console.log('الاستجابة:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'فشل التحليل');
+        throw new Error(data.error || data.message || 'فشل التحليل');
       }
 
       // عرض النتائج
       displayResults(data);
 
     } catch (error) {
+      console.error('خطأ:', error);
       soapOutput.innerText = `❌ خطأ: ${error.message}`;
     } finally {
       analyzeBtn.disabled = false;
@@ -335,19 +374,46 @@ Follow-up Plan:
     // عرض SOAP Note
     if (data.answer) {
       soapOutput.innerText = data.answer;
+    } else {
+      soapOutput.innerText = 'لا توجد بيانات كافية لإنشاء التقرير';
     }
 
     // عرض شريط الحالة
     if (data.safety_status) {
       statusBar.style.display = 'flex';
-      safetyBadge.textContent = data.safety_status.status;
-      safetyBadge.className = `finding-badge badge-${data.safety_status.color.toLowerCase()}`;
+      safetyBadge.textContent = data.safety_status.status || 'غير معروف';
+      
+      // تحديد لون الشارة
+      if (data.safety_status.color) {
+        safetyBadge.className = `finding-badge badge-${data.safety_status.color.toLowerCase()}`;
+      } else {
+        safetyBadge.className = 'finding-badge badge-moderate';
+      }
     }
 
-    // عرض عدد النتائج
+    // عرض النتائج السريرية
     if (data.clinical_findings && data.clinical_findings.length > 0) {
+      findingsContainer.style.display = 'block';
       findingsCount.textContent = `🔍 ${data.clinical_findings.length} نتائج`;
       findingsCount.className = 'finding-badge badge-moderate';
+      
+      let findingsHtml = '<div style="margin-bottom:16px;"><strong>📋 النتائج السريرية:</strong></div>';
+      
+      data.clinical_findings.forEach(finding => {
+        const severity = finding.severity ? finding.severity.toLowerCase() : 'moderate';
+        findingsHtml += `
+          <div class="finding-item ${severity}">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="font-weight:600;">${finding.type || 'نتيجة'}</span>
+              <span class="finding-badge badge-${severity}">${finding.severity || 'MODERATE'}</span>
+            </div>
+            <div style="margin-bottom:8px;">${finding.problem || ''}</div>
+            <div style="color:#4b5563; font-size:0.9rem;">${finding.correction || ''}</div>
+          </div>
+        `;
+      });
+      
+      findingsContainer.innerHTML = findingsHtml;
     }
 
     // عرض الأدوية المفقودة
@@ -385,6 +451,8 @@ Follow-up Plan:
 - Follow-up: OK.`;
     statusBar.style.display = 'none';
     missingMedsSection.style.display = 'none';
+    findingsContainer.style.display = 'none';
+    findingsContainer.innerHTML = '';
   }
 </script>
 </body>
