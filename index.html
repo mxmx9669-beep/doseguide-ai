@@ -439,6 +439,7 @@ Current Medications:
   analyzeBtn.addEventListener('click', analyzeCase);
   clearBtn.addEventListener('click', clearAll);
 
+  // ========== MAIN ANALYSIS FUNCTION ==========
   async function analyzeCase() {
     const caseText = caseInput.value.trim();
     if (!caseText) {
@@ -456,10 +457,15 @@ Current Medications:
     try {
       console.log('Connecting to:', ASK_ENDPOINT);
       
-      // ✅ NEW PAYLOAD: فقط case_text حسب المواصفات
+      // ✅ CORRECT PAYLOAD - مع question و mode
       const payload = {
-        case_text: caseText
+        question: caseText,        // الـ backend ينتظر هذا
+        mode: 'case_analysis',      // عشان نميز أنها حالة
+        case_text: caseText,        // نحتفظ بالنص للتحليل
+        language: 'en'
       };
+
+      console.log('Sending payload:', payload);
 
       const response = await fetch(ASK_ENDPOINT, {
         method: 'POST',
@@ -491,6 +497,7 @@ Current Medications:
           <li>The worker URL is correct</li>
           <li>Worker is deployed and running</li>
           <li>API keys are configured</li>
+          <li>Backend expects "question" field</li>
         </ul>
       `;
     } finally {
@@ -499,6 +506,7 @@ Current Medications:
     }
   }
 
+  // ========== DISPLAY RESULTS ==========
   function displayResults(data) {
     // 1️⃣ Template-1 SOAP
     if (data.template1_soap) {
