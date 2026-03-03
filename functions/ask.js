@@ -25,13 +25,19 @@ export async function onRequest(context) {
 
   try {
     const body = await request.json();
-    const { case_text, language = "en" } = body;
+    // ✅ التعديل هنا - إضافة mode إلى المتغيرات المستقبلة
+    const { case_text, mode, language = "en" } = body;
 
     if (!case_text) {
       return new Response(JSON.stringify({ error: "Missing case_text" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders }
       });
+    }
+
+    // ✅ إضافة دعم mode - للتوافق مع الإصدارات السابقة
+    if (mode && mode === "case_analysis") {
+      console.log("✅ Case analysis mode detected");
     }
 
     // ========== PIPELINE EXECUTION ==========
