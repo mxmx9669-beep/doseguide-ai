@@ -1,1269 +1,390 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide AI · Clinical Pharmacist Validation Engine</title>
+  <title>منصة التدخل السريري · Clinical Pharmacist Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #f2f5f9;
-      --white: #ffffff;
-      --navy: #0a1628;
-      --navy2: #132240;
-      --blue: #1b4b8a;
-      --blue-light: #2563c4;
-      --blue-pale: #e8f0fb;
-      --border: #dde4ef;
-      --border2: #c8d4e8;
-      --text: #0d1f36;
-      --text-mid: #3d5572;
-      --text-muted: #7a90aa;
-      --critical: #c8102e;
-      --critical-bg: #fff0f3;
-      --critical-border: #fbbbc8;
-      --high: #c2440a;
-      --high-bg: #fff4ed;
-      --high-border: #fbc89a;
-      --moderate: #8a6200;
-      --moderate-bg: #fffbe6;
-      --moderate-border: #f5d97a;
-      --low: #1a6b3a;
-      --low-bg: #edfaf3;
-      --low-border: #86e0ad;
-      --info-bg: #eef4ff;
-      --info-border: #b3ccf5;
-      --found: #065f46;
-      --found-bg: #d1fae5;
-      --notfound: #7c2d12;
-      --notfound-bg: #fef3c7;
-      --mono: 'JetBrains Mono', monospace;
-      --sans: 'Syne', sans-serif;
-      --serif: 'Source Serif 4', Georgia, serif;
-      --radius: 12px;
-      --radius-lg: 20px;
-      --shadow: 0 2px 8px rgba(10,22,40,0.08), 0 1px 2px rgba(10,22,40,0.05);
-      --shadow-lg: 0 12px 40px rgba(10,22,40,0.14), 0 2px 8px rgba(10,22,40,0.06);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: var(--serif);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 15px;
-      line-height: 1.65;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #0b1c33;
+      line-height: 1.5;
       min-height: 100vh;
+      padding: 24px;
     }
-
-    /* ── HEADER ── */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
     .header {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 0 32px;
+      background: #ffffff;
+      border-radius: 32px 32px 0 0;
+      padding: 24px 32px;
+      border-bottom: 1px solid #e9eef3;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 64px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(10,22,40,0.04);
+      box-shadow: 0 4px 12px rgba(0,20,60,0.08);
     }
-
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
-
-    .logo-mark {
-      width: 38px; height: 38px;
-      background: var(--navy);
-      border-radius: 10px;
+    .logo-icon {
+      background: linear-gradient(135deg, #1a5c9e, #0d3b6f);
+      width: 48px; height: 48px; border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      font-family: var(--sans);
-      font-weight: 800;
-      font-size: 14px;
-      color: white;
-      letter-spacing: -0.5px;
-      flex-shrink: 0;
+      color: white; font-size: 26px; font-weight: 600;
     }
-
-    .logo-name {
-      font-family: var(--sans);
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--navy);
-      letter-spacing: -0.3px;
+    .logo-text h1 {
+      font-size: 1.7rem; font-weight: 700;
+      background: linear-gradient(135deg, #1a3b5c, #143059);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
-    .logo-sub {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      margin-top: 1px;
+    .logo-text span { font-size: 0.85rem; color: #5e7185; }
+    .badge {
+      background: #e1ecfe; color: #1d4a8b; padding: 6px 16px;
+      border-radius: 40px; font-size: 0.8rem; font-weight: 600;
+      border: 1px solid rgba(29,74,139,0.15);
     }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .protocol-badge {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--blue);
-      background: var(--blue-pale);
-      border: 1px solid var(--info-border);
-      padding: 5px 12px;
-      border-radius: 20px;
-    }
-
-    /* ── MAIN LAYOUT ── */
-    .layout {
+    .main-grid {
       display: grid;
-      grid-template-columns: 260px 1fr;
-      min-height: calc(100vh - 64px);
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      background: #ffffff;
+      border-radius: 0 0 32px 32px;
+      padding: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0,20,60,0.25);
     }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      background: var(--white);
-      border-right: 1px solid var(--border);
-      padding: 24px 16px;
-      position: sticky;
-      top: 64px;
-      height: calc(100vh - 64px);
-      overflow-y: auto;
+    .input-section, .output-section {
+      background: #f8fafd;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid #e2eaf5;
     }
-
-    .sidebar-section { margin-bottom: 28px; }
-
-    .sidebar-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-      padding: 0 4px;
-    }
-
-    .ctrl-group { margin-bottom: 14px; }
-
-    .ctrl-label {
-      font-family: var(--sans);
-      font-size: 12px;
+    .section-title {
+      font-size: 1.1rem;
       font-weight: 600;
-      color: var(--text-mid);
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .ctrl-select {
-      width: 100%;
-      padding: 9px 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-family: var(--serif);
-      font-size: 13px;
-      color: var(--text);
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a90aa' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      transition: border-color 0.15s;
-    }
-    .ctrl-select:focus { border-color: var(--blue-light); }
-
-    .pill-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .pill {
-      font-family: var(--sans);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid var(--border2);
-      background: var(--bg);
-      color: var(--text-mid);
-      cursor: pointer;
-      transition: all 0.12s;
-      user-select: none;
-    }
-    .pill:hover { border-color: var(--blue-light); color: var(--blue-light); }
-    .pill.active {
-      background: var(--navy);
-      border-color: var(--navy);
-      color: white;
-    }
-
-    /* ── MAIN CONTENT ── */
-    .main {
-      padding: 28px 32px;
-      max-width: 900px;
-    }
-
-    /* ── MODE TABS ── */
-    .mode-tabs {
-      display: flex;
-      gap: 0;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 4px;
-      width: fit-content;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow);
-    }
-
-    .mode-tab {
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 9px 22px;
-      border-radius: 14px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      letter-spacing: 0.2px;
-    }
-    .mode-tab:hover { color: var(--text); }
-    .mode-tab.active {
-      background: var(--navy);
-      color: white;
-      box-shadow: 0 2px 8px rgba(10,22,40,0.2);
-    }
-
-    /* ── INPUT AREAS ── */
-    .input-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      color: #13273f;
       margin-bottom: 16px;
-    }
-
-    .input-card-header {
-      padding: 12px 18px;
-      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: var(--bg);
+      gap: 8px;
     }
-
-    .input-card-title {
-      font-family: var(--sans);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-mid);
-      letter-spacing: 0.3px;
-    }
-
-    .char-count {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    textarea {
+    .case-input {
       width: 100%;
-      border: none;
-      font-family: var(--serif);
-      font-size: 14.5px;
+      min-height: 500px;
+      padding: 20px;
+      font-family: 'Inter', monospace;
+      font-size: 0.95rem;
       line-height: 1.7;
+      border: 1px solid #dbe1e9;
+      border-radius: 20px;
       resize: vertical;
       outline: none;
-      color: var(--text);
-      padding: 16px 18px;
-      background: var(--white);
+      background: #ffffff;
+      color: #1a2c42;
     }
-
-    textarea::placeholder { color: #b0bdc9; font-style: italic; }
-    textarea#question { min-height: 90px; }
-    textarea#case_text { min-height: 200px; font-size: 13.5px; font-family: var(--mono); }
-
-    /* ── ACTION BAR ── */
+    .case-input:focus {
+      border-color: #1a4c8c;
+      box-shadow: 0 0 0 3px rgba(26,76,140,0.1);
+    }
     .action-bar {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
+      gap: 16px;
+      margin: 20px 0;
+      justify-content: center;
     }
-
-    .btn-primary {
-      font-family: var(--sans);
-      font-size: 14px;
-      font-weight: 700;
-      padding: 12px 28px;
-      background: var(--navy);
-      color: white;
+    .primary-btn {
+      background: #1a4c8c;
       border: none;
-      border-radius: 40px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      box-shadow: 0 4px 12px rgba(10,22,40,0.25);
-      transition: all 0.15s;
-      letter-spacing: 0.2px;
-    }
-    .btn-primary:hover { background: var(--navy2); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(10,22,40,0.3); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    .btn-primary.case-btn {
-      background: linear-gradient(135deg, #1b3a6b, #2563c4);
-    }
-    .btn-primary.case-btn:hover {
-      background: linear-gradient(135deg, #152d55, #1d52a8);
-    }
-
-    .btn-secondary {
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 11px 20px;
-      background: var(--white);
-      color: var(--text-mid);
-      border: 1px solid var(--border2);
-      border-radius: 40px;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .btn-secondary:hover { background: var(--bg); border-color: var(--blue-light); color: var(--blue-light); }
-
-    /* ── LOADER ── */
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: inline-block;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── RESULTS ── */
-    .results { animation: fadeUp 0.2s ease; }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-
-    /* Status bar */
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 16px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .dot-ok { background: #22c55e; box-shadow: 0 0 0 3px #dcfce7; }
-    .dot-warn { background: var(--critical); box-shadow: 0 0 0 3px #fef2f2; }
-    .dot-neutral { background: #94a3b8; box-shadow: 0 0 0 3px #f1f5f9; }
-
-    .status-text {
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .status-tags {
-      display: flex;
-      gap: 6px;
-      margin-left: auto;
-    }
-
-    .tag {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.5px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-    .tag-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
-    .tag-ok { background: var(--found-bg); color: var(--found); border: 1px solid var(--low-border); }
-    .tag-warn { background: var(--moderate-bg); color: var(--moderate); border: 1px solid var(--moderate-border); }
-    .tag-locked { background: var(--navy); color: white; }
-
-    /* Result sections */
-    .result-section {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      margin-bottom: 16px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .section-header {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      background: var(--bg);
-      user-select: none;
-      transition: background 0.1s;
-    }
-    .section-header:hover { background: #eaeff6; }
-
-    .section-title {
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--navy);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      letter-spacing: 0.2px;
-    }
-
-    .section-chevron {
-      font-size: 11px;
-      color: var(--text-muted);
-      transition: transform 0.2s;
-    }
-    .section-header.collapsed .section-chevron { transform: rotate(-90deg); }
-
-    .section-body {
-      padding: 20px;
-    }
-    .section-body.hidden { display: none; }
-
-    /* SOAP */
-    .soap-body {
-      font-family: var(--serif);
-      font-size: 14px;
-      line-height: 1.75;
-      color: var(--text);
-    }
-
-    .soap-body h2 {
-      font-family: var(--sans);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin: 20px 0 8px;
-      padding-bottom: 4px;
-      border-bottom: 2px solid var(--blue-pale);
-    }
-    .soap-body h2:first-child { margin-top: 0; }
-
-    .soap-body table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      margin: 10px 0;
-      font-family: var(--mono);
-    }
-    .soap-body th {
-      background: var(--bg);
-      padding: 7px 10px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 11px;
-      color: var(--text-mid);
-      border: 1px solid var(--border);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .soap-body td {
-      padding: 7px 10px;
-      border: 1px solid var(--border);
-      font-size: 12.5px;
-      vertical-align: top;
-    }
-    .soap-body tr:nth-child(even) td { background: var(--bg); }
-
-    /* Intervention cards */
-    .int-card {
-      border-radius: var(--radius);
-      border-left: 4px solid;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      font-size: 14px;
-    }
-    .int-CRITICAL { background: var(--critical-bg); border-color: var(--critical); }
-    .int-HIGH { background: var(--high-bg); border-color: var(--high); }
-    .int-MODERATE { background: var(--moderate-bg); border-color: var(--moderate); }
-    .int-LOW { background: var(--low-bg); border-color: var(--low); }
-    .int-NOT_FOUND { background: var(--notfound-bg); border-color: #d97706; }
-
-    .int-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .int-severity {
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 20px;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .sev-CRITICAL { background: var(--critical); color: white; }
-    .sev-HIGH { background: var(--high); color: white; }
-    .sev-MODERATE { background: var(--moderate); color: white; }
-    .sev-LOW { background: var(--low); color: white; }
-    .sev-NOT_FOUND { background: #d97706; color: white; }
-
-    .int-drug {
-      font-family: var(--sans);
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .int-type {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    .int-row {
-      display: grid;
-      grid-template-columns: 90px 1fr;
-      gap: 4px 12px;
-      margin-bottom: 5px;
-      font-size: 13.5px;
-    }
-
-    .int-key {
-      font-family: var(--sans);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding-top: 2px;
-    }
-
-    .int-val { color: var(--text); line-height: 1.5; }
-
-    .int-citation {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.6);
-      border-radius: 8px;
-      border: 1px solid rgba(0,0,0,0.06);
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-mid);
-    }
-
-    .citation-not-found {
-      background: var(--notfound-bg);
-      border-color: #fcd34d;
-      color: #92400e;
-    }
-
-    .citation-general {
-      background: var(--info-bg);
-      border-color: var(--info-border);
-      color: #1e40af;
-    }
-
-    /* Missing / no-indication items */
-    .flag-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: var(--radius);
-      margin-bottom: 8px;
-      font-size: 13.5px;
-    }
-    .flag-missing { background: #fef3c7; border: 1px solid #fcd34d; }
-    .flag-noid { background: #fff7ed; border: 1px solid #fed7aa; }
-    .flag-dup { background: var(--info-bg); border: 1px solid var(--info-border); }
-    .flag-unparsed { background: #f8fafc; border: 1px solid var(--border); }
-
-    .flag-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-    .flag-drug { font-family: var(--sans); font-weight: 700; font-size: 13px; }
-    .flag-reason { color: var(--text-mid); font-size: 13px; }
-
-    /* Citations panel */
-    .cit-item {
-      padding: 12px 14px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--bg);
-      margin-bottom: 8px;
-      font-size: 13px;
-    }
-
-    .cit-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 7px;
-    }
-
-    .cit-file {
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--blue);
-      background: var(--blue-pale);
-      padding: 2px 8px;
-      border-radius: 6px;
-    }
-
-    .cit-section { font-size: 12px; color: var(--text-mid); }
-    .cit-page { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-left: auto; }
-
-    .cit-excerpt {
-      font-size: 12.5px;
-      color: var(--text-mid);
-      border-left: 2px solid var(--border2);
-      padding-left: 10px;
-      font-family: var(--serif);
-      font-style: italic;
-      line-height: 1.55;
-    }
-
-    /* Renal card */
-    .renal-card {
-      background: var(--info-bg);
-      border: 1px solid var(--info-border);
-      border-radius: var(--radius);
-      padding: 12px 16px;
-      font-family: var(--mono);
-      font-size: 12.5px;
-      color: #1e3a8a;
-      margin-bottom: 16px;
-    }
-
-    .renal-card strong { font-weight: 700; }
-
-    /* Q&A answer */
-    .answer-text {
-      font-family: var(--serif);
-      font-size: 15px;
-      line-height: 1.75;
-      color: var(--text);
-      white-space: pre-wrap;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { position: static; height: auto; }
-      .main { padding: 20px 16px; }
-      .header { padding: 0 16px; }
-    }
-
-    /* Markdown-lite rendering inside soap-body */
-    .soap-body strong { font-weight: 700; }
-    .soap-body em { font-style: italic; }
-    .soap-body hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
-    .soap-body ul, .soap-body ol { padding-left: 20px; margin: 6px 0; }
-    .soap-body li { margin-bottom: 3px; }
-    .soap-body code {
-      font-family: var(--mono);
-      font-size: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 1px 5px;
-      border-radius: 4px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
-      font-size: 14px;
-    }
-    .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
-
-    .count-badge {
-      font-family: var(--mono);
-      font-size: 10px;
-      background: var(--navy);
       color: white;
-      padding: 2px 8px;
+      font-weight: 600;
+      padding: 16px 40px;
+      border-radius: 60px;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 18px rgba(20,70,140,0.35);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .primary-btn:hover {
+      background: #0d3b6f;
+      transform: translateY(-2px);
+    }
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .secondary-btn {
+      background: transparent;
+      border: 1px solid #bcc9db;
+      color: #334e70;
+      font-weight: 500;
+      padding: 16px 32px;
+      border-radius: 60px;
+      cursor: pointer;
+    }
+    .loader {
+      width: 20px; height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* SOAP Output Styling */
+    .soap-output {
+      background: #ffffff;
       border-radius: 20px;
-      margin-left: 6px;
+      padding: 24px;
+      border: 1px solid #e2eaf5;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      color: #1a2c42;
+      direction: ltr;
+    }
+    .finding-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .badge-critical { background: #fee2e2; color: #991b1b; }
+    .badge-high { background: #fef3c7; color: #92400e; }
+    .badge-moderate { background: #e0f2fe; color: #075985; }
+    .status-bar {
+      background: #f0f4fa;
+      border-radius: 60px;
+      padding: 12px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .missing-meds {
+      background: #fff9f0;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 1px solid #ffe2b3;
     }
   </style>
 </head>
 <body>
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🩺</div>
+      <div class="logo-text">
+        <h1>منصة التدخل السريري</h1>
+        <span>Clinical Pharmacist Validation Engine · Protocol-Locked</span>
+      </div>
+    </div>
+    <div class="badge">🔬 تحليل آلي · تدخل دوائي · تقارير ذكية</div>
+  </div>
 
-<!-- ── HEADER ── -->
-<header class="header">
-  <div class="logo">
-    <div class="logo-mark">DG</div>
-    <div>
-      <div class="logo-name">DoseGuide AI</div>
-      <div class="logo-sub">Clinical Pharmacist Validation Engine</div>
+  <div class="main-grid">
+    <!-- الجانب الأيمن: إدخال الحالة -->
+    <div class="input-section">
+      <div class="section-title">
+        <span>📋</span>
+        أدخل الحالة السريرية (نص متلخبط)
+      </div>
+      <textarea 
+        id="caseInput" 
+        class="case-input" 
+        placeholder="الصق هنا تقرير المريض، التحاليل، الأدوية، التاريخ المرضي..."
+      >17-02-2026 Test Result Reference Conclusion TOTAL PROTEIN 73 g/L [66-83] Normal Show Chart Multi NotesReport LIVER FUNCTION TEST Multi NotesReport Total Protein 73 g/L [66-83] Normal Show Chart Albumin Serum 29 g/L [35-52] Low Abnormal Show Chart Alkaline Phosphatase 370 U/L [30-120] High Abnormal Show Chart Ast(Sgot) 2303 U/L [1-49] High Abnormal Show Chart Alt(Sgpt) 18 U/L [1-49] Normal Show Chart Ggt 217 U/L [1-54] High Abnormal Show Chart Total Bilirubin 36.2 umol/L [5-21] High Abnormal Show Chart Direct Bilirubin 21.4 umol/L [0-3.39] High Abnormal Show Chart GLYCOCYLATED HEMOGLOBIN ( HBA1C) 9.2 % [4-5.8] Diabetic Show Chart Multi NotesReport LIPID PROFILE - PROFILE Multi NotesReport Kidney Function test Multi NotesReport Glucose Random 8.5 mmol/L [4.1-7.8] Pre Diabetic Show Chart Urea 33.3 mmol/L [2.8-7.2] High Abnormal Show Chart Creatinine 434 umol/L [59-104] High Abnormal Show Chart Sodium 125 mmol/L [136-146] Low Abnormal Show Chart Potassium 5.45 mmol/L [3.5-5.1] High Abnormal Show Chart Chloride 86 mmol/L [101-109] Low Abnormal Show Chart AUTOMATED BLOOD COUNT - PROFILE (C.B.C) Multi NotesReport W.B.C. 15.4 10^3/uL [4-10] High Abnormal Show Chart R.B.C. 4.06 x10^12 [4.5-5.5] Low Abnormal Show Chart Haemoglobin 11.3 g/dL [13-17] Low Abnormal Show Chart Hematocrit 34.2 % [40-50] Low Abnormal Show Chart Mcv 84.2 FL [83-101] Normal Show Chart Mch 27.8 PG [27-32] Normal Show Chart Mchc 33 % [31.5-34.5] Normal Show Chart Platelet Count 523 X10^3/UL [150-400] High Abnormal Show Chart Neuts % 91.3 % [40-75] High Show Chart Lymph % 5.6 % [20-45] Low Show Chart Mono % 2.7 % [2-10] Normal Show Chart Eos % 0.1 % [0-6] Show Chart Baso% 0.3 % [0-2] Normal Show Chart Neut # 14.06 10^3/uL [2-7] High Abnormal Show Chart Lymphs # 0.86 10^3/uL [1-4] Low Abnormal Show Chart Mono # 0.42 10^3/uL [0.2-1] Normal Show Chart Eos # 0.02 10^3/uL [0.02-0.5] Normal Show Chart Baso # 0.05 10^3/uL [0-0.1] Normal Show Chart Red Cell Distribution Width - Sd 45.9 FL [35-44] High Abnormal Show Chart Red Cell Distribution Width-Cv 15.1 % [11.6-14.4] High Abnormal Show Chart LDH 4973 U/L [1-248] High Abnormal Show Chart Multi NotesReport COAGULATION - PROFILE Multi NotesReport Pt Patient 26.8 SEC [10-13] High Abnormal Show Chart Aptt Patient 37.4 SEC [24-38] Normal Show Chart Inr P 2.23 Ratio [0.9-1.2] High Abnormal Show Chart هذا التحاليل Started Drug Details Prescriber Diagnosis Status End Date Medication Type Repeats Chat 2/17/2026 Paracetamol 10 Mg / Ml Injection Vial-1vial : 1000 MG IV NFUSION WHEN REQURED THREE TIMES For 2 Days Ahmed Abduallah Alshreef Completed 2/19/2026 Acute Schedule 2/17/2026 Piperacillin+Tazobactam 2.25 Gm. Vial : 2.25 GRAM INTRAVENIOUS EVERY EIGHT HOURES For 7 Days Ahmed Abduallah Alshreef Started 2/24/2026 Acute Schedule 2/17/2026 Noradrenaline 4mg/4ml (High Alert) Amp(I.V)-10 Ampoule : 10 MG INTRAVENIOUS [Over 1 Minute ] 1 HOURLY For 1 Day Bandar Abdullah Al Otabi Started 2/18/2026 Acute هاذا الادويه SEEN BY DR MOHD ALTAYIB: B: A 94-YEAR-OLD MALE BEDRIDDEN K/C OF: - DM ON INSULIN AND OHA - HTN - CKD, Hx OF AKI IN TOP CKD AFTER CONTRAST, S/P TEMPORARY SESSION OF DIALYSIS - CHRONIC ANEMIA - PSYCHIATRIC ISSUE PREVIOUSLY ADMITTED AS ACS-NSTEMI ** DISCUSSED IN HEART TEAM MEETING CONSENSUS WAS FOR CONSERATIVE MANEGEMENT AS PT IS ELDERY WITH PSYCHIATRIC AND HX OF AKI IN TOP CKD AFTER CONTRAST WITH TEMPORARY SESSION OF DIALYSIS OLD ECG ON ADMISSION: SINUS TACHYCARDIA HR 107 RBBB( NEW CHANGE, ARCHIVE IN 2/2/2025 WAS NORMAL) OLD BEDSIDE ECHO MARKED TACHYCARDIA DURING THE STUDY, AVEARGE LV SYSTOLIC FUNCTION, EF>55%, NO RWMA, DDI, NO SIGNIFICANT VALVULAR LESION, NO MASSESS, NO EFFUSION PATIENT ON: Acetylsalicylic Acid 81 MG PO OD. Clopidogrel 75 MG PO OD. Rosuvastatin 20 MG PO OD. Bisoprolol 2.5 MG PO OD. Furosemide 40 Mg PO BID. Esomeprazole 20mg PO OD. Nifedipine 60mg PO OD. Empagliflozin 10mg PO OD. CAME WITH DECREASE LEVEL OF CONSIOUSNESS YESTERDAY ASS WITH VOMITNG ONCE PT ON OZEMPIC > RECEIVE HIGHER DOSE THAN USUAL LAST NIGHT HE HAS EPISODE OF HYPOGLYCEMIA > 60 MG /DL HAS ABDOMINAL PAIN , LT LOWER ABD , NO CHANGE BOWEL HABIT HAS ONE EPISODE OF HEMATOURIA ? NO CHEST PAIN OR SOB NO LOC NO WEAKNESS NO FEVER O/E: INTUBATED, MV FIO2 70 RR 17 VITAL: BP: 125/63 NORAD 4 HR: 68 OSAT: 99 AFEBRILE CVS: S1 S2 CHEST : CORSE CREAPTATION LOWER LUNGS ABD: SOFT LAX , DISTENDED + LOWER LIMB EDEMA INVESTIGATION : WBC: 17.11 HB: 11.5 PLT : 474 CREAT : 343 BUN: 24.7 NA: 123 K: 4.9 VBG: PH: 7.31 CO: 31.7 K: 5 LAC: 7 HCO: 16.2 2ND VBG: PH: 7.29 CO: 35.9 K: 4.8 LAC: 6.3 HCO: 16.7 ECG: RBBB ( OLD CHANGE ) CXR: CONGESTION , CARDIOMEGALY BED SIDED ECHO: PRESERVED EF, NO RWMA, THERE IS SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE. US KUB: Both kidneys show increased echogeneicity grade II nephropathy Both kidneys shows normal size, contour & location . Bilaterally no stones nor hydronephrosis. Urinary bladder is empty .</textarea>
+      
+      <div class="action-bar">
+        <button class="primary-btn" id="analyzeBtn">
+          <span class="btn-text">🔍 فحص الحالة</span>
+        </button>
+        <button class="secondary-btn" id="clearBtn">🗑️ مسح</button>
+      </div>
+    </div>
+
+    <!-- الجانب الأيسر: النتائج -->
+    <div class="output-section">
+      <div class="section-title">
+        <span>📊</span>
+        تقرير SOAP المنظم + التدخلات الدوائية
+      </div>
+
+      <!-- شريط الحالة -->
+      <div id="statusBar" class="status-bar" style="display: none;">
+        <span id="safetyBadge" class="finding-badge"></span>
+        <span id="findingsCount"></span>
+        <span id="missingCount"></span>
+      </div>
+
+      <!-- الأدوية المفقودة -->
+      <div id="missingMedsSection" class="missing-meds" style="display: none;">
+        <div style="font-weight:600; margin-bottom:8px;">⚠️ أدوية غير موجودة في قاعدة البروتوكول:</div>
+        <div id="missingMedsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <!-- SOAP Note -->
+      <div id="soapOutput" class="soap-output" dir="ltr">
+S: Patient — (MRN: ), __Y, __kg admitted to ICU.
+Reason for Admission: N/A
+PMH: N/A
+Home Meds: N/A
+
+O: Vitals: Within normal limits
+Labs: Within normal limits
+Renal: SCr ___ umol, Calculated CrCl ___
+
+A: Primary admission for acute issues. Clinical review performed.
+
+P:
+Current Medications:
+- No medications started
+
+Pharmacist Intervention:
+Patient reviewed; no interventions at this time.
+
+Follow-up Plan:
+- Follow-up: OK.
+      </div>
     </div>
   </div>
-  <div class="header-right">
-    <div class="protocol-badge">🔒 Protocol-Locked · Vector Store</div>
-  </div>
-</header>
-
-<!-- ── LAYOUT ── -->
-<div class="layout">
-
-  <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">Configuration</div>
-
-      <div class="ctrl-group">
-        <label class="ctrl-label" for="drug">Drug / Topic</label>
-        <select class="ctrl-select" id="drug">
-          <option value="">None</option>
-          <option value="warfarin">Warfarin (Coumadin)</option>
-          <option value="insulin">Insulin (all types)</option>
-          <option value="amoxicillin">Amoxicillin</option>
-          <option value="vancomycin">Vancomycin</option>
-          <option value="piperacillin-tazobactam">Piperacillin/Tazobactam</option>
-          <option value="noradrenaline">Noradrenaline</option>
-          <option value="furosemide">Furosemide</option>
-          <option value="heparin">Heparin</option>
-          <option value="metformin">Metformin</option>
-          <option value="rosuvastatin">Rosuvastatin</option>
-        </select>
-      </div>
-
-      <div class="ctrl-group">
-        <label class="ctrl-label" for="language">Language</label>
-        <select class="ctrl-select" id="language">
-          <option value="en">🇬🇧 English</option>
-          <option value="ar">🇸🇦 العربية</option>
-        </select>
-      </div>
-
-      <div class="ctrl-group">
-        <label class="ctrl-label" for="answer_style">Answer Style</label>
-        <select class="ctrl-select" id="answer_style">
-          <option value="Recommended">Recommended</option>
-          <option value="Bullet">Bullet Points</option>
-          <option value="Detailed">Detailed</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">Output Mode</div>
-      <div class="pill-group" id="modeGroup">
-        <span class="pill active" data-mode="hybrid">Hybrid</span>
-        <span class="pill" data-mode="short">Short</span>
-        <span class="pill" data-mode="verbatim">Verbatim</span>
-      </div>
-      <input type="hidden" id="output_mode" value="hybrid" />
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">Source Mode</div>
-      <div class="pill-group" id="sourceModeGroup">
-        <span class="pill active" data-smode="off">Off</span>
-        <span class="pill" data-smode="required">Required</span>
-      </div>
-      <input type="hidden" id="source_mode" value="off" />
-    </div>
-  </aside>
-
-  <!-- ── MAIN ── -->
-  <main class="main">
-
-    <!-- Mode Tabs -->
-    <div class="mode-tabs">
-      <button class="mode-tab active" id="tabQA" onclick="switchTab('qa')">
-        🔍 Q &amp; A
-      </button>
-      <button class="mode-tab" id="tabCase" onclick="switchTab('case')">
-        🏥 Case Validation
-      </button>
-    </div>
-
-    <!-- Q&A Panel -->
-    <div id="panelQA">
-      <div class="input-card">
-        <div class="input-card-header">
-          <span class="input-card-title">Clinical Question</span>
-          <span class="char-count" id="qaCharCount">0 chars</span>
-        </div>
-        <textarea id="question"
-          placeholder="e.g. What is the renal dose adjustment for piperacillin/tazobactam in CrCl < 20 mL/min?"
-          oninput="document.getElementById('qaCharCount').textContent=this.value.length+' chars'"
-        ></textarea>
-      </div>
-      <div class="action-bar">
-        <button class="btn-primary" id="askBtn" onclick="handleQA()">
-          <span>Ask DoseGuide</span>
-        </button>
-        <button class="btn-secondary" onclick="clearQA()">Clear</button>
-      </div>
-    </div>
-
-    <!-- Case Validation Panel -->
-    <div id="panelCase" style="display:none;">
-      <div class="input-card">
-        <div class="input-card-header">
-          <span class="input-card-title">Paste Clinical Case (messy progress notes, labs, meds — anything)</span>
-          <span class="char-count" id="caseCharCount">0 chars</span>
-        </div>
-        <textarea id="case_text"
-          placeholder="Paste any format: progress notes, lab results, medication lists, vitals — the system will parse and organize everything..."
-          oninput="document.getElementById('caseCharCount').textContent=this.value.length+' chars'"
-        ></textarea>
-      </div>
-      <div class="action-bar">
-        <button class="btn-primary case-btn" id="caseBtn" onclick="handleCase()">
-          🏥 <span>Validate Case</span>
-        </button>
-        <button class="btn-secondary" onclick="clearCase()">Clear</button>
-      </div>
-    </div>
-
-    <!-- Results Area -->
-    <div id="resultArea"></div>
-
-  </main>
 </div>
 
 <script>
-  // ── CONFIG ──
   const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
   const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
-  // ── TAB SWITCH ──
-  let currentTab = 'qa';
+  const caseInput = document.getElementById('caseInput');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const soapOutput = document.getElementById('soapOutput');
+  const statusBar = document.getElementById('statusBar');
+  const safetyBadge = document.getElementById('safetyBadge');
+  const findingsCount = document.getElementById('findingsCount');
+  const missingCount = document.getElementById('missingCount');
+  const missingMedsSection = document.getElementById('missingMedsSection');
+  const missingMedsList = document.getElementById('missingMedsList');
 
-  function switchTab(tab) {
-    currentTab = tab;
-    document.getElementById('panelQA').style.display = tab === 'qa' ? 'block' : 'none';
-    document.getElementById('panelCase').style.display = tab === 'case' ? 'block' : 'none';
-    document.getElementById('tabQA').classList.toggle('active', tab === 'qa');
-    document.getElementById('tabCase').classList.toggle('active', tab === 'case');
-    document.getElementById('resultArea').innerHTML = '';
-  }
+  analyzeBtn.addEventListener('click', analyzeCase);
+  clearBtn.addEventListener('click', clearAll);
 
-  // ── PILL GROUPS ──
-  document.querySelectorAll('#modeGroup .pill').forEach(p => {
-    p.addEventListener('click', function() {
-      document.querySelectorAll('#modeGroup .pill').forEach(x => x.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('output_mode').value = this.dataset.mode;
-    });
-  });
+  async function analyzeCase() {
+    const caseText = caseInput.value.trim();
+    if (!caseText) {
+      alert('الرجاء إدخال الحالة السريرية');
+      return;
+    }
 
-  document.querySelectorAll('#sourceModeGroup .pill').forEach(p => {
-    p.addEventListener('click', function() {
-      document.querySelectorAll('#sourceModeGroup .pill').forEach(x => x.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('source_mode').value = this.dataset.smode;
-    });
-  });
-
-  // ── CLEAR ──
-  function clearQA() {
-    document.getElementById('question').value = '';
-    document.getElementById('qaCharCount').textContent = '0 chars';
-    document.getElementById('resultArea').innerHTML = '';
-  }
-
-  function clearCase() {
-    document.getElementById('case_text').value = '';
-    document.getElementById('caseCharCount').textContent = '0 chars';
-    document.getElementById('resultArea').innerHTML = '';
-  }
-
-  // ── Q&A HANDLER ──
-  async function handleQA() {
-    const question = document.getElementById('question').value.trim();
-    if (!question) { alert("Please enter a clinical question."); return; }
-
-    const payload = {
-      question,
-      drug: document.getElementById('drug').value || null,
-      language: document.getElementById('language').value,
-      answer_style: document.getElementById('answer_style').value,
-      output_mode: document.getElementById('output_mode').value,
-      source_mode: document.getElementById('source_mode').value
-    };
-
-    setLoading('askBtn', true, 'Searching protocols...');
-    showLoadingResult("Searching clinical protocol database...");
+    // تغيير حالة الزر
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<span class="loader"></span><span> جاري التحليل...</span>';
+    
+    // إخفاء النتائج القديمة
+    statusBar.style.display = 'none';
+    missingMedsSection.style.display = 'none';
+    soapOutput.innerText = 'جاري تحليل الحالة واستخراج البيانات...';
 
     try {
-      const data = await postToWorker(payload);
-      renderQAResult(data);
-    } catch (e) {
-      renderError(e.message);
-    } finally {
-      setLoading('askBtn', false, '<span>Ask DoseGuide</span>');
-    }
-  }
+      const payload = {
+        mode: 'case_analysis',
+        case_text: caseText,
+        language: 'en'
+      };
 
-  // ── CASE ANALYSIS HANDLER ──
-  async function handleCase() {
-    const case_text = document.getElementById('case_text').value.trim();
-    if (!case_text) { alert("Please paste a clinical case."); return; }
-
-    const payload = {
-      mode: "case_analysis",
-      case_text,
-      question: case_text.substring(0, 200),  // keep existing field populated
-      drug: document.getElementById('drug').value || null,
-      language: document.getElementById('language').value,
-      answer_style: document.getElementById('answer_style').value,
-      output_mode: document.getElementById('output_mode').value,
-      source_mode: document.getElementById('source_mode').value
-    };
-
-    setLoading('caseBtn', true, 'Analyzing case...');
-    showLoadingResult("Parsing case → extracting entities → searching protocol database...");
-
-    try {
-      const data = await postToWorker(payload);
-      renderCaseResult(data);
-    } catch (e) {
-      renderError(e.message);
-    } finally {
-      setLoading('caseBtn', false, '🏥 <span>Validate Case</span>');
-    }
-  }
-
-  // ── POST TO WORKER ──
-  async function postToWorker(payload) {
-    const res = await fetch(ASK_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const ct = res.headers.get("content-type") || "";
-    const data = ct.includes("application/json") ? await res.json() : { answer: await res.text() };
-    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-    return data;
-  }
-
-  // ── RENDER Q&A RESULT ──
-  function renderQAResult(data) {
-    const isNotFound = data.verdict === 'NOT_FOUND' ||
-      (typeof data.answer === 'string' && data.answer.trim().toUpperCase().includes('NOT_FOUND'));
-
-    const statusDot = isNotFound ? 'dot-warn' : 'dot-ok';
-    const statusLabel = isNotFound ? 'Not Found in Protocol' : 'Found';
-    const tags = [];
-    if (isNotFound) tags.push(`<span class="tag tag-critical">NOT_FOUND</span>`);
-    else tags.push(`<span class="tag tag-ok">FOUND</span>`);
-    if (data.applied_output?.output_mode) tags.push(`<span class="tag tag-warn">${data.applied_output.output_mode.toUpperCase()}</span>`);
-
-    const citationsHtml = renderCitationsHtml(data.citations);
-
-    document.getElementById('resultArea').innerHTML = `
-      <div class="results">
-        <div class="status-bar">
-          <div class="status-dot ${statusDot}"></div>
-          <div class="status-text">${statusLabel}</div>
-          <div class="status-tags">${tags.join('')}</div>
-        </div>
-
-        ${makeSection('📋 Evidence Summary', `<div class="answer-text">${escHtml(data.answer || 'No answer generated.')}</div>`, true)}
-
-        ${data.citations?.length ? makeSection(`📎 Cited References <span class="count-badge">${data.citations.length}</span>`, citationsHtml, true) : ''}
-      </div>
-    `;
-    attachCollapse();
-  }
-
-  // ── RENDER CASE RESULT ──
-  function renderCaseResult(data) {
-    const findings = data.clinical_findings || [];
-    const critical = findings.filter(f => f.severity === 'CRITICAL');
-    const high = findings.filter(f => f.severity === 'HIGH');
-    const moderate = findings.filter(f => f.severity === 'MODERATE');
-    const low = findings.filter(f => f.severity === 'LOW');
-    const notFound = findings.filter(f => f.type === 'NOT_FOUND');
-
-    const safetyStatus = data.safety_status || 'ISSUES_FOUND';
-    const statusDot = safetyStatus === 'CLEAN' ? 'dot-ok' : 'dot-warn';
-    const statusLabel = {
-      CLEAN: '✅ No Issues Found',
-      ISSUES_FOUND: `⚠️ ${findings.length} Intervention(s) Found`,
-      CRITICAL_ISSUES_FOUND: `🔴 Critical Issues Found`
-    }[safetyStatus] || 'Review Required';
-
-    const tags = [];
-    if (critical.length) tags.push(`<span class="tag tag-critical">CRITICAL ×${critical.length}</span>`);
-    if (high.length) tags.push(`<span class="tag tag-warn">HIGH ×${high.length}</span>`);
-    tags.push(`<span class="tag tag-locked">🔒 PROTOCOL-LOCKED</span>`);
-
-    // Renal info
-    const renalHtml = data.renal_info?.summary
-      ? `<div class="renal-card">⚗️ <strong>CrCl:</strong> ${escHtml(data.renal_info.summary)}</div>`
-      : '';
-
-    // Parse SOAP from answer
-    const soapHtml = `<div class="soap-body">${markdownToHtml(extractSection(data.answer || '', '## 📋 STRUCTURED SOAP NOTE', '## 💊'))}</div>`;
-
-    // Interventions
-    const allInts = [...critical, ...high, ...moderate, ...low, ...notFound];
-    const intHtml = allInts.length
-      ? allInts.map((inv, i) => renderIntCard(inv, i)).join('')
-      : '<div class="empty-state"><div class="icon">✅</div>No pharmacist interventions required.</div>';
-
-    // Missing
-    const missing = data.missing_medications || [];
-    const noInd = data.no_indication || [];
-    const dups = data.duplicates || [];
-    const unparsed = data.unparsed || [];
-
-    let flagsHtml = '';
-    missing.forEach(m => {
-      flagsHtml += `<div class="flag-item flag-missing"><span class="flag-icon">⚠️</span><div><div class="flag-drug">${escHtml(m.drug || '')}</div><div class="flag-reason">${escHtml(m.reason || '')}</div></div></div>`;
-    });
-    noInd.forEach(m => {
-      flagsHtml += `<div class="flag-item flag-noid"><span class="flag-icon">❌</span><div><div class="flag-drug">${escHtml(m.drug || '')}</div><div class="flag-reason">No indication documented — ${escHtml(m.reason || '')}</div></div></div>`;
-    });
-    dups.forEach(d => {
-      const drugs = Array.isArray(d.drugs) ? d.drugs.join(' + ') : (d.drugs || '');
-      flagsHtml += `<div class="flag-item flag-dup"><span class="flag-icon">🔄</span><div><div class="flag-drug">${escHtml(drugs)}</div><div class="flag-reason">${escHtml(d.reason || '')}</div></div></div>`;
-    });
-    unparsed.forEach(u => {
-      flagsHtml += `<div class="flag-item flag-unparsed"><span class="flag-icon">❓</span><div class="flag-reason">${escHtml(u)}</div></div>`;
-    });
-
-    // Monitoring
-    const monitoringRaw = extractSection(data.answer || '', '## 📊 MONITORING PLAN', '## ⚠️ UNPARSED');
-    const monitoringHtml = `<div class="soap-body">${markdownToHtml(monitoringRaw)}</div>`;
-
-    // Citations
-    const citHtml = renderCitationsHtml(data.citations);
-
-    document.getElementById('resultArea').innerHTML = `
-      <div class="results">
-        <div class="status-bar">
-          <div class="status-dot ${statusDot}"></div>
-          <div class="status-text">${statusLabel}</div>
-          <div class="status-tags">${tags.join('')}</div>
-        </div>
-
-        ${renalHtml}
-
-        ${makeSection('📋 Structured SOAP Note', soapHtml, true)}
-
-        ${makeSection(
-          `💊 Pharmacist Interventions <span class="count-badge">${allInts.length}</span>`,
-          intHtml,
-          true
-        )}
-
-        ${(missing.length || noInd.length || dups.length || unparsed.length)
-          ? makeSection(
-              `⚠️ Missing / No-Indication / Duplicates <span class="count-badge">${missing.length + noInd.length + dups.length + unparsed.length}</span>`,
-              flagsHtml,
-              true
-            )
-          : ''}
-
-        ${makeSection('📊 Monitoring Plan', monitoringHtml, false)}
-
-        ${data.citations?.length ? makeSection(`📎 Protocol References <span class="count-badge">${data.citations.length}</span>`, citHtml, false) : ''}
-      </div>
-    `;
-    attachCollapse();
-  }
-
-  // ── RENDER SINGLE INTERVENTION CARD ──
-  function renderIntCard(inv, idx) {
-    const sevClass = `int-${inv.severity || 'MODERATE'}`;
-    const sevBadge = `sev-${inv.severity || 'MODERATE'}`;
-    const typeLabel = (inv.type || '').replace(/_/g, ' ');
-    const isNotFound = inv.source?.includes('NOT_FOUND') || inv.type === 'NOT_FOUND';
-    const isGeneral = inv.source?.includes('GENERAL');
-
-    let citHtml = '';
-    if (isNotFound) {
-      citHtml = `<div class="int-citation citation-not-found">⚠️ NOT_FOUND in protocol database — UNSUPPORTED_BY_PROTOCOL. No protocol file covers this drug/diagnosis.</div>`;
-    } else if (isGeneral) {
-      citHtml = `<div class="int-citation citation-general">ℹ️ General medical knowledge (labs/vitals reference values)</div>`;
-    } else if (inv.citations?.length) {
-      citHtml = inv.citations.map(c =>
-        `<div class="int-citation">📄 <strong>${escHtml(c.filename || '')}</strong>${c.section ? ' · ' + escHtml(c.section) : ''}${c.page ? ' · p.' + c.page : ''}${c.excerpt ? '<br><em style="color:var(--text-muted);font-size:11.5px">' + escHtml(c.excerpt.substring(0, 120)) + '...</em>' : ''}</div>`
-      ).join('');
-    }
-
-    return `
-      <div class="int-card ${sevClass}">
-        <div class="int-header">
-          <span class="int-severity ${sevBadge}">${inv.severity || 'MODERATE'}</span>
-          <span class="int-drug">${escHtml(inv.drug_or_topic || '')}</span>
-          <span class="int-type">${typeLabel}</span>
-        </div>
-        <div class="int-row"><span class="int-key">Problem</span><span class="int-val">${escHtml(inv.problem || '')}</span></div>
-        <div class="int-row"><span class="int-key">Correction</span><span class="int-val"><strong>${escHtml(inv.correction || '')}</strong></span></div>
-        <div class="int-row"><span class="int-key">Rationale</span><span class="int-val">${escHtml(inv.rationale || '')}</span></div>
-        ${citHtml}
-      </div>
-    `;
-  }
-
-  // ── RENDER CITATIONS HTML ──
-  function renderCitationsHtml(citations) {
-    if (!Array.isArray(citations) || citations.length === 0) {
-      return '<div style="color:var(--text-muted);font-size:13px;padding:10px">No protocol references cited.</div>';
-    }
-    return citations.map(c => `
-      <div class="cit-item">
-        <div class="cit-header">
-          <span class="cit-file">${escHtml(c.filename || 'Unknown file')}</span>
-          ${c.section ? `<span class="cit-section">${escHtml(c.section)}</span>` : ''}
-          ${c.page ? `<span class="cit-page">p.${c.page}</span>` : ''}
-        </div>
-        ${c.excerpt ? `<div class="cit-excerpt">${escHtml(c.excerpt.substring(0, 200))}...</div>` : ''}
-      </div>
-    `).join('');
-  }
-
-  // ── COLLAPSIBLE SECTIONS ──
-  function makeSection(title, bodyHtml, startOpen) {
-    const openClass = startOpen ? '' : 'collapsed';
-    const bodyClass = startOpen ? '' : 'hidden';
-    return `
-      <div class="result-section">
-        <div class="section-header ${openClass}">
-          <span class="section-title">${title}</span>
-          <span class="section-chevron">▼</span>
-        </div>
-        <div class="section-body ${bodyClass}">${bodyHtml}</div>
-      </div>
-    `;
-  }
-
-  function attachCollapse() {
-    document.querySelectorAll('.section-header').forEach(h => {
-      h.addEventListener('click', function() {
-        this.classList.toggle('collapsed');
-        const body = this.nextElementSibling;
-        body.classList.toggle('hidden');
+      const response = await fetch(ASK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-    });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'فشل التحليل');
+      }
+
+      // عرض النتائج
+      displayResults(data);
+
+    } catch (error) {
+      soapOutput.innerText = `❌ خطأ: ${error.message}`;
+    } finally {
+      analyzeBtn.disabled = false;
+      analyzeBtn.innerHTML = '<span class="btn-text">🔍 فحص الحالة</span>';
+    }
   }
 
-  // ── LOADING / ERROR ──
-  function setLoading(btnId, loading, html) {
-    const btn = document.getElementById(btnId);
-    btn.disabled = loading;
-    btn.innerHTML = loading ? `<span class="spinner"></span><span> ${typeof html === 'string' ? html : '...'}</span>` : html;
+  function displayResults(data) {
+    // عرض SOAP Note
+    if (data.answer) {
+      soapOutput.innerText = data.answer;
+    }
+
+    // عرض شريط الحالة
+    if (data.safety_status) {
+      statusBar.style.display = 'flex';
+      safetyBadge.textContent = data.safety_status.status;
+      safetyBadge.className = `finding-badge badge-${data.safety_status.color.toLowerCase()}`;
+    }
+
+    // عرض عدد النتائج
+    if (data.clinical_findings && data.clinical_findings.length > 0) {
+      findingsCount.textContent = `🔍 ${data.clinical_findings.length} نتائج`;
+      findingsCount.className = 'finding-badge badge-moderate';
+    }
+
+    // عرض الأدوية المفقودة
+    if (data.missing_medications && data.missing_medications.length > 0) {
+      missingMedsSection.style.display = 'block';
+      missingMedsList.innerHTML = data.missing_medications
+        .map(med => `<span style="background:#fee2e2; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${med}</span>`)
+        .join('');
+      missingCount.textContent = `⚠️ ${data.missing_medications.length} أدوية مفقودة`;
+      missingCount.className = 'finding-badge badge-critical';
+    }
   }
 
-  function showLoadingResult(msg) {
-    document.getElementById('resultArea').innerHTML = `
-      <div class="result-section">
-        <div class="section-body">
-          <div style="display:flex;align-items:center;gap:12px;padding:20px;color:var(--text-mid)">
-            <span class="spinner" style="border-color:rgba(27,75,138,0.2);border-top-color:var(--blue-light);width:20px;height:20px;border-width:2.5px"></span>
-            <span style="font-family:var(--mono);font-size:13px">${escHtml(msg)}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  function clearAll() {
+    caseInput.value = '';
+    soapOutput.innerText = `S: Patient — (MRN: ), __Y, __kg admitted to ICU.
+Reason for Admission: N/A
+PMH: N/A
+Home Meds: N/A
 
-  function renderError(msg) {
-    document.getElementById('resultArea').innerHTML = `
-      <div class="result-section">
-        <div class="section-body">
-          <div style="color:var(--critical);font-family:var(--mono);font-size:13px;padding:16px">
-            ❌ Error: ${escHtml(msg)}<br>
-            <span style="color:var(--text-muted);font-size:11px;margin-top:6px;display:block">Endpoint: ${escHtml(ASK_ENDPOINT)}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+O: Vitals: Within normal limits
+Labs: Within normal limits
+Renal: SCr ___ umol, Calculated CrCl ___
 
-  // ── MARKDOWN-LITE RENDERER ──
-  function markdownToHtml(md) {
-    if (!md) return '<em style="color:var(--text-muted)">No content.</em>';
-    return md
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      // Restore safe HTML we want
-      .replace(/^#{1,2}\s+(.+)$/gm, (_, t) => `<h2>${t}</h2>`)
-      .replace(/^#{3,4}\s+(.+)$/gm, (_, t) => `<h3 style="font-family:var(--sans);font-size:12px;font-weight:700;color:var(--navy);margin:14px 0 6px;text-transform:uppercase;letter-spacing:0.8px">${t}</h3>`)
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      .replace(/^---+$/gm, '<hr>')
-      .replace(/^\|\s*(.+?)\s*\|$/gm, row => {
-        const cells = row.split('|').map(c => c.trim()).filter(Boolean);
-        const isHeader = false;
-        return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
-      })
-      .replace(/(<tr>.*<\/tr>\n?)+/g, match => `<table>${match}</table>`)
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
-      .replace(/(<li>.*<\/li>\n?)+/g, match => `<ul>${match}</ul>`)
-      .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-      .replace(/\n{2,}/g, '</p><p>')
-      .replace(/\n/g, '<br>');
-  }
+A: Primary admission for acute issues. Clinical review performed.
 
-  function extractSection(text, startMarker, endMarker) {
-    const start = text.indexOf(startMarker);
-    if (start === -1) return text;
-    const from = start + startMarker.length;
-    const end = endMarker ? text.indexOf(endMarker, from) : -1;
-    return end === -1 ? text.substring(from) : text.substring(from, end);
-  }
+P:
+Current Medications:
+- No medications started
 
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+Pharmacist Intervention:
+Patient reviewed; no interventions at this time.
+
+Follow-up Plan:
+- Follow-up: OK.`;
+    statusBar.style.display = 'none';
+    missingMedsSection.style.display = 'none';
   }
 </script>
 </body>
