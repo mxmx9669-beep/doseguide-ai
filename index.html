@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoseGuide AI · Clinical Decision Support</title>
+  <title>DoseGuide AI · Clinical Pharmacist Validation Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -16,24 +16,18 @@
       color: #0b1c33;
       line-height: 1.5;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       padding: 24px;
     }
 
-    .app-card {
-      max-width: 1100px;
-      width: 100%;
-      background: #ffffff;
-      border-radius: 32px;
-      box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25);
-      overflow: hidden;
-      transition: all 0.2s ease;
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
     }
 
+    /* Header */
     .app-header {
       background: #ffffff;
+      border-radius: 32px 32px 0 0;
       padding: 24px 32px;
       border-bottom: 1px solid #e9eef3;
       display: flex;
@@ -41,6 +35,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 20px;
+      box-shadow: 0 4px 12px rgba(0, 20, 60, 0.08);
     }
 
     .logo-area { display: flex; align-items: center; gap: 14px; }
@@ -68,193 +63,621 @@
       border: 1px solid rgba(29, 74, 139, 0.15);
     }
 
-    .main-layout { display: grid; grid-template-columns: 280px 1fr; background: #fafcff; }
+    /* Main Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      background: #ffffff;
+      border-radius: 0 0 32px 32px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25);
+    }
 
-    .context-panel { background: #f5f9ff; border-right: 1px solid #dde3ea; padding: 28px 20px; }
+    /* Left Panel - Configuration */
+    .config-panel {
+      background: #f5f9ff;
+      border-right: 1px solid #dde3ea;
+      padding: 28px 20px;
+    }
 
-    .panel-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #5b6f87; margin-bottom: 24px; }
+    .panel-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      color: #5b6f87;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-    .param-group { margin-bottom: 28px; }
+    .mode-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      background: #e9eff8;
+      padding: 4px;
+      border-radius: 60px;
+    }
 
-    .param-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #1f334a; margin-bottom: 10px; }
+    .mode-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #3e5775;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #1d4a8b;
+      color: white;
+      box-shadow: 0 4px 8px rgba(0, 55, 120, 0.2);
+    }
+
+    .param-group {
+      margin-bottom: 24px;
+    }
+
+    .param-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1f334a;
+      margin-bottom: 10px;
+    }
 
     .param-select {
-      width: 100%; padding: 12px 16px; background: white; border: 1px solid #d4dce6;
-      border-radius: 14px; font-size: 0.95rem; color: #0f263b; font-weight: 500;
-      outline: none; cursor: pointer; appearance: none;
+      width: 100%;
+      padding: 12px 16px;
+      background: white;
+      border: 1px solid #d4dce6;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      color: #0f263b;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
       background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2336547a" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
-      background-repeat: no-repeat; background-position: right 16px center;
+      background-repeat: no-repeat;
+      background-position: right 16px center;
     }
 
-    .mode-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .mode-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
 
     .mode-pill {
-      background: white; border: 1px solid #ccd7e6; border-radius: 30px;
-      padding: 8px 16px; font-size: 0.8rem; font-weight: 600; color: #2b405b;
-      cursor: pointer; transition: all 0.1s; flex: 1 0 auto; text-align: center;
+      background: white;
+      border: 1px solid #ccd7e6;
+      border-radius: 30px;
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2b405b;
+      cursor: pointer;
+      transition: all 0.1s;
+      flex: 1 0 auto;
+      text-align: center;
     }
 
-    .mode-pill.active { background: #1d4a8b; border-color: #1d4a8b; color: white; box-shadow: 0 4px 8px rgba(0, 55, 120, 0.2); }
-
-    .interaction-panel { padding: 32px; }
-
-    .query-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-
-    .query-header h2 { font-size: 1.2rem; font-weight: 600; color: #13273f; }
-
-    .question-box {
-      background: #ffffff; border: 1px solid #dbe1e9; border-radius: 24px;
-      padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    .mode-pill.active {
+      background: #1d4a8b;
+      border-color: #1d4a8b;
+      color: white;
+      box-shadow: 0 4px 8px rgba(0, 55, 120, 0.2);
     }
 
-    .question-box textarea {
-      width: 100%; border: none; font-family: "Inter", sans-serif;
-      font-size: 1rem; line-height: 1.6; resize: vertical; min-height: 100px;
-      outline: none; color: #1a2c42;
+    /* Right Panel - Main Content */
+    .main-panel {
+      padding: 32px;
     }
 
-    .action-bar { display: flex; gap: 16px; align-items: center; margin-top: 10px; }
+    /* Input Area */
+    .input-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .input-header h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #13273f;
+    }
+
+    .case-badge {
+      background: #e9edf2;
+      color: #3f5670;
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .input-card {
+      background: #ffffff;
+      border: 1px solid #dbe1e9;
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .input-card textarea {
+      width: 100%;
+      border: none;
+      font-family: "Inter", sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 180px;
+      outline: none;
+      color: #1a2c42;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
 
     .primary-btn {
-      background: #1a4c8c; border: none; color: white; font-weight: 600;
-      padding: 14px 34px; border-radius: 60px; font-size: 1rem;
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: 0 8px 18px rgba(20, 70, 140, 0.35); cursor: pointer;
+      background: #1a4c8c;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 14px 34px;
+      border-radius: 60px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 18px rgba(20, 70, 140, 0.35);
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .primary-btn:hover:not(:disabled) {
+      background: #0d3b6f;
+      transform: translateY(-1px);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     .secondary-btn {
-      background: transparent; border: 1px solid #bcc9db; color: #334e70;
-      font-weight: 500; padding: 14px 28px; border-radius: 60px; cursor: pointer;
+      background: transparent;
+      border: 1px solid #bcc9db;
+      color: #334e70;
+      font-weight: 500;
+      padding: 14px 28px;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    .results-container { margin-top: 40px; animation: fadeUp 0.25s ease; }
-
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    .status-strip {
-      background: #f0f4fa; border-radius: 100px; padding: 8px 20px;
-      display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+    .secondary-btn:hover {
+      background: #f0f4fa;
     }
 
-    .status-badge { background: white; border-radius: 40px; padding: 4px 16px; font-weight: 600; }
+    /* Results Area */
+    .results-container {
+      animation: fadeUp 0.25s ease;
+    }
 
-    .badge { padding: 4px 14px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; }
-    .badge-locked { background: #fee2e2; color: #991b1b; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-bar {
+      background: #f0f4fa;
+      border-radius: 100px;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      background: white;
+      border-radius: 40px;
+      padding: 6px 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .badge {
+      padding: 4px 14px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .badge-high { background: #fee2e2; color: #991b1b; }
+    .badge-med { background: #fef3c7; color: #92400e; }
+    .badge-low { background: #e0f2fe; color: #075985; }
     .badge-ok { background: #dcfce7; color: #166534; }
     .badge-warn { background: #fef9c3; color: #854d0e; }
+    .badge-missing { background: #f1f5f9; color: #475569; }
 
-    .answer-card {
-      background: #f5faff; border-radius: 24px; padding: 28px;
-      margin-bottom: 28px; border: 1px solid #d1e0f5;
+    /* SOAP Note */
+    .soap-card {
+      background: #f5faff;
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 28px;
+      border: 1px solid #d1e0f5;
     }
 
-    .answer-card h3 { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: #3e6191; margin-bottom: 18px; }
+    .soap-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #3e6191;
+      margin-bottom: 18px;
+      letter-spacing: 0.5px;
+    }
 
-    .sources-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; }
+    .soap-content {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: #1a2c42;
+      white-space: pre-wrap;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid #e2eaf5;
+    }
 
-    .citation-item { background: #fafdff; border-radius: 12px; border: 1px solid #e4ebf5; padding: 16px; margin-bottom: 12px; }
+    /* Clinical Findings */
+    .findings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 28px;
+    }
 
-    .citation-header { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; color: #3b5575; margin-bottom: 8px; }
-    .citation-header span:last-child { white-space: nowrap; }
+    .finding-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid #e4ebf5;
+      transition: all 0.2s;
+    }
 
-    .citation-excerpt { color: #193251; font-size: 0.95rem; border-left: 3px solid #b3c9e5; padding-left: 16px; white-space: pre-wrap; }
+    .finding-card.high { border-left: 4px solid #dc2626; }
+    .finding-card.med { border-left: 4px solid #f59e0b; }
+    .finding-card.low { border-left: 4px solid #3b82f6; }
+
+    .finding-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .finding-type {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 40px;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .finding-severity {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 40px;
+    }
+
+    .finding-severity.high { background: #fee2e2; color: #991b1b; }
+    .finding-severity.med { background: #fef3c7; color: #92400e; }
+    .finding-severity.low { background: #e0f2fe; color: #075985; }
+
+    .finding-problem {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #0f263b;
+      margin-bottom: 8px;
+    }
+
+    .finding-correction {
+      font-size: 0.9rem;
+      color: #3e5775;
+      margin-bottom: 12px;
+    }
+
+    .finding-citation {
+      background: #f8fafd;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.8rem;
+      color: #475569;
+      border-left: 2px solid #b3c9e5;
+    }
+
+    /* Missing Medications */
+    .missing-meds {
+      background: #fff9f0;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      border: 1px solid #ffe2b3;
+    }
+
+    .missing-title {
+      font-weight: 600;
+      color: #854d0e;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .missing-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .missing-item {
+      background: #ffffff;
+      border: 1px solid #fed7aa;
+      border-radius: 40px;
+      padding: 4px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #7b341e;
+    }
+
+    /* Sources Panel */
+    .sources-panel {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 24px;
+    }
+
+    .sources-panel h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #25415f;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .citation-item {
+      background: #fafdff;
+      border-radius: 16px;
+      border: 1px solid #e4ebf5;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .citation-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: #3b5575;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .citation-excerpt {
+      color: #193251;
+      font-size: 0.9rem;
+      border-left: 3px solid #b3c9e5;
+      padding-left: 16px;
+      white-space: pre-wrap;
+    }
 
     .loader {
-      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4);
-      border-top: 2px solid white; border-radius: 50%; animation: spin 0.7s linear infinite;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
       display: inline-block;
     }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .example-text {
+      color: #64748b;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px dashed #cbd5e1;
+    }
   </style>
 </head>
 <body>
-
-<div class="app-card">
+<div class="app-container">
+  <!-- Header -->
   <div class="app-header">
     <div class="logo-area">
       <div class="logo-icon">DG</div>
       <div class="logo-text">
         <h1>DoseGuide AI</h1>
-        <span>evidence-based dosing · clinical decision support</span>
+        <span>clinical pharmacist validation engine · protocol-locked</span>
       </div>
     </div>
-    <div class="badge-clinical"><span>🔬</span> UpToDate® · Lexicomp® · AHFS</div>
+    <div class="badge-clinical">
+      <span>🔬</span> UpToDate® · Lexicomp® · AHFS · Protocol Locked
+    </div>
   </div>
 
-  <div class="main-layout">
-    <div class="context-panel">
-      <div class="panel-title">⚙️ query configuration</div>
-
-      <div class="param-group">
-        <div class="param-label">Drug / topic</div>
-        <select class="param-select" id="drug">
-          <option value="">None</option>
-          <option value="warfarin">warfarin (Coumadin)</option>
-          <option value="insulin">insulin (all types)</option>
-          <option value="amoxicillin">amoxicillin</option>
-        </select>
+  <!-- Main Grid -->
+  <div class="main-grid">
+    <!-- Left Configuration Panel -->
+    <div class="config-panel">
+      <div class="panel-title">
+        <span>⚙️</span> engine configuration
       </div>
 
-      <div class="param-group">
-        <div class="param-label">Language</div>
-        <select class="param-select" id="language">
-          <option value="en">🇬🇧 English</option>
-          <option value="ar">🇸🇦 العربية</option>
-        </select>
+      <!-- Mode Selector -->
+      <div class="mode-selector">
+        <button class="mode-btn active" data-mode="standard">Q&A Mode</button>
+        <button class="mode-btn" data-mode="case">Case Validation</button>
       </div>
 
-      <div class="param-group">
-        <div class="param-label">Answer style</div>
-        <select class="param-select" id="answer_style">
-          <option value="Recommended" selected>Recommended</option>
-          <option value="Bullet">Bullet points</option>
-          <option value="Detailed">Detailed</option>
-        </select>
-      </div>
-
-      <div class="param-group">
-        <div class="param-label">Output mode</div>
-        <div class="mode-pills" id="modeGroup">
-          <span class="mode-pill active" data-mode="Hybrid">Hybrid</span>
-          <span class="mode-pill" data-mode="Short">Short</span>
-          <span class="mode-pill" data-mode="Verbatim">Verbatim</span>
-          <span class="mode-pill" data-mode="Source">Source</span>
+      <!-- Q&A Mode Controls (visible in standard mode) -->
+      <div id="qaControls">
+        <div class="param-group">
+          <div class="param-label">Drug / topic</div>
+          <select class="param-select" id="drug">
+            <option value="">None</option>
+            <option value="warfarin">warfarin (Coumadin)</option>
+            <option value="insulin">insulin (all types)</option>
+            <option value="amoxicillin">amoxicillin</option>
+          </select>
         </div>
-        <input type="hidden" id="output_mode" value="Hybrid" />
+
+        <div class="param-group">
+          <div class="param-label">Language</div>
+          <select class="param-select" id="language">
+            <option value="en">🇬🇧 English</option>
+            <option value="ar">🇸🇦 العربية</option>
+          </select>
+        </div>
+
+        <div class="param-group">
+          <div class="param-label">Answer style</div>
+          <select class="param-select" id="answer_style">
+            <option value="Recommended" selected>Recommended</option>
+            <option value="Bullet">Bullet points</option>
+            <option value="Detailed">Detailed</option>
+          </select>
+        </div>
+
+        <div class="param-group">
+          <div class="param-label">Output mode</div>
+          <div class="mode-pills" id="modeGroup">
+            <span class="mode-pill active" data-mode="Hybrid">Hybrid</span>
+            <span class="mode-pill" data-mode="Short">Short</span>
+            <span class="mode-pill" data-mode="Verbatim">Verbatim</span>
+            <span class="mode-pill" data-mode="Source">Source</span>
+          </div>
+          <input type="hidden" id="output_mode" value="Hybrid" />
+        </div>
+      </div>
+
+      <!-- Case Mode Info (visible in case mode) -->
+      <div id="caseControls" style="display: none;">
+        <div class="param-group">
+          <div class="param-label">📋 validation mode</div>
+          <div style="background:#e9eff8; padding:16px; border-radius:16px;">
+            <div style="font-weight:600; color:#1d4a8b; margin-bottom:8px;">Protocol-Locked Validation</div>
+            <ul style="font-size:0.8rem; color:#2b405b; list-style:none; padding:0;">
+              <li style="margin-bottom:6px;">✓ SOAP note structuring</li>
+              <li style="margin-bottom:6px;">✓ CrCl calculation</li>
+              <li style="margin-bottom:6px;">✓ Dosing error detection</li>
+              <li style="margin-bottom:6px;">✓ Lab cutoff validation</li>
+              <li style="margin-bottom:6px;">✓ Monitoring requirements</li>
+              <li style="margin-bottom:6px;">✓ Missing drug reporting</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="param-group">
+          <div class="param-label">📁 protocol source</div>
+          <div style="background:#ffffff; border:1px solid #d4dce6; border-radius:14px; padding:12px;">
+            <span style="font-weight:500; color:#1a4c8c;">Vector Store PDFs</span>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">Lexicomp · AHFS · UpToDate</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="interaction-panel">
-      <div class="query-header">
-        <h2>Clinical inquiry</h2>
-        <div class="status-badge" style="background:#e9edf2; color:#3f5670; font-size:0.75rem">⚕️ Professional Mode</div>
+    <!-- Right Main Panel -->
+    <div class="main-panel">
+      <!-- Input Area -->
+      <div class="input-header">
+        <h2 id="inputTitle">Clinical inquiry</h2>
+        <span class="case-badge" id="modeBadge">⚕️ Q&A Mode</span>
       </div>
 
-      <div class="question-box">
-        <textarea id="question" placeholder="e.g. What is the loading dose for a patient with renal impairment?"></textarea>
+      <div class="input-card">
+        <textarea 
+          id="clinicalInput" 
+          placeholder="e.g. What is the loading dose for a patient with renal impairment?"
+        ></textarea>
+      </div>
+
+      <!-- Example text helper -->
+      <div id="exampleHelper" class="example-text">
+        💡 Example: "What is the warfarin maintenance dose for a patient with INR 2.5?"
       </div>
 
       <div class="action-bar">
-        <button class="primary-btn" id="askBtn"><span>Ask DoseGuide</span></button>
+        <button class="primary-btn" id="submitBtn">
+          <span>Submit</span>
+        </button>
         <button class="secondary-btn" id="clearBtn">Clear</button>
       </div>
 
+      <!-- Results Area -->
       <div id="resultPanel" class="results-container" style="display: none;">
-        <div class="status-strip">
+        <!-- Status Bar -->
+        <div class="status-bar">
           <span id="statusText" class="status-badge">Ready</span>
           <span id="verdictBadge" class="badge" style="display:none"></span>
-          <span id="lockedIndicator" class="badge badge-locked" style="display:none">🔒 Protocol Locked</span>
+          <span id="missingCount" class="badge badge-missing" style="display:none"></span>
+          <span id="findingsCount" class="badge" style="display:none"></span>
         </div>
 
-        <div class="answer-card">
-          <h3>Evidence Summary</h3>
-          <div class="answer-text" id="verdictContent">Waiting...</div>
+        <!-- Missing Medications Warning -->
+        <div id="missingMedsSection" class="missing-meds" style="display: none;">
+          <div class="missing-title">⚠️ Medications Not Found in Protocol Database</div>
+          <div id="missingMedsList" class="missing-list"></div>
         </div>
 
+        <!-- SOAP Note -->
+        <div class="soap-card">
+          <h3>📋 Structured SOAP Note</h3>
+          <div id="soapContent" class="soap-content">Waiting for case analysis...</div>
+        </div>
+
+        <!-- Clinical Findings -->
+        <div id="findingsSection" style="margin-bottom: 28px;">
+          <h3 style="font-size: 0.9rem; font-weight: 600; color: #25415f; margin-bottom: 16px;">🔍 Clinical Findings (Protocol-Locked)</h3>
+          <div id="findingsGrid" class="findings-grid"></div>
+        </div>
+
+        <!-- Sources -->
         <div class="sources-panel">
-          <h3 style="font-size: 0.85rem; margin-bottom:15px; color:#25415f">Cited References</h3>
+          <h3>
+            <span>📚</span> Cited Protocol References
+          </h3>
           <div id="sourceContent">No references yet.</div>
         </div>
       </div>
@@ -263,25 +686,70 @@
 </div>
 
 <script>
-  /******************************************************************
-   * ✅ FIX #1: DO NOT call "/ask" on Pages domain unless you have a Pages Function.
-   * We call the Worker directly so it can read your Vector Store PDFs.
-   ******************************************************************/
+  // ========== CONFIGURATION ==========
   const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
   const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
-  const askBtn = document.getElementById('askBtn');
+  // ========== DOM ELEMENTS ==========
+  const modeBtns = document.querySelectorAll('.mode-btn');
+  const qaControls = document.getElementById('qaControls');
+  const caseControls = document.getElementById('caseControls');
+  const inputTitle = document.getElementById('inputTitle');
+  const modeBadge = document.getElementById('modeBadge');
+  const exampleHelper = document.getElementById('exampleHelper');
+  const clinicalInput = document.getElementById('clinicalInput');
+  const submitBtn = document.getElementById('submitBtn');
   const clearBtn = document.getElementById('clearBtn');
-  const questionInput = document.getElementById('question');
   const resultPanel = document.getElementById('resultPanel');
   const statusText = document.getElementById('statusText');
-  const verdictContent = document.getElementById('verdictContent');
-  const sourceContent = document.getElementById('sourceContent');
-  const lockedIndicator = document.getElementById('lockedIndicator');
   const verdictBadge = document.getElementById('verdictBadge');
+  const missingCount = document.getElementById('missingCount');
+  const findingsCount = document.getElementById('findingsCount');
+  const missingMedsSection = document.getElementById('missingMedsSection');
+  const missingMedsList = document.getElementById('missingMedsList');
+  const soapContent = document.getElementById('soapContent');
+  const findingsGrid = document.getElementById('findingsGrid');
+  const sourceContent = document.getElementById('sourceContent');
   const outputModeInput = document.getElementById('output_mode');
 
-  // Mode Selection
+  // Q&A specific elements
+  const drugSelect = document.getElementById('drug');
+  const languageSelect = document.getElementById('language');
+  const answerStyleSelect = document.getElementById('answer_style');
+
+  // Current mode: 'standard' or 'case'
+  let currentMode = 'standard';
+
+  // ========== MODE SELECTION ==========
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      modeBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      currentMode = this.dataset.mode;
+      
+      if (currentMode === 'standard') {
+        qaControls.style.display = 'block';
+        caseControls.style.display = 'none';
+        inputTitle.textContent = 'Clinical inquiry';
+        modeBadge.textContent = '⚕️ Q&A Mode';
+        exampleHelper.innerHTML = '💡 Example: "What is the warfarin maintenance dose for a patient with INR 2.5?"';
+        clinicalInput.placeholder = "e.g. What is the loading dose for a patient with renal impairment?";
+      } else {
+        qaControls.style.display = 'none';
+        caseControls.style.display = 'block';
+        inputTitle.textContent = 'Paste clinical case (unstructured)';
+        modeBadge.textContent = '🔬 Case Validation Mode';
+        exampleHelper.innerHTML = '💡 Example: "65-year-old male, 75kg, admitted with pneumonia. MRN: 12345. PMH: HTN, DM. Home meds: metformin, lisinopril. Vitals: BP 130/80, HR 88. Labs: Cr 1.2, INR 1.1..."';
+        clinicalInput.placeholder = "Paste progress note, admission note, or clinical case here...";
+      }
+      
+      // Clear results when switching modes
+      resultPanel.style.display = 'none';
+    });
+  });
+
+  // ========== MODE PILLS ==========
   document.querySelectorAll('.mode-pill').forEach(pill => {
     pill.addEventListener('click', function() {
       document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
@@ -290,37 +758,54 @@
     });
   });
 
+  // ========== CLEAR BUTTON ==========
   clearBtn.addEventListener('click', () => {
-    questionInput.value = '';
+    clinicalInput.value = '';
     resultPanel.style.display = 'none';
     statusText.innerText = 'Ready';
-    lockedIndicator.style.display = 'none';
     verdictBadge.style.display = 'none';
-    sourceContent.innerHTML = 'No references yet.';
+    missingCount.style.display = 'none';
+    findingsCount.style.display = 'none';
+    missingMedsSection.style.display = 'none';
   });
 
-  askBtn.addEventListener('click', handleAsk);
+  // ========== SUBMIT BUTTON ==========
+  submitBtn.addEventListener('click', handleSubmit);
 
-  async function handleAsk() {
-    const question = questionInput.value.trim();
-    if (!question) { alert("Please enter a question."); return; }
+  async function handleSubmit() {
+    const input = clinicalInput.value.trim();
+    if (!input) {
+      alert("Please enter a question or clinical case.");
+      return;
+    }
 
-    const payload = {
-      question: question,
-      drug: document.getElementById('drug').value || null,
-      language: document.getElementById('language').value,
-      answer_style: document.getElementById('answer_style').value,
+    // Build payload based on mode
+    let payload = {
+      language: languageSelect ? languageSelect.value : 'en',
+      answer_style: answerStyleSelect ? answerStyleSelect.value : 'Recommended',
       output_mode: outputModeInput.value
     };
 
-    askBtn.disabled = true;
-    askBtn.innerHTML = `<span class="loader"></span><span> Analyzing...</span>`;
+    if (currentMode === 'standard') {
+      payload.question = input;
+      payload.drug = drugSelect ? drugSelect.value || null : null;
+    } else {
+      payload.mode = 'case_analysis';
+      payload.case_text = input;
+    }
+
+    // UI loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="loader"></span><span> Analyzing...</span>`;
     statusText.innerText = 'Analyzing...';
     resultPanel.style.display = 'block';
-    verdictContent.innerText = 'Searching clinical sources...';
-    sourceContent.innerHTML = 'Loading...';
-    lockedIndicator.style.display = 'none';
+    soapContent.innerText = 'Processing clinical data...';
+    findingsGrid.innerHTML = '';
+    sourceContent.innerHTML = 'Loading protocol references...';
+    missingMedsSection.style.display = 'none';
     verdictBadge.style.display = 'none';
+    missingCount.style.display = 'none';
+    findingsCount.style.display = 'none';
 
     try {
       const response = await fetch(ASK_ENDPOINT, {
@@ -338,145 +823,128 @@
         throw new Error(data?.error || `Server Error (HTTP ${response.status})`);
       }
 
-      displayResult(data);
+      displayResults(data);
 
     } catch (error) {
       statusText.innerText = 'Error';
       verdictBadge.style.display = 'inline-block';
       verdictBadge.className = 'badge badge-warn';
       verdictBadge.textContent = '⚠️ Error';
-      verdictContent.innerHTML = `<div style="color:#dc2626;">❌ ${escapeHtml(error.message)}</div>`;
-      sourceContent.innerHTML = `<div style="color:#64748b; font-size:0.9rem;">Endpoint used: <b>${escapeHtml(ASK_ENDPOINT)}</b></div>`;
+      soapContent.innerHTML = `<div style="color:#dc2626;">❌ ${escapeHtml(error.message)}</div>`;
+      sourceContent.innerHTML = `<div style="color:#64748b;">Endpoint: ${escapeHtml(ASK_ENDPOINT)}</div>`;
     } finally {
-      askBtn.disabled = false;
-      askBtn.innerHTML = `<span>Ask DoseGuide</span>`;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Submit</span>`;
     }
   }
 
-  /******************************************************************
-   * ✅ FIX #2: Normalize many possible Worker response shapes.
-   * Supports: {answer, citations[]} OR {verdict, source/sources/citations} etc.
-   ******************************************************************/
-  function normalizeResponse(data) {
-    const locked = Boolean(
-      data.locked ||
-      data.protocol_locked ||
-      data?.result?.locked ||
-      data?.result?.protocol_locked
-    );
+  function displayResults(data) {
+    // Update status
+    statusText.innerText = data.ok ? 'Success' : 'Completed';
+    
+    // Handle missing medications
+    if (data.missing_medications && data.missing_medications.length > 0) {
+      missingMedsSection.style.display = 'block';
+      missingMedsList.innerHTML = data.missing_medications
+        .map(med => `<span class="missing-item">${escapeHtml(med)}</span>`)
+        .join('');
+      
+      missingCount.style.display = 'inline-block';
+      missingCount.className = 'badge badge-missing';
+      missingCount.textContent = `⚠️ ${data.missing_medications.length} missing`;
+    } else {
+      missingMedsSection.style.display = 'none';
+      missingCount.style.display = 'none';
+    }
 
-    const verdictFlag = data.verdict || data?.result?.verdict || null;
+    // Display SOAP note or answer
+    if (data.answer) {
+      soapContent.innerText = data.answer;
+    }
 
-    const answer =
-      data.answer ||
-      data.text ||
-      data.reply ||
-      data.verdict_text ||
-      data?.result?.answer ||
-      data?.result?.text ||
-      data?.result?.reply ||
-      data?.result?.verdict ||
-      "";
-
-    // citations can be array OR string OR object
-    const citations =
-      data.citations ||
-      data?.result?.citations ||
-      data.sources ||
-      data.source ||
-      data?.result?.sources ||
-      data?.result?.source ||
-      null;
-
-    return { locked, verdictFlag, answer, citations };
-  }
-
-  function displayResult(raw) {
-    const out = normalizeResponse(raw);
-
-    // status / badge
-    const isNotFound =
-      out.verdictFlag === 'NOT_FOUND' ||
-      (typeof out.answer === "string" && out.answer.trim().toUpperCase() === "NOT_FOUND");
-
-    statusText.innerText = isNotFound ? 'Not Found' : 'OK';
-
-    verdictBadge.style.display = 'inline-block';
-    verdictBadge.className = isNotFound ? 'badge badge-warn' : 'badge badge-ok';
-    verdictBadge.textContent = isNotFound ? '⚠️ Not Found' : '✅ Found';
-
-    // answer
-    verdictContent.innerText = (out.answer && String(out.answer).trim())
-      ? String(out.answer)
-      : "No info found.";
-
-    // locked indicator
-    lockedIndicator.style.display = out.locked ? 'inline-block' : 'none';
-
-    // citations render
-    renderCitations(out.citations);
-  }
-
-  function renderCitations(citations) {
-    // 1) if array of objects {filename, page, excerpt, evidence_ids...}
-    if (Array.isArray(citations) && citations.length > 0) {
-      sourceContent.innerHTML = citations.map(c => {
-        const fname = c.filename || c.file || c.name || "Evidence";
-        const page = c.page || c.p || c.page_number || "";
-        const ids = Array.isArray(c.evidence_ids) ? c.evidence_ids.join(", ") : (c.evidence_ids || c.id || "");
-        const excerpt = c.excerpt || c.quote || c.text || "";
-
+    // Display clinical findings
+    if (data.clinical_findings && data.clinical_findings.length > 0) {
+      findingsGrid.innerHTML = data.clinical_findings.map(f => {
+        const severityClass = f.severity ? f.severity.toLowerCase() : 'med';
         return `
-          <div class="citation-item">
-            <div class="citation-header">
-              <span>📄 ${escapeHtml(fname)} ${page ? '(p.' + escapeHtml(String(page)) + ')' : ''}</span>
-              <span>${escapeHtml(String(ids || ""))}</span>
+          <div class="finding-card ${severityClass}">
+            <div class="finding-header">
+              <span class="finding-type">${escapeHtml(f.type || 'FINDING')}</span>
+              <span class="finding-severity ${severityClass}">${escapeHtml(f.severity || 'MED')}</span>
             </div>
-            <div class="citation-excerpt">${escapeHtml(String(excerpt || "")).replace(/\n/g, "<br>")}</div>
+            <div class="finding-problem">${escapeHtml(f.problem || '')}</div>
+            <div class="finding-correction">${escapeHtml(f.correction || '')}</div>
+            ${f.citations && f.citations.length > 0 ? `
+              <div class="finding-citation">
+                <strong>📄 ${escapeHtml(f.citations[0].filename || 'Protocol')}</strong><br>
+                ${escapeHtml(f.citations[0].excerpt || '').substring(0, 150)}...
+              </div>
+            ` : ''}
           </div>
         `;
       }).join('');
-      return;
+      
+      findingsCount.style.display = 'inline-block';
+      findingsCount.className = 'badge badge-med';
+      findingsCount.textContent = `🔍 ${data.clinical_findings.length} findings`;
+    } else {
+      findingsGrid.innerHTML = '<div style="color:#64748b; padding:20px; text-align:center;">No clinical findings identified from protocol.</div>';
+      findingsCount.style.display = 'none';
     }
 
-    // 2) if citations is a string (like "E1, E2" or multi-line sources)
-    if (typeof citations === "string" && citations.trim()) {
-      sourceContent.innerHTML = `
-        <div class="citation-item">
-          <div class="citation-header">
-            <span>📎 Sources</span>
-            <span></span>
+    // Display citations
+    if (data.citations && data.citations.length > 0) {
+      sourceContent.innerHTML = data.citations.map(c => {
+        const filename = c.filename || c.file || 'Protocol';
+        const excerpt = c.excerpt || c.text || '';
+        const page = c.page ? `(p.${c.page})` : '';
+        return `
+          <div class="citation-item">
+            <div class="citation-header">
+              <span>📄 ${escapeHtml(filename)} ${page}</span>
+              <span>${c.evidence_ids ? c.evidence_ids.join(', ') : ''}</span>
+            </div>
+            <div class="citation-excerpt">${escapeHtml(excerpt).replace(/\n/g, '<br>')}</div>
           </div>
-          <div class="citation-excerpt">${escapeHtml(citations).replace(/\n/g, "<br>")}</div>
-        </div>
-      `;
-      return;
+        `;
+      }).join('');
+    } else {
+      sourceContent.innerHTML = 'No protocol references cited.';
     }
 
-    // 3) if citations is an object
-    if (citations && typeof citations === "object") {
-      sourceContent.innerHTML = `
-        <div class="citation-item">
-          <div class="citation-header">
-            <span>📎 Sources</span>
-            <span></span>
-          </div>
-          <div class="citation-excerpt">${escapeHtml(JSON.stringify(citations, null, 2)).replace(/\n/g, "<br>")}</div>
-        </div>
-      `;
-      return;
+    // Update verdict badge
+    if (data.verdict) {
+      verdictBadge.style.display = 'inline-block';
+      verdictBadge.className = data.verdict === 'NOT_FOUND' ? 'badge badge-warn' : 'badge badge-ok';
+      verdictBadge.textContent = data.verdict === 'NOT_FOUND' ? '⚠️ Not Found' : '✅ Found';
     }
-
-    sourceContent.innerHTML = 'No references cited.';
   }
 
   function escapeHtml(str) {
+    if (!str) return '';
     return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  // Add example template for case mode
+  function insertExampleCase() {
+    if (currentMode === 'case') {
+      clinicalInput.value = `65-year-old male, 75kg, admitted with community-acquired pneumonia. 
+MRN: 123456
+PMH: Hypertension, Type 2 Diabetes, CKD stage 3
+Home Meds: metformin 1000mg BID, lisinopril 20mg daily, atorvastatin 40mg daily
+
+Vitals: BP 138/82, HR 92, Temp 38.2°C, SpO2 94% on RA
+Labs: WBC 14.5, Hb 13.2, PLT 220, Na 138, K 4.2, SCr 1.4, INR 1.1, ALT 45
+
+Current meds: ceftriaxone 2g IV daily, azithromycin 500mg IV daily, lisinopril continued`;
+    } else {
+      clinicalInput.value = "What is the recommended dose of ceftriaxone for community-acquired pneumonia?";
+    }
   }
 </script>
 </body>
