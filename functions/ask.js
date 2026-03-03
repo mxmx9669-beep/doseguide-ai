@@ -1,5 +1,5 @@
 // ============================================================
-// FILE: /functions/api/ask.js
+// FILE: /functions/ask.js
 // CLINICAL PHARMACIST AI PLATFORM — Backend v2.0
 // Runtime: Cloudflare Pages Functions
 // Pipeline: Extract → CrCl (code) → T1 SOAP → Analysis → T2 + Interventions
