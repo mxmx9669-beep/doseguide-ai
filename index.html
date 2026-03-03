@@ -200,6 +200,56 @@
     .finding-item.critical { border-right-color: #dc2626; }
     .finding-item.high { border-right-color: #f59e0b; }
     .finding-item.moderate { border-right-color: #3b82f6; }
+    
+    /* جديد: قسم الإحصائيات */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #e2eaf5;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1a4c8c;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    
+    /* جديد: قسم الاستشهادات */
+    .citations-section {
+      margin-top: 20px;
+      background: #f8fafd;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #e2eaf5;
+    }
+    .citation-item {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      border-left: 3px solid #1a4c8c;
+    }
+    .citation-filename {
+      font-weight: 600;
+      color: #1a4c8c;
+      margin-bottom: 4px;
+    }
+    .citation-excerpt {
+      color: #334e70;
+      font-size: 0.75rem;
+    }
   </style>
 </head>
 <body>
@@ -209,10 +259,10 @@
       <div class="logo-icon">🩺</div>
       <div class="logo-text">
         <h1>منصة التدخل السريري</h1>
-        <span>Clinical Pharmacist Validation Engine · Standalone Mode</span>
+        <span>Clinical Pharmacist Validation Engine · Protocol-Locked</span>
       </div>
     </div>
-    <div class="badge">🔬 تحليل آلي · تجريبي بدون Backend</div>
+    <div class="badge">🔬 تحليل عميق · متصل بقاعدة البروتوكول</div>
   </div>
 
   <div class="main-grid">
@@ -247,7 +297,37 @@
       <div id="statusBar" class="status-bar" style="display: none;">
         <span id="safetyBadge" class="finding-badge"></span>
         <span id="findingsCount"></span>
+        <span id="protocolsCount"></span>
       </div>
+
+      <!-- إحصائيات سريعة -->
+      <div id="statsSection" class="stats-grid" style="display: none;">
+        <div class="stat-card">
+          <div id="criticalCount" class="stat-value">0</div>
+          <div class="stat-label">حرجة</div>
+        </div>
+        <div class="stat-card">
+          <div id="highCount" class="stat-value">0</div>
+          <div class="stat-label">عالية</div>
+        </div>
+        <div class="stat-card">
+          <div id="moderateCount" class="stat-value">0</div>
+          <div class="stat-label">متوسطة</div>
+        </div>
+        <div class="stat-card">
+          <div id="evidenceCount" class="stat-value">0</div>
+          <div class="stat-label">أدلة</div>
+        </div>
+      </div>
+
+      <!-- الأدوية المفقودة -->
+      <div id="missingMedsSection" class="missing-meds" style="display: none;">
+        <div style="font-weight:600; margin-bottom:8px;">⚠️ أدوية غير موجودة في قاعدة البروتوكول:</div>
+        <div id="missingMedsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <!-- النتائج التفصيلية -->
+      <div id="findingsContainer" class="findings-container" style="display: none;"></div>
 
       <!-- SOAP Note -->
       <div id="soapOutput" class="soap-output" dir="ltr">
@@ -272,11 +352,21 @@ Patient reviewed; no interventions at this time.
 Follow-up Plan:
 - Follow-up: OK.
       </div>
+
+      <!-- الاستشهادات -->
+      <div id="citationsSection" class="citations-section" style="display: none;">
+        <div style="font-weight:600; margin-bottom:12px;">📚 الاستشهادات من قاعدة البروتوكول:</div>
+        <div id="citationsList"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+  // ========== التعديل الرئيسي: ربط مع الـ Backend الحقيقي ==========
+  const WORKER_BASE = "https://doseguide-worker.your-subdomain.workers.dev"; // ⚠️ غير هذا الرابط
+  const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
+
   // ========== العناصر ==========
   const caseInput = document.getElementById('caseInput');
   const analyzeBtn = document.getElementById('analyzeBtn');
@@ -285,6 +375,17 @@ Follow-up Plan:
   const statusBar = document.getElementById('statusBar');
   const safetyBadge = document.getElementById('safetyBadge');
   const findingsCount = document.getElementById('findingsCount');
+  const protocolsCount = document.getElementById('protocolsCount');
+  const statsSection = document.getElementById('statsSection');
+  const criticalCount = document.getElementById('criticalCount');
+  const highCount = document.getElementById('highCount');
+  const moderateCount = document.getElementById('moderateCount');
+  const evidenceCount = document.getElementById('evidenceCount');
+  const missingMedsSection = document.getElementById('missingMedsSection');
+  const missingMedsList = document.getElementById('missingMedsList');
+  const findingsContainer = document.getElementById('findingsContainer');
+  const citationsSection = document.getElementById('citationsSection');
+  const citationsList = document.getElementById('citationsList');
 
   // ========== وضع نص تجريبي ==========
   window.addEventListener('load', () => {
@@ -295,7 +396,7 @@ Follow-up Plan:
   analyzeBtn.addEventListener('click', analyzeCase);
   clearBtn.addEventListener('click', clearAll);
 
-  function analyzeCase() {
+  async function analyzeCase() {
     const caseText = caseInput.value.trim();
     if (!caseText) {
       alert('الرجاء إدخال الحالة السريرية');
@@ -304,147 +405,164 @@ Follow-up Plan:
 
     // تغيير حالة الزر
     analyzeBtn.disabled = true;
-    analyzeBtn.innerHTML = '<span class="loader"></span><span> جاري التحليل...</span>';
+    analyzeBtn.innerHTML = '<span class="loader"></span><span> جاري التحليل العميق...</span>';
     
     // إخفاء النتائج القديمة
     statusBar.style.display = 'none';
+    statsSection.style.display = 'none';
+    missingMedsSection.style.display = 'none';
+    findingsContainer.style.display = 'none';
+    citationsSection.style.display = 'none';
     
-    // محاكاة وقت المعالجة
-    setTimeout(() => {
-      try {
-        // استخراج البيانات من النص
-        const data = extractDataFromText(caseText);
-        
-        // توليد SOAP Note
-        const soapNote = generateSOAPNote(data);
-        
-        // عرض النتائج
-        soapOutput.innerText = soapNote;
-        
-        // عرض حالة الأمان
-        statusBar.style.display = 'flex';
-        safetyBadge.textContent = data.safetyStatus;
-        
-        if (data.safetyStatus === 'CRITICAL') {
-          safetyBadge.className = 'finding-badge badge-critical';
-        } else if (data.safetyStatus === 'HIGH RISK') {
-          safetyBadge.className = 'finding-badge badge-high';
-        } else {
-          safetyBadge.className = 'finding-badge badge-moderate';
-        }
-        
-        findingsCount.textContent = `🔍 ${data.findingsCount} نتائج`;
-        findingsCount.className = 'finding-badge badge-moderate';
-        
-      } catch (error) {
-        soapOutput.innerText = `❌ خطأ في التحليل: ${error.message}`;
-      } finally {
-        analyzeBtn.disabled = false;
-        analyzeBtn.innerHTML = '<span class="btn-text">🔍 فحص الحالة</span>';
+    try {
+      // 🔥 إرسال للـ Backend الحقيقي
+      const payload = {
+        question: caseText,
+        mode: 'case_analysis',
+        case_text: caseText,
+        language: 'en'
+      };
+
+      const response = await fetch(ASK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    }, 1500);
+
+      const data = await response.json();
+      console.log('✅ التحليل كامل:', data);
+      
+      // عرض النتائج
+      displayResults(data);
+
+    } catch (error) {
+      console.error('❌ خطأ:', error);
+      soapOutput.innerText = `❌ خطأ في الاتصال بالخادم: ${error.message}\n\nتأكد من:\n1. الرابط صحيح\n2. الـ Worker شغال\n3. المفاتيح مضبوطة`;
+    } finally {
+      analyzeBtn.disabled = false;
+      analyzeBtn.innerHTML = '<span class="btn-text">🔍 فحص الحالة</span>';
+    }
   }
 
-  function extractDataFromText(text) {
-    // استخراج العمر
-    const ageMatch = text.match(/(\d+)[-\s]YEAR/i);
-    const age = ageMatch ? ageMatch[1] : '94';
-    
-    // استخراج الكرياتينين
-    const creatMatch = text.match(/CREAT[:\s]*:?\s*(\d+)/i);
-    const creat = creatMatch ? creatMatch[1] : '343';
-    
-    // استخراج الصوديوم
-    const naMatch = text.match(/NA[:\s]*:?\s*(\d+)/i);
-    const na = naMatch ? naMatch[1] : '123';
-    
-    // استخراج البوتاسيوم
-    const kMatch = text.match(/K[:\s]*:?\s*(\d+(?:\.\d+)?)/i);
-    const k = kMatch ? kMatch[1] : '4.9';
-    
-    // استخراج INR
-    const inrMatch = text.match(/INR[:\s]*:?\s*(\d+(?:\.\d+)?)/i);
-    const inr = inrMatch ? inrMatch[1] : '2.23';
-    
-    // استخراج AST
-    const astMatch = text.match(/AST[:\s]*:?\s*(\d+)/i);
-    const ast = astMatch ? astMatch[1] : '2303';
-    
-    // استخراج WBC
-    const wbcMatch = text.match(/WBC[:\s]*:?\s*(\d+(?:\.\d+)?)/i);
-    const wbc = wbcMatch ? wbcMatch[1] : '17.11';
-    
-    // استخراج HB
-    const hbMatch = text.match(/HB[:\s]*:?\s*(\d+(?:\.\d+)?)/i);
-    const hb = hbMatch ? hbMatch[1] : '11.5';
-    
-    // استخراج PLT
-    const pltMatch = text.match(/PLT[:\s]*:?\s*(\d+)/i);
-    const plt = pltMatch ? pltMatch[1] : '474';
-    
-    // حساب CrCl تقريبي
-    const creatMgdl = (parseInt(creat) / 88.4).toFixed(2);
-    const crcl = ((140 - parseInt(age)) * 70) / (72 * parseFloat(creatMgdl));
-    const crclRounded = Math.round(crcl * 10) / 10;
-    
-    // تحديد حالة الأمان
-    let safetyStatus = 'STABLE';
-    let findingsCount = 0;
-    
-    if (parseFloat(inr) > 2.0) {
-      safetyStatus = 'HIGH RISK';
-      findingsCount++;
+  function displayResults(data) {
+    // عرض SOAP Note
+    if (data.answer) {
+      soapOutput.innerText = data.answer;
     }
-    if (parseInt(ast) > 1000) {
-      safetyStatus = 'CRITICAL';
-      findingsCount++;
+
+    // عرض شريط الحالة
+    if (data.safety_status) {
+      statusBar.style.display = 'flex';
+      safetyBadge.textContent = data.safety_status.status;
+      
+      if (data.safety_status.color === 'CRITICAL') {
+        safetyBadge.className = 'finding-badge badge-critical';
+      } else if (data.safety_status.color === 'HIGH') {
+        safetyBadge.className = 'finding-badge badge-high';
+      } else if (data.safety_status.color === 'MODERATE') {
+        safetyBadge.className = 'finding-badge badge-moderate';
+      } else {
+        safetyBadge.className = 'finding-badge badge-stable';
+      }
     }
-    if (parseInt(na) < 130) {
-      safetyStatus = safetyStatus === 'CRITICAL' ? 'CRITICAL' : 'HIGH RISK';
-      findingsCount++;
+
+    // عرض الإحصائيات
+    if (data.deep_analysis) {
+      statsSection.style.display = 'grid';
+      criticalCount.textContent = data.deep_analysis.critical_count || 0;
+      highCount.textContent = data.deep_analysis.high_count || 0;
+      moderateCount.textContent = data.deep_analysis.moderate_count || 0;
+      evidenceCount.textContent = data.deep_analysis.evidence_pieces || 0;
+      
+      protocolsCount.textContent = `📚 ${data.deep_analysis.protocols_checked || 0} بروتوكول`;
+      protocolsCount.className = 'finding-badge badge-moderate';
     }
+
+    // عرض عدد النتائج
+    if (data.clinical_findings && data.clinical_findings.length > 0) {
+      findingsCount.textContent = `🔍 ${data.clinical_findings.length} نتائج`;
+      findingsCount.className = 'finding-badge badge-moderate';
+      
+      // عرض النتائج التفصيلية
+      displayFindings(data.clinical_findings);
+    }
+
+    // عرض الأدوية المفقودة
+    if (data.missing_medications && data.missing_medications.length > 0) {
+      missingMedsSection.style.display = 'block';
+      missingMedsList.innerHTML = data.missing_medications
+        .map(med => `<span style="background:#fee2e2; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${med}</span>`)
+        .join('');
+    }
+
+    // عرض الاستشهادات
+    if (data.citations && data.citations.length > 0) {
+      citationsSection.style.display = 'block';
+      citationsList.innerHTML = data.citations
+        .map(c => `
+          <div class="citation-item">
+            <div class="citation-filename">📄 ${c.filename || 'Protocol'}</div>
+            <div class="citation-excerpt">${c.excerpt || ''}</div>
+          </div>
+        `).join('');
+    }
+  }
+
+  function displayFindings(findings) {
+    findingsContainer.style.display = 'block';
     
-    return {
-      age, creat, na, k, inr, ast, wbc, hb, plt,
-      crcl: crclRounded,
-      safetyStatus,
-      findingsCount
+    const grouped = {
+      CRITICAL: findings.filter(f => f.severity === 'CRITICAL'),
+      HIGH: findings.filter(f => f.severity === 'HIGH'),
+      MODERATE: findings.filter(f => f.severity === 'MODERATE')
     };
-  }
-
-  function generateSOAPNote(data) {
-    return `S: Patient — (MRN: ), ${data.age}Y, 70kg admitted to ICU.
-Reason for Admission: Decreased level of consciousness
-PMH: DM, HTN, CKD, Hx of AKI, Chronic Anemia, Psychiatric issue, ACS-NSTEMI
-Home Meds: Aspirin, Clopidogrel, Rosuvastatin, Bisoprolol, Furosemide, Esomeprazole, Nifedipine, Empagliflozin
-
-O: Vitals: BP 125/63, HR 68, SpO2 99
-Labs: WBC ${data.wbc}, Hb ${data.hb}, PLT ${data.plt}, Na ${data.na}, K ${data.k}, INR ${data.inr}, AST ${data.ast}
-Renal: SCr ${data.creat} umol, Calculated CrCl ${data.crcl} mL/min
-
-A: Primary admission for acute issues. Clinical review performed.
-Safety Status: ${data.safetyStatus}
-
-P:
-Current Medications:
-- Acetylsalicylic Acid 81mg OD (antiplatelet)
-- Clopidogrel 75mg OD (antiplatelet)
-- Rosuvastatin 20mg OD (statin)
-- Bisoprolol 2.5mg OD (beta-blocker)
-- Furosemide 40mg BID (diuretic)
-- Esomeprazole 20mg OD (PPI)
-- Nifedipine 60mg OD (CCB)
-- Empagliflozin 10mg OD (SGLT2)
-
-Pharmacist Intervention:
-${data.inr > 2.0 ? '🔴 CRITICAL: INR مرتفع (2.23) مع DAPT - إيقاف مضادات الصفيحات مؤقتاً، مراقبة علامات النزيف\n' : ''}${data.ast > 1000 ? '🔴 CRITICAL: ارتفاع شديد في AST (2303) - تلف كبدي حاد، إيقاف الأدوية السامة للكبد\n' : ''}${data.na < 130 ? '🟠 HIGH: نقص صوديوم الدم الشديد (123) - تقييد السوائل، مراقبة الوعي\n' : ''}${data.k > 5.0 ? '🟡 MODERATE: فرط بوتاسيوم (5.45) - إيقاف مكملات K، مراقبة ECG\n' : ''}- Severe pericardial effusion with cardiac tamponade requires URGENT pericardiocentesis
-
-Follow-up Plan:
-- Urgent pericardiocentesis
-- Hold antiplatelets until tamponade resolved
-- Repeat electrolytes, LFTs, coagulation panel
-- Nephrology consult for AKI on CKD
-- Cardiology follow-up`;
+    
+    let html = '<div style="margin-bottom:16px;"><strong>🔍 النتائج التفصيلية:</strong></div>';
+    
+    if (grouped.CRITICAL.length > 0) {
+      html += '<div style="margin-bottom:12px;"><span class="finding-badge badge-critical">حرجة</span></div>';
+      grouped.CRITICAL.forEach(f => {
+        html += `
+          <div class="finding-item critical">
+            <div style="margin-bottom:8px;"><strong>${f.type || 'تدخل حرج'}</strong></div>
+            <div style="margin-bottom:8px;">${f.problem || ''}</div>
+            <div style="color:#4b5563;">${f.correction || ''}</div>
+          </div>
+        `;
+      });
+    }
+    
+    if (grouped.HIGH.length > 0) {
+      html += '<div style="margin:12px 0;"><span class="finding-badge badge-high">عالية</span></div>';
+      grouped.HIGH.forEach(f => {
+        html += `
+          <div class="finding-item high">
+            <div style="margin-bottom:8px;"><strong>${f.type || 'خطر عالي'}</strong></div>
+            <div style="margin-bottom:8px;">${f.problem || ''}</div>
+            <div style="color:#4b5563;">${f.correction || ''}</div>
+          </div>
+        `;
+      });
+    }
+    
+    if (grouped.MODERATE.length > 0) {
+      html += '<div style="margin:12px 0;"><span class="finding-badge badge-moderate">متوسطة</span></div>';
+      grouped.MODERATE.forEach(f => {
+        html += `
+          <div class="finding-item moderate">
+            <div style="margin-bottom:8px;"><strong>${f.type || 'ملاحظة'}</strong></div>
+            <div style="margin-bottom:8px;">${f.problem || ''}</div>
+            <div style="color:#4b5563;">${f.correction || ''}</div>
+          </div>
+        `;
+      });
+    }
+    
+    findingsContainer.innerHTML = html;
   }
 
   function clearAll() {
@@ -470,6 +588,10 @@ Patient reviewed; no interventions at this time.
 Follow-up Plan:
 - Follow-up: OK.`;
     statusBar.style.display = 'none';
+    statsSection.style.display = 'none';
+    missingMedsSection.style.display = 'none';
+    findingsContainer.style.display = 'none';
+    citationsSection.style.display = 'none';
   }
 </script>
 </body>
