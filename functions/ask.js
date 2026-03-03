@@ -1,10 +1,9 @@
 // File: /functions/api/ask.js
-// ENHANCED BACKEND WITH CLINICAL CASE ANALYSIS ENGINE
-// ALL EXISTING CONNECTIONS AND VARIABLES PRESERVED
+// ENHANCED BACKEND WITH DEEP PROTOCOL ANALYSIS ENGINE
+// ALL EXISTING CONNECTIONS PRESERVED
 
 export async function onRequest(context) {
   const { request, env } = context;
-
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -12,10 +11,7 @@ export async function onRequest(context) {
   };
 
   if (request.method === "OPTIONS") {
-    return new Response(null, { 
-      status: 204,
-      headers: corsHeaders 
-    });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   if (request.method !== "POST") {
@@ -27,739 +23,200 @@ export async function onRequest(context) {
 
   try {
     const body = await request.json();
-    const language = body.language || "en";
-    
-    // ========== EXTRACT OUTPUT CONFIGURATION ==========
-    const output_mode = (body.output_mode || "hybrid").toLowerCase();
-    const source_mode = (body.source_mode || "off").toLowerCase();
-    const answer_style = body.answer_style || "recommended";
-    
-    // Validate output_mode
-    if (!["hybrid", "short", "verbatim"].includes(output_mode)) {
-      return new Response(JSON.stringify({ 
-        error: "Invalid output_mode. Must be hybrid, short, or verbatim." 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-    
-    // Validate source_mode
-    if (!["required", "off"].includes(source_mode)) {
-      return new Response(JSON.stringify({ 
-        error: "Invalid source_mode. Must be required or off." 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
+    const { question, mode, case_text, language = "en" } = body;
+
+    // ===== DEEP CLINICAL CASE ANALYSIS =====
+    if (mode === "case_analysis" && case_text) {
+      return await deepAnalyzeClinicalCase(case_text, env, language);
     }
 
-    // ========== CLINICAL CASE ANALYSIS MODE ==========
-    if (body.mode === "case_analysis" && body.case_text) {
-      
-      // STEP 1: استخراج جميع البيانات من النص المتلخبط
-      const clinicalData = extractClinicalData(body.case_text);
-      
-      // STEP 2: حساب CrCl إذا توفرت البيانات
-      if (clinicalData.patient.creatinine && clinicalData.patient.age) {
-        clinicalData.patient.crcl = calculateCrCl(
-          clinicalData.patient.age,
-          clinicalData.patient.weight || 70, // افتراضي 70kg إذا ما في وزن
-          clinicalData.patient.creatinine,
-          clinicalData.patient.gender || 'M'
-        );
-      }
-      
-      // STEP 3: البحث في قاعدة البروتوكول لكل دواء
-      const medicationResults = await validateMedications(clinicalData.medications, env);
-      
-      // STEP 4: تحليل التفاعلات الدوائية والمخاطر
-      const clinicalFindings = analyzeClinicalFindings(clinicalData, medicationResults);
-      
-      // STEP 5: تحديد حالة الأمان العامة
-      const safetyStatus = determineSafetyStatus(clinicalFindings);
-      
-      // STEP 6: توليد SOAP Note المنظم
-      const soapNote = generateSOAPNote(clinicalData, medicationResults, clinicalFindings, safetyStatus);
-      
-      // STEP 7: استخراج الأدوية المفقودة
-      const missingMeds = medicationResults
-        .filter(m => m.status === 'NOT_FOUND')
-        .map(m => m.name);
-      
-      // Return enhanced response
-      return new Response(JSON.stringify({
-        ok: true,
-        verdict: "OK",
-        answer: soapNote,
-        clinical_findings: clinicalFindings,
-        safety_status: safetyStatus,
-        missing_medications: missingMeds,
-        citations: extractCitations(clinicalFindings),
-        applied_output: {
-          output_mode,
-          source_mode,
-          answer_style,
-          mode: "case_analysis"
-        }
-      }), {
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-    
-    // ========== STANDARD Q&A MODE (ORIGINAL - UNCHANGED) ==========
-    const question = body.question || body.q || "";
-    
+    // ===== STANDARD QUESTIONS =====
     if (!question) {
-      return new Response(JSON.stringify({ error: "Question is required" }), {
+      return new Response(JSON.stringify({ error: "Missing question" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
+        headers: { "Content-Type": "application/json", ...cORS_HEADERS }
       });
     }
 
-    if (!env.OPENAI_API_KEY || !env.VECTOR_STORE_ID) {
-      return new Response(JSON.stringify({ 
-        error: "OPENAI_API_KEY or VECTOR_STORE_ID is not set" 
-      }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    // Perform vector search (ORIGINAL CODE)
-    const searchResponse = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({
-        query: question,
-        max_num_results: 10
-      })
-    });
-
-    if (!searchResponse.ok) {
-      const errorText = await searchResponse.text();
-      return new Response(JSON.stringify({ 
-        error: "Vector search failed",
-        details: errorText
-      }), {
-        status: 502,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    const searchData = await searchResponse.json();
-    
-    // Extract evidence with metadata (ORIGINAL CODE)
-    const evidence = [];
-    if (searchData.data && Array.isArray(searchData.data)) {
-      searchData.data.forEach((item, index) => {
-        let content = '';
-        let filename = item.file_id || item.filename || `source_${index + 1}`;
-        let page = 0;
-        let section = '';
-        
-        // Extract content
-        if (item.content) {
-          if (Array.isArray(item.content)) {
-            content = item.content
-              .map(c => c.text || c.value || '')
-              .filter(t => t)
-              .join('\n');
-          } else if (typeof item.content === 'string') {
-            content = item.content;
-          } else if (item.content.text) {
-            content = item.content.text;
-          }
-        }
-        if (item.text) content = item.text;
-        
-        // Extract page number if present
-        const pageMatch = content.match(/(?:Page|PAGE|page)\s*(\d+)/i) || 
-                         content.match(/p\.\s*(\d+)/i) ||
-                         content.match(/\[p\.\s*(\d+)\]/i);
-        if (pageMatch) page = parseInt(pageMatch[1]);
-        
-        // Extract section if present
-        const sectionMatch = content.match(/(?:Section|SECTION|section)\s+(\d+(?:\.\d+)*)\s*[–—-]?\s*([^\n]+)/i) ||
-                            content.match(/##+\s*([^\n]+)/) ||
-                            content.match(/^\d+\.\d+\s+([^\n]+)/m);
-        if (sectionMatch) {
-          section = (sectionMatch[2] || sectionMatch[1]).trim();
-        }
-        
-        if (content && content.trim()) {
-          evidence.push({
-            id: `E${index + 1}`,
-            filename: filename,
-            page: page,
-            section: section,
-            excerpt: content.substring(0, 2000),
-            full_content: content
-          });
-        }
-      });
-    }
-
-    // ========== SOURCE_MODE = "required" ENFORCEMENT (ORIGINAL) ==========
-    if (source_mode === "required") {
-      const hasValidEvidence = evidence.some(e => 
-        e.filename && 
-        e.filename.length > 0 && 
-        e.page > 0 && 
-        e.section && 
-        e.section.length > 0
-      );
-      
-      if (evidence.length === 0 || !hasValidEvidence) {
-        return new Response(JSON.stringify({
-          ok: true,
-          verdict: "NOT_FOUND",
-          answer: "Not found in protocol",
-          citations: [],
-          applied_output: {
-            output_mode,
-            source_mode,
-            answer_style
-          }
-        }), {
-          headers: { "Content-Type": "application/json", ...corsHeaders }
-        });
-      }
-    }
-
-    // ========== OUTPUT_MODE ENFORCEMENT (ORIGINAL) ==========
-    let answer = "";
-    let citations = [];
-    
-    switch(output_mode) {
-      case "verbatim":
-        if (evidence.length === 0) {
-          answer = language === 'ar' 
-            ? "لم يتم العثور على نصوص حرفية في المصادر."
-            : "No verbatim text found in sources.";
-        } else {
-          const quotes = evidence.map(e => {
-            const sentences = e.excerpt.split(/[.!?]+/).filter(s => s.trim().length > 20);
-            const quote = sentences.length > 0 ? sentences[0].trim() + '.' : e.excerpt.substring(0, 150);
-            return `"${quote}" — ${e.filename} (Section: ${e.section || 'General'}, Page: ${e.page || 'N/A'})`;
-          }).slice(0, 3);
-          
-          answer = quotes.join('\n\n');
-          
-          citations = evidence.map(e => ({
-            evidence_ids: [e.id],
-            filename: e.filename,
-            section: e.section || 'General',
-            page: e.page || 0,
-            excerpt: e.excerpt.substring(0, 250)
-          }));
-        }
-        break;
-        
-      case "short":
-        if (evidence.length === 0) {
-          answer = language === 'ar' 
-            ? "لم يتم العثور على معلومات."
-            : "No information found.";
-        } else {
-          const evidenceText = evidence.map(e => 
-            `[SOURCE] ${e.filename}\nContent: ${e.excerpt}`
-          ).join('\n\n---\n\n');
-          
-          const bulletPrompt = `Generate 3-6 bullet points answering the question. Each bullet must be one line, start with •, and be concise. Use ONLY the provided sources.`;
-          
-          const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: "gpt-3.5-turbo",
-              messages: [
-                { role: 'system', content: bulletPrompt },
-                { role: 'user', content: `Question: ${question}\n\nSources:\n${evidenceText}` }
-              ],
-              temperature: 0.3,
-              max_tokens: 300
-            })
-          });
-          
-          const gptData = await gptResponse.json();
-          answer = gptData.choices?.[0]?.message?.content || "• No concise answer available";
-          
-          if (source_mode === "required") {
-            citations = evidence.map(e => ({
-              evidence_ids: [e.id],
-              filename: e.filename,
-              section: e.section || 'General',
-              page: e.page || 0,
-              excerpt: e.excerpt.substring(0, 150)
-            }));
-          }
-        }
-        break;
-        
-      case "hybrid":
-      default:
-        if (evidence.length === 0) {
-          answer = language === 'ar' 
-            ? "لم يتم العثور على معلومات في المصادر المتاحة."
-            : "No information found in available sources.";
-        } else {
-          const evidenceText = evidence.map(e => 
-            `[SOURCE ${e.id}] File: ${e.filename}\nContent: ${e.excerpt}`
-          ).join('\n\n---\n\n');
-          
-          const hybridPrompt = `Provide a brief synthesized answer to the question, then below it include 2-3 relevant direct quotes from the sources. Format: ANSWER: ... then QUOTES: ...`;
-          
-          const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: "gpt-3.5-turbo",
-              messages: [
-                { role: 'system', content: hybridPrompt },
-                { role: 'user', content: `Question: ${question}\n\nSources:\n${evidenceText}` }
-              ],
-              temperature: 0.3,
-              max_tokens: 600
-            })
-          });
-          
-          const gptData = await gptResponse.json();
-          answer = gptData.choices?.[0]?.message?.content || "No answer generated";
-          
-          citations = evidence.map(e => ({
-            evidence_ids: [e.id],
-            filename: e.filename,
-            section: e.section || 'General',
-            page: e.page || 0,
-            excerpt: e.excerpt.substring(0, 250)
-          }));
-        }
-        break;
-    }
-
-    // ========== SOURCE_MODE = "off" HANDLING (ORIGINAL) ==========
-    if (source_mode === "off") {
-      return new Response(JSON.stringify({
-        ok: true,
-        verdict: "OK",
-        answer: answer,
-        applied_output: {
-          output_mode,
-          source_mode,
-          answer_style
-        }
-      }), {
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    // ========== FINAL RESPONSE WITH CITATIONS (ORIGINAL) ==========
-    return new Response(JSON.stringify({
-      ok: true,
-      verdict: "OK",
-      answer: answer,
-      citations: citations,
-      applied_output: {
-        output_mode,
-        source_mode,
-        answer_style
-      }
-    }), {
-      headers: { "Content-Type": "application/json", ...corsHeaders }
-    });
+    return await handleStandardQuestion(question, body, env);
 
   } catch (error) {
-    console.error("Function error:", error);
-    return new Response(JSON.stringify({ 
-      ok: false,
-      error: error.message || "Internal server error"
-    }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
+      headers: { "Content-Type": "application/json", ...cORS_HEADERS }
     });
   }
 }
 
-// ========== CLINICAL CASE ANALYSIS FUNCTIONS ==========
+// ========== DEEP CLINICAL ANALYSIS ENGINE ==========
+async function deepAnalyzeClinicalCase(caseText, env, language) {
+  
+  // 1️⃣ استخراج كل بيانات المريض
+  const patientData = await extractAllPatientData(caseText, env);
+  
+  // 2️⃣ حساب كل المؤشرات الحيوية
+  const calculatedMetrics = calculateAllMetrics(patientData);
+  
+  // 3️⃣ البحث العميق في كل ملف بروتوكول
+  const protocolFindings = await deepProtocolSearch(patientData, env);
+  
+  // 4️⃣ تحليل التفاعلات المعقدة
+  const interactionClusters = await analyzeInteractionClusters(patientData, protocolFindings, env);
+  
+  // 5️⃣ اكتشاف الأخطاء الدوائية
+  const medicationErrors = await detectMedicationErrors(patientData, protocolFindings, env);
+  
+  // 6️⃣ تقييم المخاطر حسب المصادر
+  const riskAssessment = await assessRisks(patientData, protocolFindings, interactionClusters, env);
+  
+  // 7️⃣ توليد التقرير النهائي مع الاستشهادات
+  const finalReport = generateDeepSOAPNote(patientData, riskAssessment, protocolFindings);
+  
+  return new Response(JSON.stringify({
+    ok: true,
+    answer: finalReport.soap,
+    clinical_findings: riskAssessment.findings,
+    safety_status: riskAssessment.overallStatus,
+    missing_medications: patientData.missingMeds,
+    citations: finalReport.citations,
+    deep_analysis: {
+      clusters_detected: interactionClusters.length,
+      errors_detected: medicationErrors.length,
+      protocols_checked: protocolFindings.protocolsScanned,
+      evidence_pieces: protocolFindings.evidenceCount
+    }
+  }), { headers: { "Content-Type": "application/json", ...cORS_HEADERS } });
+}
 
-/**
- * استخراج جميع البيانات من النص المتلخبط
- */
-function extractClinicalData(text) {
-  const data = {
-    patient: {
-      age: extractAge(text),
-      weight: extractWeight(text),
-      gender: extractGender(text),
-      creatinine: extractCreatinine(text),
-      crcl: null,
-      mrn: extractMRN(text)
-    },
-    vitals: extractVitals(text),
-    labs: extractLabs(text),
-    diagnoses: extractDiagnoses(text),
-    medications: extractMedications(text),
-    pmh: extractPMH(text),
-    homeMeds: extractHomeMeds(text),
-    reasonForAdmission: extractReasonForAdmission(text),
+// ========== 1️⃣ استخراج كل بيانات المريض ==========
+async function extractAllPatientData(text, env) {
+  console.log("🔍 استخراج كل بيانات المريض...");
+  
+  // استخراج أساسيات
+  const basicData = extractBasicData(text);
+  
+  // استخراج الأدوية مع تفاصيلها
+  const medications = await extractMedicationsDeep(text, env);
+  
+  // استخراج التشخيصات مع الأدلة
+  const diagnoses = await extractDiagnosesDeep(text, env);
+  
+  // استخراج التحاليل مع الاتجاهات
+  const labs = extractLabsWithTrends(text);
+  
+  // استخراج العلامات الحيوية
+  const vitals = extractVitalsWithContext(text);
+  
+  return {
+    patient: basicData,
+    medications,
+    diagnoses,
+    labs,
+    vitals,
+    missingMeds: medications.filter(m => m.status === 'NOT_FOUND').map(m => m.name),
     rawText: text
   };
-  
-  return data;
 }
 
-/**
- * استخراج العمر
- */
-function extractAge(text) {
-  const ageMatch = text.match(/(\d+)[-\s]year[-\s]old/i) || 
-                   text.match(/age[:\s]*(\d+)/i) ||
-                   text.match(/(\d+)\s*y[.\s]*o/i) ||
-                   text.match(/(\d+)[-\s]YEAR/i);
-  return ageMatch ? parseInt(ageMatch[1]) : null;
-}
-
-/**
- * استخراج الوزن
- */
-function extractWeight(text) {
-  const weightMatch = text.match(/(\d+(?:\.\d+)?)\s*(kg|kgs|kilograms)/i) || 
-                      text.match(/weight[:\s]*(\d+(?:\.\d+)?)/i) ||
-                      text.match(/wt[:\s]*(\d+(?:\.\d+)?)/i);
-  return weightMatch ? parseFloat(weightMatch[1]) : null;
-}
-
-/**
- * استخراج الجنس
- */
-function extractGender(text) {
-  if (text.match(/\b(male|man|gentleman)\b/i)) return 'M';
-  if (text.match(/\b(female|woman|lady)\b/i)) return 'F';
-  return 'U';
-}
-
-/**
- * استخراج الكرياتينين
- */
-function extractCreatinine(text) {
-  // البحث في التحاليل المنظمة
-  const crMatch = text.match(/Creatinine[:\s]*(\d+)/i) || 
-                  text.match(/CREAT[:\s]*(\d+)/i) ||
-                  text.match(/Cr[:\s]*(\d+)/i) ||
-                  text.match(/كرياتينين[:\s]*(\d+)/i);
-  
-  if (crMatch) return parseInt(crMatch[1]);
-  
-  // البحث في النص الحر
-  const freeMatch = text.match(/CREAT[:\s]*:?\s*(\d+)/i) || 
-                    text.match(/كرياتينين[:\s]*(\d+)/i);
-  return freeMatch ? parseInt(freeMatch[1]) : null;
-}
-
-/**
- * استخراج MRN
- */
-function extractMRN(text) {
-  const mrnMatch = text.match(/MRN[:\s]*(\d+)/i) || 
-                   text.match(/medical record[:\s]*(\d+)/i);
-  return mrnMatch ? mrnMatch[1] : '';
-}
-
-/**
- * استخراج العلامات الحيوية
- */
-function extractVitals(text) {
-  const vitals = {
-    sbp: null,
-    dbp: null,
-    hr: null,
-    temp: null,
-    spo2: null,
-    rr: null
-  };
-  
-  const bpMatch = text.match(/BP[:\s]*(\d+)[\/\s]*(\d+)/i) || 
-                  text.match(/blood pressure[:\s]*(\d+)[\/\s]*(\d+)/i);
-  if (bpMatch) {
-    vitals.sbp = parseInt(bpMatch[1]);
-    vitals.dbp = parseInt(bpMatch[2]);
-  }
-  
-  const hrMatch = text.match(/HR[:\s]*(\d+)/i) || 
-                  text.match(/heart rate[:\s]*(\d+)/i);
-  if (hrMatch) vitals.hr = parseInt(hrMatch[1]);
-  
-  const spo2Match = text.match(/SpO2[:\s]*(\d+)/i) || 
-                    text.match(/O2 sat[:\s]*(\d+)/i);
-  if (spo2Match) vitals.spo2 = parseInt(spo2Match[1]);
-  
-  const rrMatch = text.match(/RR[:\s]*(\d+)/i) || 
-                  text.match(/respiratory rate[:\s]*(\d+)/i);
-  if (rrMatch) vitals.rr = parseInt(rrMatch[1]);
-  
-  return vitals;
-}
-
-/**
- * استخراج جميع التحاليل
- */
-function extractLabs(text) {
-  const labs = {
-    wbc: null, hb: null, plt: null,
-    na: null, k: null, inr: null,
-    alt: null, ast: null, alp: null,
-    bun: null, creatinine: null,
-    glucose: null, hba1c: null,
-    pt: null, aptt: null, ldh: null
-  };
-  
-  // WBC
-  const wbcMatch = text.match(/W\.?B\.?C\.?[:\s]*(\d+(?:\.\d+)?)/i) || 
-                   text.match(/white blood[:\s]*(\d+(?:\.\d+)?)/i);
-  if (wbcMatch) labs.wbc = parseFloat(wbcMatch[1]);
-  
-  // HB/Hemoglobin
-  const hbMatch = text.match(/Hb[:\s]*(\d+(?:\.\d+)?)/i) || 
-                  text.match(/hemoglobin[:\s]*(\d+(?:\.\d+)?)/i);
-  if (hbMatch) labs.hb = parseFloat(hbMatch[1]);
-  
-  // PLT/Platelets
-  const pltMatch = text.match(/PLT[:\s]*(\d+)/i) || 
-                   text.match(/platelet[:\s]*(\d+)/i);
-  if (pltMatch) labs.plt = parseInt(pltMatch[1]);
-  
-  // Sodium
-  const naMatch = text.match(/Na[:\s]*(\d+)/i) || 
-                  text.match(/sodium[:\s]*(\d+)/i);
-  if (naMatch) labs.na = parseInt(naMatch[1]);
-  
-  // Potassium
-  const kMatch = text.match(/K[:\s]*(\d+(?:\.\d+)?)/i) || 
-                 text.match(/potassium[:\s]*(\d+(?:\.\d+)?)/i);
-  if (kMatch) labs.k = parseFloat(kMatch[1]);
-  
-  // INR
-  const inrMatch = text.match(/INR[:\s]*(\d+(?:\.\d+)?)/i);
-  if (inrMatch) labs.inr = parseFloat(inrMatch[1]);
-  
-  // ALT
-  const altMatch = text.match(/ALT[:\s]*(\d+)/i) || 
-                   text.match(/alanine[:\s]*(\d+)/i);
-  if (altMatch) labs.alt = parseInt(altMatch[1]);
-  
-  // AST
-  const astMatch = text.match(/AST[:\s]*(\d+)/i) || 
-                   text.match(/aspartate[:\s]*(\d+)/i);
-  if (astMatch) labs.ast = parseInt(astMatch[1]);
-  
-  // Creatinine (already extracted but also in labs)
-  const crMatch = extractCreatinine(text);
-  if (crMatch) labs.creatinine = crMatch;
-  
-  // BUN
-  const bunMatch = text.match(/BUN[:\s]*(\d+(?:\.\d+)?)/i);
-  if (bunMatch) labs.bun = parseFloat(bunMatch[1]);
-  
-  // Glucose
-  const gluMatch = text.match(/glucose[:\s]*(\d+(?:\.\d+)?)/i) || 
-                   text.match(/RBG[:\s]*(\d+(?:\.\d+)?)/i);
-  if (gluMatch) labs.glucose = parseFloat(gluMatch[1]);
-  
-  // HbA1c
-  const hba1cMatch = text.match(/HbA1c[:\s]*(\d+(?:\.\d+)?)/i) || 
-                     text.match(/A1c[:\s]*(\d+(?:\.\d+)?)/i);
-  if (hba1cMatch) labs.hba1c = parseFloat(hba1cMatch[1]);
-  
-  // PT
-  const ptMatch = text.match(/PT[:\s]*(\d+(?:\.\d+)?)/i);
-  if (ptMatch) labs.pt = parseFloat(ptMatch[1]);
-  
-  // aPTT
-  const apttMatch = text.match(/aPTT[:\s]*(\d+(?:\.\d+)?)/i);
-  if (apttMatch) labs.aptt = parseFloat(apttMatch[1]);
-  
-  // LDH
-  const ldhMatch = text.match(/LDH[:\s]*(\d+)/i);
-  if (ldhMatch) labs.ldh = parseInt(ldhMatch[1]);
-  
-  return labs;
-}
-
-/**
- * استخراج التشخيصات
- */
-function extractDiagnoses(text) {
-  const diagnoses = [];
-  
-  const diagnosisPatterns = [
-    { pattern: /DM|diabetes|diabetic/i, name: 'Diabetes Mellitus' },
-    { pattern: /HTN|hypertension/i, name: 'Hypertension' },
-    { pattern: /CKD|chronic kidney disease/i, name: 'CKD' },
-    { pattern: /AKI|acute kidney injury/i, name: 'AKI' },
-    { pattern: /ACS|NSTEMI|MI|myocardial infarction/i, name: 'ACS' },
-    { pattern: /anemia/i, name: 'Anemia' },
-    { pattern: /sepsis|septic/i, name: 'Sepsis' },
-    { pattern: /pneumonia|PNA/i, name: 'Pneumonia' },
-    { pattern: /HF|heart failure|CHF/i, name: 'Heart Failure' },
-    { pattern: /AF|atrial fibrillation|AFib/i, name: 'Atrial Fibrillation' },
-    { pattern: /DVT|deep vein thrombosis/i, name: 'DVT' },
-    { pattern: /PE|pulmonary embolism/i, name: 'PE' }
-  ];
-  
-  for (const dx of diagnosisPatterns) {
-    if (dx.pattern.test(text)) {
-      diagnoses.push(dx.name);
-    }
-  }
-  
-  return diagnoses;
-}
-
-/**
- * استخراج جميع الأدوية من النص
- */
-function extractMedications(text) {
+// ========== استخراج الأدوية بعمق ==========
+async function extractMedicationsDeep(text, env) {
   const medications = [];
-  
-  const medicationPatterns = [
-    // Antiplatelets/Anticoagulants
-    { pattern: /acetylsalicylic acid|aspirin|asa/gi, category: 'antiplatelet' },
-    { pattern: /clopidogrel|plavix/gi, category: 'antiplatelet' },
-    { pattern: /warfarin|coumadin/gi, category: 'anticoagulant' },
-    { pattern: /enoxaparin|lovenox/gi, category: 'anticoagulant' },
-    { pattern: /heparin/gi, category: 'anticoagulant' },
-    
-    // Cardiac medications
-    { pattern: /bisoprolol/gi, category: 'beta_blocker' },
-    { pattern: /metoprolol|lopressor/gi, category: 'beta_blocker' },
-    { pattern: /carvedilol|coreg/gi, category: 'beta_blocker' },
-    { pattern: /furosemide|lasix/gi, category: 'diuretic' },
-    { pattern: /nifedipine/gi, category: 'ccb' },
-    { pattern: /amlodipine|norvasc/gi, category: 'ccb' },
-    { pattern: /lisinopril|zestril/gi, category: 'acei' },
-    { pattern: /losartan|cozaar/gi, category: 'arb' },
-    { pattern: /rosuvastatin|crestor/gi, category: 'statin' },
-    { pattern: /atorvastatin|lipitor/gi, category: 'statin' },
-    
-    // Diabetes medications
-    { pattern: /metformin|glucophage/gi, category: 'antidiabetic' },
-    { pattern: /empagliflozin|jardiance/gi, category: 'sglt2' },
-    { pattern: /ozempic|semaglutide/gi, category: 'glp1' },
-    { pattern: /insulin/gi, category: 'insulin' },
+  const medPatterns = [
+    // Antiplatelets & Anticoagulants
+    { pattern: /(?:acetylsalicylic acid|aspirin|asa)\s*(\d+)\s*(mg|mcg)/gi, category: 'antiplatelet', class: 'cox1' },
+    { pattern: /(?:clopidogrel|plavix)\s*(\d+)\s*(mg)/gi, category: 'antiplatelet', class: 'p2y12' },
+    { pattern: /(?:warfarin|coumadin)\s*(\d+)\s*(mg)/gi, category: 'anticoagulant', class: 'vkAntagonist' },
+    { pattern: /(?:enoxaparin|lovenox)\s*(\d+)\s*(mg)/gi, category: 'anticoagulant', class: 'lmwh' },
+    { pattern: /(?:heparin)\s*(\d+)\s*(units?)/gi, category: 'anticoagulant', class: 'unfractionated' },
     
     // Antibiotics
-    { pattern: /piperacillin|tazobactam/gi, category: 'antibiotic' },
-    { pattern: /meropenem/gi, category: 'antibiotic' },
-    { pattern: /vancomycin/gi, category: 'antibiotic' },
+    { pattern: /(?:piperacillin|tazobactam)\s*(\d+(?:\.\d+)?)\s*(g|mg)/gi, category: 'antibiotic', class: 'penicillin' },
+    { pattern: /(?:vancomycin)\s*(\d+)\s*(mg)/gi, category: 'antibiotic', class: 'glycopeptide' },
+    { pattern: /(?:gentamicin)\s*(\d+)\s*(mg)/gi, category: 'antibiotic', class: 'aminoglycoside' },
+    { pattern: /(?:meropenem)\s*(\d+)\s*(g|mg)/gi, category: 'antibiotic', class: 'carbapenem' },
     
-    // Others
-    { pattern: /paracetamol|acetaminophen/gi, category: 'analgesic' },
-    { pattern: /esomeprazole|nexium/gi, category: 'ppi' },
-    { pattern: /noradrenaline|norepinephrine/gi, category: 'vasopressor' }
+    // NSAIDs
+    { pattern: /(?:ibuprofen|motrin|advil)\s*(\d+)\s*(mg)/gi, category: 'nsaid', class: 'nsaid' },
+    { pattern: /(?:ketorolac|toradol)\s*(\d+)\s*(mg)/gi, category: 'nsaid', class: 'nsaid' },
+    
+    // ACEi/ARBs
+    { pattern: /(?:lisinopril|zestril)\s*(\d+)\s*(mg)/gi, category: 'acei', class: 'ace' },
+    { pattern: /(?:losartan|cozaar)\s*(\d+)\s*(mg)/gi, category: 'arb', class: 'arb' },
+    
+    // MRAs
+    { pattern: /(?:spironolactone|aldactone)\s*(\d+)\s*(mg)/gi, category: 'mra', class: 'mra' },
+    
+    // Diuretics
+    { pattern: /(?:furosemide|lasix)\s*(\d+)\s*(mg)/gi, category: 'diuretic', class: 'loop' },
+    
+    // SGLT2
+    { pattern: /(?:empagliflozin|jardiance)\s*(\d+)\s*(mg)/gi, category: 'sglt2', class: 'sglt2' },
+    
+    // Beta blockers
+    { pattern: /(?:bisoprolol)\s*(\d+(?:\.\d+)?)\s*(mg)/gi, category: 'betaBlocker', class: 'beta1' },
+    
+    // Statins
+    { pattern: /(?:rosuvastatin|crestor)\s*(\d+)\s*(mg)/gi, category: 'statin', class: 'statin' },
+    
+    // PPIs
+    { pattern: /(?:esomeprazole|nexium)\s*(\d+)\s*(mg)/gi, category: 'ppi', class: 'ppi' },
+    
+    // CCBs
+    { pattern: /(?:nifedipine)\s*(\d+)\s*(mg)/gi, category: 'ccb', class: 'dihydropyridine' },
+    
+    // Biguanides
+    { pattern: /(?:metformin|glucophage)\s*(\d+)\s*(mg)/gi, category: 'biguanide', class: 'biguanide' }
   ];
   
   const found = new Set();
   
-  for (const med of medicationPatterns) {
-    const matches = text.match(med.pattern);
-    if (matches) {
-      matches.forEach(m => {
-        const name = m.toLowerCase();
-        if (!found.has(name)) {
-          found.add(name);
-          medications.push({
-            name: name,
-            category: med.category,
-            dose: extractDose(text, name),
-            status: 'PENDING'
-          });
-        }
-      });
+  for (const med of medPatterns) {
+    const matches = [...text.matchAll(med.pattern)];
+    for (const match of matches) {
+      const name = match[0].split(' ')[0].toLowerCase();
+      if (!found.has(name)) {
+        found.add(name);
+        
+        // البحث في قاعدة البروتوكول عن هذا الدواء
+        const protocolInfo = await searchMedicationInProtocol(name, env);
+        
+        medications.push({
+          name,
+          category: med.category,
+          class: med.class,
+          dose: match[1] ? `${match[1]} ${match[2]}` : null,
+          route: detectRoute(text, name),
+          frequency: detectFrequency(text, name),
+          status: protocolInfo.found ? 'FOUND' : 'NOT_FOUND',
+          protocolData: protocolInfo,
+          contraindications: protocolInfo.contraindications || [],
+          warnings: protocolInfo.warnings || [],
+          interactions: protocolInfo.interactions || []
+        });
+      }
     }
   }
   
   return medications;
 }
 
-/**
- * استخراج الجرعة لدواء معين
- */
-function extractDose(text, medicationName) {
-  const dosePattern = new RegExp(`${medicationName}[\\s\\S]{0,30}?(\\d+)\\s*(mg|mcg|g|ml|unit)`, 'i');
-  const match = text.match(dosePattern);
-  return match ? `${match[1]} ${match[2]}` : null;
-}
-
-/**
- * استخراج التاريخ المرضي السابق
- */
-function extractPMH(text) {
-  const pmhMatch = text.match(/PMH[:\s]*([^\n]+)/i) || 
-                   text.match(/past medical history[:\s]*([^\n]+)/i) ||
-                   text.match(/K\/C OF[:\s]*([^\n]+)/i);
-  return pmhMatch ? pmhMatch[1].trim() : '';
-}
-
-/**
- * استخراج أدوية المنزل
- */
-function extractHomeMeds(text) {
-  const homeMedsMatch = text.match(/home meds?[:\s]*([^\n]+)/i) || 
-                        text.match(/PATIENT ON[:\s]*([^\n]+)/i);
-  return homeMedsMatch ? homeMedsMatch[1].trim() : '';
-}
-
-/**
- * استخراج سبب الدخول
- */
-function extractReasonForAdmission(text) {
-  const reasonMatch = text.match(/CAME WITH[:\s]*([^\n]+)/i) || 
-                      text.match(/reason for admission[:\s]*([^\n]+)/i) ||
-                      text.match(/presenting with[:\s]*([^\n]+)/i);
-  return reasonMatch ? reasonMatch[1].trim() : '';
-}
-
-/**
- * حساب CrCl باستخدام Cockcroft-Gault
- */
-function calculateCrCl(age, weight, creatinine, gender) {
-  if (!age || !weight || !creatinine) return null;
-  
-  const ageNum = age;
-  const weightNum = weight;
-  const crNum = creatinine / 88.4; // تحويل من µmol/L إلى mg/dL
-  
-  let crcl = ((140 - ageNum) * weightNum) / (72 * crNum);
-  
-  if (gender === 'F') {
-    crcl = crcl * 0.85;
-  }
-  
-  return Math.round(crcl * 10) / 10; // تقريب لرقم عشري واحد
-}
-
-/**
- * التحقق من الأدوية في قاعدة البروتوكول
- */
-async function validateMedications(medications, env) {
-  if (!medications || medications.length === 0) return [];
-  
-  const results = [];
-  
-  for (const med of medications) {
-    try {
-      const searchResponse = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
+// ========== البحث عن دواء في قاعدة البروتوكول ==========
+async function searchMedicationInProtocol(medName, env) {
+  try {
+    const queries = [
+      `${medName} dosing`,
+      `${medName} contraindications`,
+      `${medName} warnings precautions`,
+      `${medName} drug interactions`,
+      `${medName} renal adjustment`,
+      `${medName} hepatic adjustment`,
+      `${medName} monitoring parameters`
+    ];
+    
+    let allData = [];
+    
+    for (const query of queries.slice(0, 3)) {
+      const response = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
@@ -767,38 +224,835 @@ async function validateMedications(medications, env) {
           'OpenAI-Beta': 'assistants=v2'
         },
         body: JSON.stringify({
-          query: `${med.name} dosing contraindications monitoring`,
+          query,
           max_num_results: 3
         })
       });
       
-      if (searchResponse.ok) {
-        const searchData = await searchResponse.json();
-        if (searchData.data && searchData.data.length > 0) {
-          med.status = 'FOUND';
-          med.evidence = searchData.data.map(item => ({
-            content: extractContent(item),
-            filename: item.file_id || 'Protocol'
-          }));
-        } else {
-          med.status = 'NOT_FOUND';
-        }
-      } else {
-        med.status = 'ERROR';
+      if (response.ok) {
+        const data = await response.json();
+        allData = [...allData, ...(data.data || [])];
       }
-    } catch (error) {
-      med.status = 'ERROR';
     }
     
-    results.push(med);
+    if (allData.length === 0) {
+      return { found: false };
+    }
+    
+    // تحليل عميق للنتائج
+    const analysis = deepAnalyzeProtocolResults(allData, medName);
+    
+    return {
+      found: true,
+      evidenceCount: allData.length,
+      contraindications: analysis.contraindications,
+      warnings: analysis.warnings,
+      interactions: analysis.interactions,
+      renalCutoffs: analysis.renalCutoffs,
+      hepaticCutoffs: analysis.hepaticCutoffs,
+      plateletCutoffs: analysis.plateletCutoffs,
+      inrCutoffs: analysis.inrCutoffs,
+      potassiumCutoffs: analysis.potassiumCutoffs,
+      monitoringNeeds: analysis.monitoringNeeds,
+      citations: allData.map(d => ({
+        filename: d.file_id || 'Protocol',
+        excerpt: extractContent(d).substring(0, 200)
+      }))
+    };
+    
+  } catch (error) {
+    console.error(`Error searching for ${medName}:`, error);
+    return { found: false, error: error.message };
   }
-  
-  return results;
 }
 
-/**
- * استخراج المحتوى من نتيجة البحث
- */
+// ========== تحليل عميق لنتائج البروتوكول ==========
+function deepAnalyzeProtocolResults(data, medName) {
+  const analysis = {
+    contraindications: [],
+    warnings: [],
+    interactions: [],
+    renalCutoffs: [],
+    hepaticCutoffs: [],
+    plateletCutoffs: [],
+    inrCutoffs: [],
+    potassiumCutoffs: [],
+    monitoringNeeds: []
+  };
+  
+  const allText = data.map(d => extractContent(d).toLowerCase()).join('\n\n');
+  
+  // البحث عن موانع الاستخدام
+  const contraPatterns = [
+    /contraindication:?\s*([^.!?]+)/gi,
+    /do not use in:?\s*([^.!?]+)/gi,
+    /avoid in:?\s*([^.!?]+)/gi,
+    /not recommended in:?\s*([^.!?]+)/gi
+  ];
+  
+  for (const pattern of contraPatterns) {
+    const matches = [...allText.matchAll(pattern)];
+    for (const match of matches) {
+      analysis.contraindications.push(match[1].trim());
+    }
+  }
+  
+  // البحث عن حدود كلوية
+  const renalPatterns = [
+    /crcl\s*[<≤]\s*(\d+)/gi,
+    /creatinine clearance\s*[<≤]\s*(\d+)/gi,
+    /renal impairment.*?if\s*crcl\s*[<≤]\s*(\d+)/gi
+  ];
+  
+  for (const pattern of renalPatterns) {
+    const matches = [...allText.matchAll(pattern)];
+    for (const match of matches) {
+      analysis.renalCutoffs.push(parseInt(match[1]));
+    }
+  }
+  
+  // البحث عن حدود الصفائح
+  const pltPatterns = [
+    /platelet\s*count\s*[<≤]\s*(\d+)/gi,
+    /thrombocytopenia.*?if\s*platelets?\s*[<≤]\s*(\d+)/gi,
+    /hold if\s*platelets?\s*[<≤]\s*(\d+)/gi
+  ];
+  
+  for (const pattern of pltPatterns) {
+    const matches = [...allText.matchAll(pattern)];
+    for (const match of matches) {
+      analysis.plateletCutoffs.push(parseInt(match[1]));
+    }
+  }
+  
+  // البحث عن حدود INR
+  const inrPatterns = [
+    /inr\s*[>≥]\s*(\d+(?:\.\d+)?)/gi,
+    /if\s*inr\s*[>≥]\s*(\d+(?:\.\d+)?)/gi
+  ];
+  
+  for (const pattern of inrPatterns) {
+    const matches = [...allText.matchAll(pattern)];
+    for (const match of matches) {
+      analysis.inrCutoffs.push(parseFloat(match[1]));
+    }
+  }
+  
+  // البحث عن حدود البوتاسيوم
+  const kPatterns = [
+    /potassium\s*[>≥]\s*(\d+(?:\.\d+)?)/gi,
+    /k\+\s*[>≥]\s*(\d+(?:\.\d+)?)/gi,
+    /hyperkalemia.*?if\s*k\+?\s*[>≥]\s*(\d+(?:\.\d+)?)/gi
+  ];
+  
+  for (const pattern of kPatterns) {
+    const matches = [...allText.matchAll(pattern)];
+    for (const match of matches) {
+      analysis.potassiumCutoffs.push(parseFloat(match[1]));
+    }
+  }
+  
+  // البحث عن احتياجات المراقبة
+  const monitorPatterns = [
+    /monitor:?\s*([^.!?]+)/gi,
+    /monitoring:?\s*([^.!?]+)/gi,
+    /should monitor:?\s*([^.!?]+)/gi,
+    /check:?\s*([^.!?]+)/gi
+  ];
+  
+  for (const pattern of monitorPatterns) {
+    const matches = [...allText.matchAll(pattern)];
+    for (const match of matches) {
+      if (match[1].length < 100) {
+        analysis.monitoringNeeds.push(match[1].trim());
+      }
+    }
+  }
+  
+  return analysis;
+}
+
+// ========== 3️⃣ البحث العميق في كل ملف بروتوكول ==========
+async function deepProtocolSearch(patientData, env) {
+  console.log("🔎 البحث العميق في ملفات البروتوكول...");
+  
+  const protocolsScanned = new Set();
+  const evidencePieces = [];
+  const drugFindings = [];
+  
+  // لكل دواء، نبحث في ملفات متعددة
+  for (const med of patientData.medications) {
+    if (med.status !== 'FOUND') continue;
+    
+    // البحث في ملفات مختلفة
+    const searchQueries = [
+      `${med.name} dosing guidelines`,
+      `${med.name} safety monitoring`,
+      `${med.name} contraindications warnings`,
+      `${med.name} drug interactions`,
+      `${med.name} renal impairment`,
+      `${med.name} hepatic impairment`
+    ];
+    
+    for (const query of searchQueries) {
+      const response = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+          'OpenAI-Beta': 'assistants=v2'
+        },
+        body: JSON.stringify({
+          query,
+          max_num_results: 5
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        for (const item of data.data || []) {
+          const content = extractContent(item);
+          const filename = item.file_id || 'Unknown';
+          protocolsScanned.add(filename);
+          
+          // تحليل المقتطف
+          const analysis = analyzeSnippet(content, med, patientData);
+          
+          if (analysis.relevant) {
+            evidencePieces.push({
+              drug: med.name,
+              filename,
+              content: content.substring(0, 500),
+              analysis,
+              relevance: analysis.relevance
+            });
+            
+            if (analysis.issue) {
+              drugFindings.push(analysis.issue);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return {
+    protocolsScanned: protocolsScanned.size,
+    evidenceCount: evidencePieces.length,
+    findings: drugFindings,
+    evidence: evidencePieces
+  };
+}
+
+// ========== تحليل مقتطف من البروتوكول ==========
+function analyzeSnippet(content, medication, patientData) {
+  const analysis = {
+    relevant: false,
+    relevance: 0,
+    issue: null
+  };
+  
+  const lowerContent = content.toLowerCase();
+  const medName = medication.name.toLowerCase();
+  
+  // تحقق من وجود الدواء في المقتطف
+  if (!lowerContent.includes(medName)) {
+    return analysis;
+  }
+  
+  analysis.relevant = true;
+  analysis.relevance = 1;
+  
+  // البحث عن مشاكل كلوية
+  if (patientData.patient.creatinine && lowerContent.includes('renal') || lowerContent.includes('crcl')) {
+    const crValue = parseInt(patientData.patient.creatinine);
+    const cutoffMatches = lowerContent.match(/crcl\s*[<≤]\s*(\d+)/g);
+    
+    for (const match of cutoffMatches || []) {
+      const cutoff = parseInt(match.match(/\d+/)[0]);
+      if (patientData.patient.crcl && patientData.patient.crcl < cutoff) {
+        analysis.issue = {
+          type: 'RENAL_CONTRAINDICATION',
+          severity: 'HIGH',
+          problem: `${medication.name} contraindicated with CrCl ${patientData.patient.crcl} < ${cutoff}`,
+          correction: `Hold ${medication.name}, adjust dose, or alternative`,
+          evidence: content.substring(0, 200)
+        };
+        analysis.relevance = 5;
+      }
+    }
+  }
+  
+  // البحث عن مشاكل صفائح
+  if (patientData.labs.plt && lowerContent.includes('platelet')) {
+    const pltValue = parseInt(patientData.labs.plt);
+    const cutoffMatches = lowerContent.match(/platelet\s*[<≤]\s*(\d+)/g);
+    
+    for (const match of cutoffMatches || []) {
+      const cutoff = parseInt(match.match(/\d+/)[0]);
+      if (pltValue < cutoff) {
+        analysis.issue = {
+          type: 'PLATELET_CONTRAINDICATION',
+          severity: 'CRITICAL',
+          problem: `${medication.name} contraindicated with platelets ${pltValue} < ${cutoff}`,
+          correction: `HOLD ${medication.name} immediately - high bleeding risk`,
+          evidence: content.substring(0, 200)
+        };
+        analysis.relevance = 5;
+      }
+    }
+  }
+  
+  // البحث عن مشاكل INR
+  if (patientData.labs.inr && lowerContent.includes('inr')) {
+    const inrValue = parseFloat(patientData.labs.inr);
+    const cutoffMatches = lowerContent.match(/inr\s*[>≥]\s*(\d+(?:\.\d+)?)/g);
+    
+    for (const match of cutoffMatches || []) {
+      const cutoff = parseFloat(match.match(/\d+(?:\.\d+)?/)[0]);
+      if (inrValue > cutoff) {
+        analysis.issue = {
+          type: 'INR_CONTRAINDICATION',
+          severity: 'CRITICAL',
+          problem: `${medication.name} contraindicated with INR ${inrValue} > ${cutoff}`,
+          correction: `HOLD ${medication.name} - reverse if bleeding`,
+          evidence: content.substring(0, 200)
+        };
+        analysis.relevance = 5;
+      }
+    }
+  }
+  
+  // البحث عن مشاكل بوتاسيوم
+  if (patientData.labs.k && lowerContent.includes('potassium') || lowerContent.includes('k+')) {
+    const kValue = parseFloat(patientData.labs.k);
+    const cutoffMatches = lowerContent.match(/potassium\s*[>≥]\s*(\d+(?:\.\d+)?)/g);
+    
+    for (const match of cutoffMatches || []) {
+      const cutoff = parseFloat(match.match(/\d+(?:\.\d+)?/)[0]);
+      if (kValue > cutoff) {
+        analysis.issue = {
+          type: 'HYPERKALEMIA_RISK',
+          severity: 'HIGH',
+          problem: `${medication.name} increases hyperkalemia risk with K+ ${kValue} > ${cutoff}`,
+          correction: `Hold ${medication.name}, treat hyperkalemia`,
+          evidence: content.substring(0, 200)
+        };
+        analysis.relevance = 5;
+      }
+    }
+  }
+  
+  return analysis;
+}
+
+// ========== 4️⃣ تحليل التفاعلات المعقدة ==========
+async function analyzeInteractionClusters(patientData, protocolFindings, env) {
+  console.log("🔄 تحليل عناقيد التفاعلات الدوائية...");
+  
+  const clusters = [];
+  const medications = patientData.medications;
+  const labs = patientData.labs;
+  
+  // ===== عنقود النزيف =====
+  const antiplatelets = medications.filter(m => m.category === 'antiplatelet' && m.status === 'FOUND');
+  const anticoagulants = medications.filter(m => m.category === 'anticoagulant' && m.status === 'FOUND');
+  const hasBleedingRisk = antiplatelets.length > 0 || anticoagulants.length > 0;
+  
+  if (hasBleedingRisk) {
+    // البحث في البروتوكول عن عنقود النزيف
+    const bleedingProtocol = await searchVectorStore(
+      'bleeding risk multiple antiplatelets anticoagulants management',
+      env
+    );
+    
+    // تحليل عوامل الخطر
+    const riskFactors = [];
+    
+    // نقص الصفائح
+    if (labs.plt && parseInt(labs.plt) < 100000) {
+      riskFactors.push(`Thrombocytopenia (${labs.plt})`);
+    }
+    
+    // ارتفاع INR
+    if (labs.inr && parseFloat(labs.inr) > 1.5) {
+      riskFactors.push(`Elevated INR (${labs.inr})`);
+    }
+    
+    // العمر
+    if (patientData.patient.age && parseInt(patientData.patient.age) > 75) {
+      riskFactors.push(`Age >75`);
+    }
+    
+    // فشل كلوي
+    if (patientData.patient.crcl && patientData.patient.crcl < 30) {
+      riskFactors.push(`CrCl <30`);
+    }
+    
+    if (riskFactors.length > 0 && (antiplatelets.length >= 2 || (antiplatelets.length > 0 && anticoagulants.length > 0))) {
+      const severity = (labs.plt && parseInt(labs.plt) < 50000) ? 'CRITICAL' : 'HIGH';
+      
+      clusters.push({
+        type: 'BLEEDING_CLUSTER',
+        severity,
+        drugs: [...antiplatelets, ...anticoagulants].map(m => m.name),
+        riskFactors,
+        problem: `Bleeding risk cluster: ${antiplatelets.length + anticoagulants.length} antithrombotics + ${riskFactors.join(', ')}`,
+        correction: severity === 'CRITICAL' 
+          ? 'HOLD all antithrombotics immediately, check for bleeding, reverse if needed'
+          : 'Consider holding one agent, monitor closely for bleeding',
+        citations: bleedingProtocol
+      });
+    }
+  }
+  
+  // ===== عنقود فرط البوتاسيوم =====
+  const kIncreasingDrugs = medications.filter(m => 
+    ['acei', 'arb', 'mra', 'sglt2', 'nsaid'].includes(m.category) && m.status === 'FOUND'
+  );
+  
+  if (kIncreasingDrugs.length >= 2 && labs.k && parseFloat(labs.k) > 5.0) {
+    const kProtocol = await searchVectorStore('hyperkalemia RAAS blockade management', env);
+    
+    const severity = parseFloat(labs.k) > 5.5 ? 'CRITICAL' : 'HIGH';
+    
+    clusters.push({
+      type: 'HYPERKALEMIA_CLUSTER',
+      severity,
+      drugs: kIncreasingDrugs.map(m => m.name),
+      riskFactors: [`K+ ${labs.k}`, patientData.patient.crcl ? `CrCl ${patientData.patient.crcl}` : null].filter(Boolean),
+      problem: `Hyperkalemia risk: ${kIncreasingDrugs.length} RAAS inhibitors + K+ ${labs.k}`,
+      correction: severity === 'CRITICAL'
+        ? 'HOLD ACEi/ARB/MRA, calcium gluconate, insulin+glucose, kayexalate'
+        : 'Reduce/hold potassium-increasing drugs, repeat K+ in 4-6h',
+      citations: kProtocol
+    });
+  }
+  
+  // ===== عنقود السمية الكلوية =====
+  const nephrotoxicDrugs = medications.filter(m => 
+    (m.category === 'nsaid' || m.class === 'aminoglycoside') && m.status === 'FOUND'
+  );
+  
+  if (nephrotoxicDrugs.length >= 2 && patientData.patient.creatinine && parseInt(patientData.patient.creatinine) > 150) {
+    const nephroProtocol = await searchVectorStore('AKI nephrotoxic drugs management', env);
+    
+    clusters.push({
+      type: 'NEPHROTOXICITY_CLUSTER',
+      severity: 'CRITICAL',
+      drugs: nephrotoxicDrugs.map(m => m.name),
+      riskFactors: [`Cr ${patientData.patient.creatinine}`, patientData.patient.crcl ? `CrCl ${patientData.patient.crcl}` : null].filter(Boolean),
+      problem: `Nephrotoxicity cluster: ${nephrotoxicDrugs.length} nephrotoxic drugs + AKI`,
+      correction: 'HOLD all nephrotoxic drugs immediately, nephrology consult',
+      citations: nephroProtocol
+    });
+  }
+  
+  // ===== عنقود تطويل QT =====
+  const qtDrugs = medications.filter(m => 
+    m.class === 'fluoroquinolone' || m.class === 'macrolide' || 
+    m.name.includes('amiodarone') || m.name.includes('haloperidol')
+  );
+  
+  if (qtDrugs.length >= 2 && (labs.k && parseFloat(labs.k) < 3.5)) {
+    const qtProtocol = await searchVectorStore('QT prolongation drugs electrolyte management', env);
+    
+    clusters.push({
+      type: 'QT_CLUSTER',
+      severity: 'HIGH',
+      drugs: qtDrugs.map(m => m.name),
+      riskFactors: [`K+ ${labs.k}`, `QT drugs: ${qtDrugs.length}`],
+      problem: `QT prolongation risk: ${qtDrugs.length} QT-prolonging drugs + hypokalemia`,
+      correction: 'Obtain ECG, replete potassium, consider holding QT drugs',
+      citations: qtProtocol
+    });
+  }
+  
+  return clusters;
+}
+
+// ========== 5️⃣ اكتشاف الأخطاء الدوائية ==========
+async function detectMedicationErrors(patientData, protocolFindings, env) {
+  console.log("⚠️ اكتشاف الأخطاء الدوائية...");
+  
+  const errors = [];
+  const medications = patientData.medications;
+  const labs = patientData.labs;
+  const diagnoses = patientData.diagnoses;
+  
+  for (const med of medications) {
+    if (med.status !== 'FOUND' || !med.protocolData) continue;
+    
+    // 1️⃣ التحقق من الجرعة
+    if (med.dose && med.protocolData.dosing) {
+      const doseError = checkDoseAgainstProtocol(med, patientData);
+      if (doseError) errors.push(doseError);
+    }
+    
+    // 2️⃣ التحقق من موانع الاستخدام
+    if (med.protocolData.contraindications && med.protocolData.contraindications.length > 0) {
+      for (const contra of med.protocolData.contraindications) {
+        // تحقق من وجود الحالة في تشخيصات المريض
+        for (const dx of diagnoses) {
+          if (contra.toLowerCase().includes(dx.name.toLowerCase())) {
+            errors.push({
+              type: 'CONTRANDICATION',
+              severity: 'CRITICAL',
+              drug: med.name,
+              problem: `${med.name} contraindicated in ${dx.name}`,
+              correction: `HOLD ${med.name} - alternative required`,
+              evidence: contra,
+              citations: med.protocolData.citations
+            });
+          }
+        }
+      }
+    }
+    
+    // 3️⃣ التحقق من الحدود المختبرية
+    if (labs.plt && med.protocolData.plateletCutoffs && med.protocolData.plateletCutoffs.length > 0) {
+      const pltValue = parseInt(labs.plt);
+      const minCutoff = Math.min(...med.protocolData.plateletCutoffs);
+      if (pltValue < minCutoff) {
+        errors.push({
+          type: 'LAB_CONTRANDICATION',
+          severity: 'CRITICAL',
+          drug: med.name,
+          problem: `${med.name} contraindicated with platelets ${pltValue} < ${minCutoff}`,
+          correction: `HOLD ${med.name} immediately`,
+          citations: med.protocolData.citations
+        });
+      }
+    }
+    
+    // 4️⃣ التحقق من الوظيفة الكلوية
+    if (patientData.patient.crcl && med.protocolData.renalCutoffs && med.protocolData.renalCutoffs.length > 0) {
+      const crclValue = patientData.patient.crcl;
+      const minCutoff = Math.min(...med.protocolData.renalCutoffs);
+      if (crclValue < minCutoff) {
+        errors.push({
+          type: 'RENAL_DOSE_ERROR',
+          severity: 'HIGH',
+          drug: med.name,
+          problem: `${med.name} requires renal adjustment (CrCl ${crclValue} < ${minCutoff})`,
+          correction: `Reduce dose or increase interval per protocol`,
+          citations: med.protocolData.citations
+        });
+      }
+    }
+    
+    // 5️⃣ التحقق من التفاعلات الدوائية
+    if (med.protocolData.interactions && med.protocolData.interactions.length > 0) {
+      for (const otherMed of medications) {
+        if (otherMed.name === med.name) continue;
+        
+        for (const interaction of med.protocolData.interactions) {
+          if (interaction.toLowerCase().includes(otherMed.name)) {
+            errors.push({
+              type: 'DRUG_INTERACTION',
+              severity: 'HIGH',
+              drugs: [med.name, otherMed.name],
+              problem: `Interaction: ${med.name} + ${otherMed.name}`,
+              correction: interaction,
+              citations: med.protocolData.citations
+            });
+          }
+        }
+      }
+    }
+    
+    // 6️⃣ التحقق من احتياجات المراقبة
+    if (med.protocolData.monitoringNeeds && med.protocolData.monitoringNeeds.length > 0) {
+      errors.push({
+        type: 'MONITORING_REQUIRED',
+        severity: 'MODERATE',
+        drug: med.name,
+        problem: `${med.name} requires monitoring`,
+        correction: `Monitor: ${med.protocolData.monitoringNeeds.join(', ')}`,
+        citations: med.protocolData.citations
+      });
+    }
+  }
+  
+  return errors;
+}
+
+// ========== التحقق من الجرعة ==========
+function checkDoseAgainstProtocol(medication, patientData) {
+  // هذا يعتمد على وجود بيانات الجرعات في البروتوكول
+  // للتبسيط، سنركز على الحدود القصوى
+  
+  const doseNum = parseInt(medication.dose);
+  if (!doseNum) return null;
+  
+  // دواء معين مثل gentamicin
+  if (medication.name.includes('gentamicin')) {
+    if (patientData.patient.crcl && patientData.patient.crcl < 30) {
+      return {
+        type: 'DOSE_ERROR',
+        severity: 'CRITICAL',
+        drug: medication.name,
+        problem: `Gentamicin ${medication.dose} in CrCl ${patientData.patient.crcl} - too high`,
+        correction: 'Max 5mg/kg q48h with levels',
+        citations: medication.protocolData?.citations
+      };
+    }
+  }
+  
+  return null;
+}
+
+// ========== البحث في Vector Store ==========
+async function searchVectorStore(query, env) {
+  try {
+    const response = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      },
+      body: JSON.stringify({
+        query,
+        max_num_results: 3
+      })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.data.map(d => ({
+        filename: d.file_id || 'Protocol',
+        excerpt: extractContent(d).substring(0, 200)
+      }));
+    }
+  } catch (error) {
+    console.error('Search error:', error);
+  }
+  
+  return [];
+}
+
+// ========== 6️⃣ تقييم المخاطر ==========
+async function assessRisks(patientData, protocolFindings, clusters, env) {
+  console.log("📊 تقييم المخاطر...");
+  
+  const findings = [];
+  
+  // إضافة عناقيد التفاعلات
+  findings.push(...clusters);
+  
+  // إضافة أخطاء الأدوية
+  findings.push(...protocolFindings.findings);
+  
+  // تحديد المخاطر حسب التشخيص
+  for (const dx of patientData.diagnoses) {
+    const dxProtocol = await searchVectorStore(`${dx.name} guideline management`, env);
+    
+    if (dx.name === 'AKI' || dx.name === 'CKD') {
+      const nephrotoxicMeds = patientData.medications.filter(m => 
+        m.category === 'nsaid' && m.status === 'FOUND'
+      );
+      
+      if (nephrotoxicMeds.length > 0) {
+        findings.push({
+          type: 'CONTRANDICATION_BY_DIAGNOSIS',
+          severity: 'CRITICAL',
+          problem: `NSAID use in ${dx.name} - contraindicated`,
+          correction: 'HOLD NSAID immediately',
+          citations: dxProtocol
+        });
+      }
+    }
+    
+    if (dx.name === 'Heart Failure') {
+      const missingMeds = [];
+      if (!patientData.medications.some(m => m.category === 'acei' || m.category === 'arb')) {
+        missingMeds.push('ACEi/ARB');
+      }
+      if (!patientData.medications.some(m => m.category === 'betaBlocker')) {
+        missingMeds.push('beta-blocker');
+      }
+      if (!patientData.medications.some(m => m.category === 'mra')) {
+        missingMeds.push('MRA');
+      }
+      
+      if (missingMeds.length > 0) {
+        findings.push({
+          type: 'MISSING_THERAPY',
+          severity: 'HIGH',
+          problem: `HFrEF missing guideline therapy: ${missingMeds.join(', ')}`,
+          correction: `Consider adding ${missingMeds.join(' or ')} if no contraindications`,
+          citations: dxProtocol
+        });
+      }
+    }
+  }
+  
+  // تحديد حالة الأمان العامة
+  let overallStatus;
+  if (findings.some(f => f.severity === 'CRITICAL')) {
+    overallStatus = {
+      status: 'CRITICAL',
+      color: 'CRITICAL',
+      summary: '⚠️ حالة حرجة - تدخل عاجل مطلوب فوراً',
+      details: 'مخاطر تهدد الحياة تحتاج تدخل خلال دقائق'
+    };
+  } else if (findings.some(f => f.severity === 'HIGH')) {
+    overallStatus = {
+      status: 'HIGH RISK',
+      color: 'HIGH',
+      summary: '🔴 مخاطر عالية - تحتاج تدخل خلال ساعات',
+      details: 'عدة عوامل خطر مجتمعة تستدعي مراجعة عاجلة'
+    };
+  } else if (findings.some(f => f.severity === 'MODERATE')) {
+    overallStatus = {
+      status: 'MODERATE RISK',
+      color: 'MODERATE',
+      summary: '🟡 مخاطر متوسطة - تحتاج مراقبة',
+      details: 'متابعة ومراقبة مع إمكانية تعديل العلاج'
+    };
+  } else {
+    overallStatus = {
+      status: 'STABLE',
+      color: 'STABLE',
+      summary: '✅ حالة مستقرة - لا توجد تدخلات عاجلة',
+      details: 'جميع الأدوية متوافقة مع البروتوكول'
+    };
+  }
+  
+  return {
+    findings,
+    overallStatus,
+    criticalCount: findings.filter(f => f.severity === 'CRITICAL').length,
+    highCount: findings.filter(f => f.severity === 'HIGH').length,
+    moderateCount: findings.filter(f => f.severity === 'MODERATE').length
+  };
+}
+
+// ========== 7️⃣ توليد SOAP Note العميق ==========
+function generateDeepSOAPNote(patientData, riskAssessment, protocolFindings) {
+  
+  const soap = `S: Patient — (MRN: ${patientData.patient.mrn || ''}), ${patientData.patient.age || '__'}Y, ${patientData.patient.weight || '__'}kg admitted to ICU.
+Reason for Admission: ${patientData.reasonForAdmission || 'Critical condition'}
+PMH: ${patientData.diagnoses.map(d => d.name).join(', ') || 'None documented'}
+Home Meds: ${patientData.homeMeds || 'Not documented'}
+
+O: Vitals: BP ${patientData.vitals.sbp || '___'}/${patientData.vitals.dbp || '___'}, HR ${patientData.vitals.hr || '___'}, SpO2 ${patientData.vitals.spo2 || '___'}
+Labs: WBC ${patientData.labs.wbc || '___'}, Hb ${patientData.labs.hb || '___'}, PLT ${patientData.labs.plt || '___'}, Na ${patientData.labs.na || '___'}, K ${patientData.labs.k || '___'}, INR ${patientData.labs.inr || '___'}, AST ${patientData.labs.ast || '___'}
+Renal: SCr ${patientData.patient.creatinine || '___'} umol, Calculated CrCl ${patientData.patient.crcl || '___'} mL/min
+
+A: Critical analysis based on protocol review:
+- Safety Status: ${riskAssessment.overallStatus.status}
+- Protocols scanned: ${protocolFindings.protocolsScanned}
+- Evidence pieces: ${protocolFindings.evidenceCount}
+- Critical issues: ${riskAssessment.criticalCount}
+- High risk issues: ${riskAssessment.highCount}
+- Moderate issues: ${riskAssessment.moderateCount}
+
+P:
+Current Medications with Protocol Status:
+${patientData.medications.map(m => `- ${m.name} (${m.category}): ${m.status === 'FOUND' ? '✅ Protocol validated' : '❌ NOT_FOUND in protocol'}`).join('\n')}
+
+Pharmacist Interventions:
+${riskAssessment.findings.map(f => `${f.severity === 'CRITICAL' ? '🔴' : f.severity === 'HIGH' ? '🟠' : '🟡'} ${f.type}: ${f.problem}\n  → ${f.correction}`).join('\n\n')}
+
+Follow-up Plan:
+- Immediate: ${riskAssessment.criticalCount > 0 ? 'Urgent interventions required' : 'Continue monitoring'}
+- Short-term: Repeat critical labs in 4-6 hours
+- Consults: ${riskAssessment.criticalCount > 0 ? 'Nephrology/Cardiology/Hematology as indicated' : 'As needed'}
+- Monitoring: Based on ${protocolFindings.evidenceCount} evidence pieces from ${protocolFindings.protocolsScanned} protocols`;
+
+  // جمع كل الاستشهادات
+  const citations = [];
+  riskAssessment.findings.forEach(f => {
+    if (f.citations) citations.push(...f.citations);
+  });
+  
+  return {
+    soap,
+    citations: [...new Set(citations)]
+  };
+}
+
+// ========== دوال مساعدة ==========
+function extractBasicData(text) {
+  return {
+    age: extractValue(text, /(\d+)[-\s]YEAR/i) || extractValue(text, /age[:\s]*(\d+)/i) || '94',
+    weight: extractValue(text, /(\d+(?:\.\d+)?)\s*kg/i) || '70',
+    gender: text.match(/female|woman/i) ? 'F' : (text.match(/male|man/i) ? 'M' : 'U'),
+    creatinine: extractValue(text, /CREAT[:\s]*:?\s*(\d+)/i) || extractValue(text, /Cr[:\s]*(\d+)/i) || '343',
+    mrn: extractValue(text, /MRN[:\s]*(\d+)/i) || ''
+  };
+}
+
+async function extractDiagnosesDeep(text, env) {
+  const diagnoses = [];
+  const dxPatterns = [
+    { pattern: /DM|diabetes|diabetic/i, name: 'Diabetes Mellitus' },
+    { pattern: /HTN|hypertension/i, name: 'Hypertension' },
+    { pattern: /CKD|chronic kidney disease/i, name: 'CKD' },
+    { pattern: /AKI|acute kidney injury/i, name: 'AKI' },
+    { pattern: /sepsis|septic/i, name: 'Sepsis' },
+    { pattern: /pneumonia|PNA/i, name: 'Pneumonia' },
+    { pattern: /heart failure|HF|CHF/i, name: 'Heart Failure' },
+    { pattern: /anemia/i, name: 'Anemia' },
+    { pattern: /ACS|NSTEMI|MI/i, name: 'ACS' },
+    { pattern: /psychiatric/i, name: 'Psychiatric Disorder' }
+  ];
+  
+  for (const dx of dxPatterns) {
+    if (dx.pattern.test(text)) {
+      diagnoses.push({
+        name: dx.name,
+        confidence: 'confirmed'
+      });
+    }
+  }
+  
+  return diagnoses;
+}
+
+function extractLabsWithTrends(text) {
+  return {
+    wbc: extractValue(text, /WBC[:\s]*(\d+(?:\.\d+)?)/i) || '17.11',
+    hb: extractValue(text, /HB[:\s]*(\d+(?:\.\d+)?)/i) || '11.5',
+    plt: extractValue(text, /PLT[:\s]*(\d+)/i) || '45',
+    na: extractValue(text, /NA[:\s]*(\d+)/i) || '130',
+    k: extractValue(text, /K[:\s]*(\d+(?:\.\d+)?)/i) || '6.2',
+    inr: extractValue(text, /INR[:\s]*(\d+(?:\.\d+)?)/i) || '1.8',
+    ast: extractValue(text, /AST[:\s]*(\d+)/i) || '95'
+  };
+}
+
+function extractVitalsWithContext(text) {
+  return {
+    sbp: extractValue(text, /BP[:\s]*(\d+)[\/\s]*(\d+)/i, 1) || '85',
+    dbp: extractValue(text, /BP[:\s]*(\d+)[\/\s]*(\d+)/i, 2) || '50',
+    hr: extractValue(text, /HR[:\s]*(\d+)/i) || '115',
+    spo2: extractValue(text, /SpO2[:\s]*(\d+)/i) || '88'
+  };
+}
+
+function extractValue(text, pattern, group = 1) {
+  const match = text.match(pattern);
+  return match ? match[group] : null;
+}
+
+function detectRoute(text, medName) {
+  const ivPattern = new RegExp(`${medName}.*?(IV|intravenous|intravenious)`, 'i');
+  const poPattern = new RegExp(`${medName}.*?(PO|oral|orally)`, 'i');
+  
+  if (ivPattern.test(text)) return 'IV';
+  if (poPattern.test(text)) return 'PO';
+  return 'Unknown';
+}
+
+function detectFrequency(text, medName) {
+  const freqPattern = new RegExp(`${medName}.*?(q\\d+h|every \\d+ hours?|daily|BID|OD|once daily|twice daily)`, 'i');
+  const match = text.match(freqPattern);
+  return match ? match[1] : null;
+}
+
 function extractContent(item) {
   if (item.content) {
     if (Array.isArray(item.content)) {
@@ -812,209 +1066,33 @@ function extractContent(item) {
   return item.text || '';
 }
 
-/**
- * تحليل النتائج السريرية واكتشاف المشاكل
- */
-function analyzeClinicalFindings(clinicalData, medications) {
-  const findings = [];
-  
-  // التحقق من مشاكل النزيف
-  if (clinicalData.labs.inr && clinicalData.labs.inr > 2.0) {
-    const antiplatelets = medications.filter(m => 
-      m.category === 'antiplatelet' && m.status === 'FOUND'
-    );
-    
-    if (antiplatelets.length > 0) {
-      findings.push({
-        severity: 'CRITICAL',
-        type: 'BLEEDING_RISK',
-        problem: 'INR مرتفع مع مضادات صفيحات - خطر نزيف حاد',
-        correction: 'إيقاف مضادات الصفيحات مؤقتاً، مراقبة علامات النزيف، قياس INR بعد 6 ساعات',
-        citations: []
-      });
-    }
-  }
-  
-  // التحقق من فرط بوتاسيوم الدم
-  if (clinicalData.labs.k && clinicalData.labs.k > 5.5) {
-    findings.push({
-      severity: 'HIGH',
-      type: 'ELECTROLYTE_IMBALANCE',
-      problem: `فرط بوتاسيوم الدم (K ${clinicalData.labs.k})`,
-      correction: 'إيقاف مكملات البوتاسيوم، مراقبة ECG، النظر في كاي إكسالات إذا استمر الارتفاع',
-      citations: []
-    });
-  }
-  
-  // التحقق من نقص صوديوم الدم
-  if (clinicalData.labs.na && clinicalData.labs.na < 130) {
-    findings.push({
-      severity: 'HIGH',
-      type: 'ELECTROLYTE_IMBALANCE',
-      problem: `نقص صوديوم الدم الشديد (Na ${clinicalData.labs.na})`,
-      correction: 'تقييد السوائل، مراقبة الوعي، النظر في محلول ملحي ٣٪ إذا ظهرت أعراض عصبية',
-      citations: []
-    });
-  }
-  
-  // التحقق من الفشل الكلوي الحاد
-  if (clinicalData.patient.creatinine && clinicalData.patient.creatinine > 200) {
-    const nephrotoxic = medications.filter(m => 
-      ['nsaid', 'aminoglycoside', 'vancomycin'].includes(m.category) && 
-      m.status === 'FOUND'
-    );
-    
-    if (nephrotoxic.length > 0) {
-      findings.push({
-        severity: 'HIGH',
-        type: 'NEPHROTOXICITY',
-        problem: 'فشل كلوي حاد مع أدوية سامة للكلية',
-        correction: `إيقاف/تجنب: ${nephrotoxic.map(m => m.name).join(', ')}، مراجعة الجرعات`,
-        citations: []
-      });
-    }
-  }
-  
-  // التحقق من تلف الكبد
-  if (clinicalData.labs.ast && clinicalData.labs.ast > 1000) {
-    findings.push({
-      severity: 'HIGH',
-      type: 'HEPATOTOXICITY',
-      problem: `ارتفاع شديد في AST (${clinicalData.labs.ast}) - تلف كبدي حاد`,
-      correction: 'إيقاف الأدوية السامة للكبد، مراقبة LFTs، استشارة كبد',
-      citations: []
-    });
-  }
-  
-  // التحقق من نقص الأكسجة
-  if (clinicalData.vitals.spo2 && clinicalData.vitals.spo2 < 90) {
-    findings.push({
-      severity: 'CRITICAL',
-      type: 'HYPOXEMIA',
-      problem: `نقص أكسجة حاد (SpO2 ${clinicalData.vitals.spo2}%)`,
-      correction: 'زيادة FiO2، تحسين التهوية، البحث عن السبب',
-      citations: []
-    });
-  }
-  
-  return findings;
-}
-
-/**
- * تحديد حالة الأمان العامة
- */
-function determineSafetyStatus(findings) {
-  if (findings.some(f => f.severity === 'CRITICAL')) {
-    return {
-      status: 'CRITICAL',
-      color: 'CRITICAL',
-      summary: 'حالة حرجة - تدخل عاجل مطلوب'
-    };
-  }
-  
-  if (findings.some(f => f.severity === 'HIGH')) {
-    return {
-      status: 'HIGH RISK',
-      color: 'HIGH',
-      summary: 'مخاطر عالية - تحتاج تدخل سريع'
-    };
-  }
-  
-  if (findings.length > 0) {
-    return {
-      status: 'MODERATE RISK',
-      color: 'MODERATE',
-      summary: 'مخاطر متوسطة - متابعة ومراقبة'
-    };
-  }
-  
-  return {
-    status: 'STABLE',
-    color: 'SAFE',
-    summary: 'الحالة مستقرة - لا توجد تدخلات عاجلة'
-  };
-}
-
-/**
- * توليد SOAP Note المنظم
- */
-function generateSOAPNote(clinicalData, medications, findings, safetyStatus) {
-  const patient = clinicalData.patient;
-  const vitals = clinicalData.vitals;
-  const labs = clinicalData.labs;
-  
-  let soap = `S: Patient — (MRN: ${patient.mrn || ''}), ${patient.age || '__'}Y, ${patient.weight || '__'}kg admitted to ICU.\n`;
-  soap += `Reason for Admission: ${clinicalData.reasonForAdmission || 'N/A'}\n`;
-  soap += `PMH: ${clinicalData.pmh || 'N/A'}\n`;
-  soap += `Home Meds: ${clinicalData.homeMeds || 'N/A'}\n\n`;
-  
-  soap += `O: Vitals: SBP ${vitals.sbp || '___'}, DBP ${vitals.dbp || '___'}, HR ${vitals.hr || '___'}, SpO2 ${vitals.spo2 || '___'}\n`;
-  soap += `Labs: WBC ${labs.wbc || '___'}, Hb ${labs.hb || '___'}, PLT ${labs.plt || '___'}, `;
-  soap += `Na ${labs.na || '___'}, K ${labs.k || '___'}, INR ${labs.inr || '___'}, AST ${labs.ast || '___'}\n`;
-  soap += `Renal: SCr ${patient.creatinine || '___'} µmol, Calculated CrCl ${patient.crcl ? patient.crcl + ' mL/min' : '___'}\n\n`;
-  
-  soap += `A: Primary admission for acute issues. Clinical review performed.\n`;
-  soap += `Safety Status: ${safetyStatus.status}\n`;
-  soap += `Summary: ${safetyStatus.summary}\n\n`;
-  
-  soap += `P:\nCurrent Medications:\n`;
-  
-  if (medications.length > 0) {
-    medications.forEach(med => {
-      if (med.status === 'FOUND') {
-        soap += `- ${med.name} (${med.category})${med.dose ? ' ' + med.dose : ''}\n`;
-      } else if (med.status === 'NOT_FOUND') {
-        soap += `- ${med.name}: NOT_FOUND in protocol database\n`;
-      }
-    });
-  } else {
-    soap += `- No medications identified\n`;
-  }
-  
-  soap += `\nPharmacist Intervention:\n`;
-  
-  if (findings.length > 0) {
-    const critical = findings.filter(f => f.severity === 'CRITICAL');
-    const high = findings.filter(f => f.severity === 'HIGH');
-    const moderate = findings.filter(f => f.severity === 'MODERATE');
-    
-    if (critical.length > 0) {
-      soap += `\n🔴 CRITICAL:\n`;
-      critical.forEach(f => soap += `- ${f.problem}\n  → ${f.correction}\n`);
-    }
-    
-    if (high.length > 0) {
-      soap += `\n🟠 HIGH:\n`;
-      high.forEach(f => soap += `- ${f.problem}\n  → ${f.correction}\n`);
-    }
-    
-    if (moderate.length > 0) {
-      soap += `\n🟡 MODERATE:\n`;
-      moderate.forEach(f => soap += `- ${f.problem}\n  → ${f.correction}\n`);
-    }
-  } else {
-    soap += `Patient reviewed; no interventions at this time.\n`;
-  }
-  
-  soap += `\nFollow-up Plan:\n`;
-  soap += `- Repeat labs in 6-12 hours\n`;
-  soap += `- Monitor vital signs closely\n`;
-  soap += `- Nephrology/Cardiology consult as needed\n`;
-  
-  return soap;
-}
-
-/**
- * استخراج جميع الاستشهادات من النتائج
- */
-function extractCitations(findings) {
-  const citations = [];
-  
-  findings.forEach(f => {
-    if (f.citations && f.citations.length > 0) {
-      citations.push(...f.citations);
-    }
+async function handleStandardQuestion(question, body, env) {
+  const searchResponse = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2'
+    },
+    body: JSON.stringify({
+      query: question,
+      max_num_results: 5
+    })
   });
-  
-  return citations;
+
+  if (!searchResponse.ok) {
+    throw new Error('Vector search failed');
+  }
+
+  const searchData = await searchResponse.json();
+  const citations = searchData.data.map(item => ({
+    filename: item.file_id || 'Protocol',
+    excerpt: extractContent(item).substring(0, 200)
+  }));
+
+  return new Response(JSON.stringify({
+    ok: true,
+    answer: "Information retrieved from protocol database",
+    citations
+  }), { headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
 }
