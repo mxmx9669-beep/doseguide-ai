@@ -440,6 +440,14 @@ BED-SIDED ECHO: SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE`;
 }
 
 document.addEventListener("keydown", e => { if((e.ctrlKey||e.metaKey)&&e.key==="Enter") runAnalysis(); });
-<\/script>
+
+/* ✅✅✅ FIX (THE ONLY CHANGE):
+   Expose onclick functions to window so HTML onclick can find them reliably */
+window.runAnalysis = runAnalysis;
+window.clearAll = clearAll;
+window.loadSample = loadSample;
+window.copyTab = copyTab;
+
+</script>
 </body>
 </html>
