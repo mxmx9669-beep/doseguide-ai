@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clinical Pharmacist Validation Engine</title>
+  <title>Clinical Pharmacist AI Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
       padding: 24px;
     }
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
     }
     .header {
@@ -72,11 +72,19 @@
       padding: 32px;
       box-shadow: 0 25px 50px -12px rgba(0,20,60,0.25);
     }
-    .input-section, .output-section {
+    .input-section {
       background: #f8fafd;
       border-radius: 24px;
       padding: 24px;
       border: 1px solid #e2eaf5;
+    }
+    .output-section {
+      background: #f8fafd;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid #e2eaf5;
+      max-height: 800px;
+      overflow-y: auto;
     }
     .section-title {
       font-size: 1.1rem;
@@ -153,6 +161,38 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
+    .output-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #e2eaf5;
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-weight: 500;
+      color: #5e7185;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      background: #e1ecfe;
+      color: #1a4c8c;
+    }
+    .tab-btn.active {
+      background: #1a4c8c;
+      color: white;
+    }
+    .output-section-panel {
+      display: none;
+    }
+    .output-section-panel.active {
+      display: block;
+    }
     .soap-output {
       background: #ffffff;
       border-radius: 20px;
@@ -164,99 +204,66 @@
       white-space: pre-wrap;
       color: #1a2c42;
       direction: ltr;
-      max-height: 600px;
-      overflow-y: auto;
     }
-    .finding-badge {
-      display: inline-block;
+    .analysis-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid #e2eaf5;
+    }
+    .analysis-title {
+      font-weight: 600;
+      color: #1a4c8c;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    .intervention-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid;
+    }
+    .intervention-card.critical { border-left-color: #dc2626; }
+    .intervention-card.high { border-left-color: #f59e0b; }
+    .intervention-card.moderate { border-left-color: #3b82f6; }
+    .intervention-card.info { border-left-color: #64748b; }
+    .intervention-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .intervention-drug {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .intervention-badge {
       padding: 4px 12px;
       border-radius: 40px;
       font-size: 0.75rem;
       font-weight: 600;
-      margin-right: 8px;
     }
     .badge-critical { background: #fee2e2; color: #991b1b; }
     .badge-high { background: #fef3c7; color: #92400e; }
     .badge-moderate { background: #e0f2fe; color: #075985; }
-    .badge-stable { background: #dcfce7; color: #166534; }
-    
-    .status-bar {
-      background: #f0f4fa;
-      border-radius: 60px;
-      padding: 12px 24px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
+    .badge-info { background: #f1f5f9; color: #475569; }
+    .intervention-recommendation {
+      margin-bottom: 8px;
+      font-weight: 500;
     }
-    .missing-meds {
-      background: #fff9f0;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 20px;
-      border: 1px solid #ffe2b3;
-    }
-    .findings-container {
-      margin-bottom: 20px;
-    }
-    .finding-item {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 16px;
+    .intervention-rationale {
+      color: #4b5563;
       margin-bottom: 12px;
-      border-left: 4px solid;
+      font-size: 0.9rem;
     }
-    .finding-item.critical { border-left-color: #dc2626; }
-    .finding-item.high { border-left-color: #f59e0b; }
-    .finding-item.moderate { border-left-color: #3b82f6; }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 12px;
-      text-align: center;
-      border: 1px solid #e2eaf5;
-    }
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1a4c8c;
-    }
-    .stat-label {
-      font-size: 0.75rem;
-      color: #64748b;
-    }
-    
-    .citations-section {
-      margin-top: 20px;
+    .intervention-evidence {
       background: #f8fafd;
-      border-radius: 16px;
-      padding: 16px;
-      border: 1px solid #e2eaf5;
-    }
-    .citation-item {
-      background: #ffffff;
       border-radius: 12px;
       padding: 12px;
-      margin-bottom: 8px;
       font-size: 0.8rem;
       border-left: 3px solid #1a4c8c;
-    }
-    .citation-filename {
-      font-weight: 600;
-      color: #1a4c8c;
-      margin-bottom: 4px;
-    }
-    .citation-excerpt {
-      color: #334e70;
-      font-size: 0.75rem;
     }
     .footer {
       text-align: center;
@@ -275,6 +282,15 @@
       margin-bottom: 20px;
       font-size: 0.9rem;
     }
+    .renal-badge {
+      background: #e0f2fe;
+      color: #075985;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      display: inline-block;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -283,12 +299,12 @@
     <div class="logo">
       <div class="logo-icon">🩺</div>
       <div class="logo-text">
-        <h1>Clinical Pharmacist Engine</h1>
-        <span>Deep Protocol Analysis · Evidence-Based Validation</span>
+        <h1>Clinical Pharmacist AI Platform</h1>
+        <span>SOAP Structuring · Clinical Analysis · Protocol-Locked Interventions</span>
         <div class="designer-credit">Design & Concept: Clinical Pharmacist Mohammed Al-Ishaq</div>
       </div>
     </div>
-    <div class="badge">🔬 Protocol-Locked · Lexicomp · UpToDate · AHFS</div>
+    <div class="badge">🔬 v2.0 · Protocol-Locked · Evidence-Based</div>
   </div>
 
   <div class="main-grid">
@@ -296,12 +312,12 @@
     <div class="input-section">
       <div class="section-title">
         <span>📋</span>
-        Enter Clinical Case (Unstructured Text)
+        Enter Unstructured Clinical Case
       </div>
       <textarea 
         id="caseInput" 
         class="case-input" 
-        placeholder="Paste patient report, labs, medications, medical history..."
+        placeholder="Paste patient history, vitals, labs, medications, imaging, notes..."
       ></textarea>
       
       <div class="action-bar">
@@ -316,50 +332,24 @@
     <div class="output-section">
       <div class="section-title">
         <span>📊</span>
-        Structured SOAP Note + Pharmacist Interventions
+        Clinical Analysis Results
       </div>
 
       <!-- Error Display -->
       <div id="errorDisplay" class="error-message" style="display: none;"></div>
 
-      <!-- Status Bar -->
-      <div id="statusBar" class="status-bar" style="display: none;">
-        <span id="safetyBadge" class="finding-badge"></span>
-        <span id="findingsCount"></span>
-        <span id="protocolsCount"></span>
+      <!-- Output Tabs -->
+      <div class="output-tabs" id="outputTabs">
+        <button class="tab-btn active" data-tab="tab1">📄 Template-1 SOAP</button>
+        <button class="tab-btn" data-tab="tab2">🔬 Clinical Analysis</button>
+        <button class="tab-btn" data-tab="tab3">💊 Pharmacotherapy Review</button>
+        <button class="tab-btn" data-tab="tab4">⚠️ Interventions</button>
+        <button class="tab-btn" data-tab="tab5">📋 Pharmacist SOAP</button>
       </div>
 
-      <!-- Quick Stats -->
-      <div id="statsSection" class="stats-grid" style="display: none;">
-        <div class="stat-card">
-          <div id="criticalCount" class="stat-value">0</div>
-          <div class="stat-label">Critical</div>
-        </div>
-        <div class="stat-card">
-          <div id="highCount" class="stat-value">0</div>
-          <div class="stat-label">High</div>
-        </div>
-        <div class="stat-card">
-          <div id="moderateCount" class="stat-value">0</div>
-          <div class="stat-label">Moderate</div>
-        </div>
-        <div class="stat-card">
-          <div id="evidenceCount" class="stat-value">0</div>
-          <div class="stat-label">Evidence</div>
-        </div>
-      </div>
-
-      <!-- Missing Medications -->
-      <div id="missingMedsSection" class="missing-meds" style="display: none;">
-        <div style="font-weight:600; margin-bottom:8px;">⚠️ Medications Not Found in Protocol Database:</div>
-        <div id="missingMedsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-      </div>
-
-      <!-- Detailed Findings -->
-      <div id="findingsContainer" class="findings-container" style="display: none;"></div>
-
-      <!-- SOAP Note -->
-      <div id="soapOutput" class="soap-output" dir="ltr">
+      <!-- Tab 1: Template-1 SOAP -->
+      <div id="tab1" class="output-section-panel active">
+        <div class="soap-output" id="template1Output">
 S: Patient — (MRN: ), __Y, __kg admitted to ICU.
 Reason for Admission: N/A
 PMH: N/A
@@ -374,52 +364,71 @@ A: Primary admission for acute issues. Clinical review performed.
 P:
 Current Medications:
 - No medications started
-
-Pharmacist Intervention:
-Patient reviewed; no interventions at this time.
-
-Follow-up Plan:
-- Follow-up: OK.
+        </div>
       </div>
 
-      <!-- Citations -->
-      <div id="citationsSection" class="citations-section" style="display: none;">
-        <div style="font-weight:600; margin-bottom:12px;">📚 Protocol Citations:</div>
-        <div id="citationsList"></div>
+      <!-- Tab 2: Clinical Analysis -->
+      <div id="tab2" class="output-section-panel">
+        <div id="clinicalAnalysisContainer"></div>
+      </div>
+
+      <!-- Tab 3: Pharmacotherapy Review -->
+      <div id="tab3" class="output-section-panel">
+        <div id="pharmacotherapyContainer"></div>
+      </div>
+
+      <!-- Tab 4: Interventions -->
+      <div id="tab4" class="output-section-panel">
+        <div id="interventionsContainer"></div>
+        <div id="missingMedsContainer" style="margin-top: 20px;"></div>
+      </div>
+
+      <!-- Tab 5: Pharmacist SOAP -->
+      <div id="tab5" class="output-section-panel">
+        <div class="soap-output" id="template2Output"></div>
+        <div id="citationsContainer" style="margin-top: 20px;"></div>
       </div>
     </div>
   </div>
   
   <div class="footer">
-    © 2026 Clinical Pharmacist Mohammed Al-Ishaq · All rights reserved · Powered by Protocol-Locked Vector Database
+    © 2026 Clinical Pharmacist Mohammed Al-Ishaq · All rights reserved · Protocol-Locked Vector Database
   </div>
 </div>
 
 <script>
-  // ========== CORRECT WORKER URL ==========
-  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev"; // ✅ Working URL
+  // ========== WORKER URL ==========
+  const WORKER_BASE = "https://aged-fog-802f.mxmx9669.workers.dev";
   const ASK_ENDPOINT = `${WORKER_BASE}/ask`;
 
   // ========== DOM Elements ==========
   const caseInput = document.getElementById('caseInput');
   const analyzeBtn = document.getElementById('analyzeBtn');
   const clearBtn = document.getElementById('clearBtn');
-  const soapOutput = document.getElementById('soapOutput');
-  const statusBar = document.getElementById('statusBar');
-  const safetyBadge = document.getElementById('safetyBadge');
-  const findingsCount = document.getElementById('findingsCount');
-  const protocolsCount = document.getElementById('protocolsCount');
-  const statsSection = document.getElementById('statsSection');
-  const criticalCount = document.getElementById('criticalCount');
-  const highCount = document.getElementById('highCount');
-  const moderateCount = document.getElementById('moderateCount');
-  const evidenceCount = document.getElementById('evidenceCount');
-  const missingMedsSection = document.getElementById('missingMedsSection');
-  const missingMedsList = document.getElementById('missingMedsList');
-  const findingsContainer = document.getElementById('findingsContainer');
-  const citationsSection = document.getElementById('citationsSection');
-  const citationsList = document.getElementById('citationsList');
+  const template1Output = document.getElementById('template1Output');
+  const template2Output = document.getElementById('template2Output');
+  const clinicalAnalysisContainer = document.getElementById('clinicalAnalysisContainer');
+  const pharmacotherapyContainer = document.getElementById('pharmacotherapyContainer');
+  const interventionsContainer = document.getElementById('interventionsContainer');
+  const missingMedsContainer = document.getElementById('missingMedsContainer');
+  const citationsContainer = document.getElementById('citationsContainer');
   const errorDisplay = document.getElementById('errorDisplay');
+  const outputTabs = document.getElementById('outputTabs');
+  const tabPanels = document.querySelectorAll('.output-section-panel');
+
+  // ========== Tab Switching ==========
+  outputTabs.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab-btn')) {
+      // Update active tab button
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      e.target.classList.add('active');
+      
+      // Show corresponding panel
+      const tabId = e.target.dataset.tab;
+      tabPanels.forEach(panel => panel.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+  });
 
   // ========== Sample Case ==========
   window.addEventListener('load', () => {
@@ -443,20 +452,13 @@ Follow-up Plan:
     
     // Hide previous results
     errorDisplay.style.display = 'none';
-    statusBar.style.display = 'none';
-    statsSection.style.display = 'none';
-    missingMedsSection.style.display = 'none';
-    findingsContainer.style.display = 'none';
-    citationsSection.style.display = 'none';
     
     try {
       console.log('Connecting to:', ASK_ENDPOINT);
       
+      // ✅ NEW PAYLOAD: فقط case_text حسب المواصفات
       const payload = {
-        question: caseText,
-        mode: 'case_analysis',
-        case_text: caseText,
-        language: 'en'
+        case_text: caseText
       };
 
       const response = await fetch(ASK_ENDPOINT, {
@@ -473,6 +475,7 @@ Follow-up Plan:
       const data = await response.json();
       console.log('✅ Analysis complete:', data);
       
+      // Display all sections
       displayResults(data);
 
     } catch (error) {
@@ -490,8 +493,6 @@ Follow-up Plan:
           <li>API keys are configured</li>
         </ul>
       `;
-      
-      soapOutput.innerText = `❌ Error: ${error.message}\n\nEndpoint: ${ASK_ENDPOINT}`;
     } finally {
       analyzeBtn.disabled = false;
       analyzeBtn.innerHTML = '<span class="btn-text">🔍 Analyze Case</span>';
@@ -499,124 +500,227 @@ Follow-up Plan:
   }
 
   function displayResults(data) {
-    // Display SOAP Note
-    if (data.answer) {
-      soapOutput.innerText = data.answer;
+    // 1️⃣ Template-1 SOAP
+    if (data.template1_soap) {
+      template1Output.innerText = data.template1_soap;
     }
 
-    // Display status bar
-    if (data.safety_status) {
-      statusBar.style.display = 'flex';
-      safetyBadge.textContent = data.safety_status.status;
-      
-      if (data.safety_status.color === 'CRITICAL') {
-        safetyBadge.className = 'finding-badge badge-critical';
-      } else if (data.safety_status.color === 'HIGH') {
-        safetyBadge.className = 'finding-badge badge-high';
-      } else if (data.safety_status.color === 'MODERATE') {
-        safetyBadge.className = 'finding-badge badge-moderate';
-      } else {
-        safetyBadge.className = 'finding-badge badge-stable';
-      }
+    // 2️⃣ Clinical Analysis
+    if (data.clinical_analysis) {
+      displayClinicalAnalysis(data.clinical_analysis);
     }
 
-    // Display stats
-    if (data.deep_analysis) {
-      statsSection.style.display = 'grid';
-      criticalCount.textContent = data.deep_analysis.critical_count || 0;
-      highCount.textContent = data.deep_analysis.high_count || 0;
-      moderateCount.textContent = data.deep_analysis.moderate_count || 0;
-      evidenceCount.textContent = data.deep_analysis.evidence_pieces || 0;
-      
-      protocolsCount.textContent = `📚 ${data.deep_analysis.protocols_checked || 0} protocols`;
-      protocolsCount.className = 'finding-badge badge-moderate';
+    // 3️⃣ Pharmacotherapy Review
+    if (data.pharmacotherapy_review) {
+      displayPharmacotherapy(data.pharmacotherapy_review);
     }
 
-    // Display findings count
-    if (data.clinical_findings && data.clinical_findings.length > 0) {
-      findingsCount.textContent = `🔍 ${data.clinical_findings.length} findings`;
-      findingsCount.className = 'finding-badge badge-moderate';
-      
-      displayFindings(data.clinical_findings);
+    // 4️⃣ Interventions
+    if (data.interventions) {
+      displayInterventions(data.interventions);
     }
 
-    // Display missing medications
-    if (data.missing_medications && data.missing_medications.length > 0) {
-      missingMedsSection.style.display = 'block';
-      missingMedsList.innerHTML = data.missing_medications
-        .map(med => `<span style="background:#fee2e2; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${med}</span>`)
-        .join('');
+    // 5️⃣ Template-2 SOAP
+    if (data.template2_soap) {
+      template2Output.innerText = data.template2_soap;
     }
 
-    // Display citations
+    // Citations
     if (data.citations && data.citations.length > 0) {
-      citationsSection.style.display = 'block';
-      citationsList.innerHTML = data.citations
-        .map(c => `
-          <div class="citation-item">
-            <div class="citation-filename">📄 ${c.filename || 'Protocol'}</div>
-            <div class="citation-excerpt">${c.excerpt || ''}</div>
-          </div>
-        `).join('');
+      displayCitations(data.citations);
     }
+
+    // Missing medications
+    if (data.missing_medications && data.missing_medications.length > 0) {
+      displayMissingMeds(data.missing_medications);
+    }
+
+    // Switch to first tab
+    document.querySelectorAll('.tab-btn')[0].click();
   }
 
-  function displayFindings(findings) {
-    findingsContainer.style.display = 'block';
+  function displayClinicalAnalysis(analysis) {
+    let html = '';
     
-    const grouped = {
-      CRITICAL: findings.filter(f => f.severity === 'CRITICAL'),
-      HIGH: findings.filter(f => f.severity === 'HIGH'),
-      MODERATE: findings.filter(f => f.severity === 'MODERATE')
+    if (analysis.primary_problem) {
+      html += `
+        <div class="analysis-card">
+          <div class="analysis-title">🎯 Primary Problem</div>
+          <div>${analysis.primary_problem}</div>
+        </div>
+      `;
+    }
+    
+    if (analysis.secondary_problems && analysis.secondary_problems.length > 0) {
+      html += `
+        <div class="analysis-card">
+          <div class="analysis-title">📋 Secondary Problems</div>
+          <ul style="margin-left: 20px;">
+            ${analysis.secondary_problems.map(p => `<li>${p}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+    
+    if (analysis.organ_systems_involved && analysis.organ_systems_involved.length > 0) {
+      html += `
+        <div class="analysis-card">
+          <div class="analysis-title">🫀 Organ Systems Involved</div>
+          <div>${analysis.organ_systems_involved.join(', ')}</div>
+        </div>
+      `;
+    }
+    
+    if (analysis.analysis_text) {
+      html += `
+        <div class="analysis-card">
+          <div class="analysis-title">📝 Analysis</div>
+          <div>${analysis.analysis_text.replace(/\n/g, '<br>')}</div>
+        </div>
+      `;
+    }
+    
+    clinicalAnalysisContainer.innerHTML = html || '<div class="analysis-card">No clinical analysis available</div>';
+  }
+
+  function displayPharmacotherapy(review) {
+    let html = '';
+    
+    if (review.renal_considerations) {
+      html += `
+        <div class="analysis-card">
+          <div class="analysis-title">🧪 Renal Considerations</div>
+          <div>CrCl: ${review.renal_considerations.crcl} mL/min (${review.renal_considerations.classification})</div>
+          <div>${review.renal_considerations.dose_adjustments_needed ? '⚠️ Dose adjustments may be needed' : '✅ No renal adjustment needed'}</div>
+        </div>
+      `;
+    }
+    
+    if (review.medications && review.medications.length > 0) {
+      html += `<div class="analysis-title">💊 Medication Review</div>`;
+      review.medications.forEach(med => {
+        html += `
+          <div class="analysis-card">
+            <div style="font-weight:600; margin-bottom:8px;">${med.name} ${med.dose || ''}</div>
+            ${med.indication ? `<div style="margin-bottom:4px;">✅ Indication: ${med.indication}</div>` : ''}
+            ${med.renal_adjustment_needed ? `<div style="color:#92400e;">⚠️ Renal adjustment needed</div>` : ''}
+            ${med.notes && med.notes.length > 0 ? `<div style="color:#4b5563; font-size:0.9rem; margin-top:8px;">${med.notes.join('<br>')}</div>` : ''}
+          </div>
+        `;
+      });
+    }
+    
+    if (review.summary) {
+      html += `
+        <div class="analysis-card">
+          <div class="analysis-title">📊 Summary</div>
+          <div>${review.summary}</div>
+        </div>
+      `;
+    }
+    
+    pharmacotherapyContainer.innerHTML = html || '<div class="analysis-card">No pharmacotherapy review available</div>';
+  }
+
+  function displayInterventions(interventions) {
+    if (!interventions || interventions.length === 0) {
+      interventionsContainer.innerHTML = '<div class="analysis-card">No interventions identified</div>';
+      return;
+    }
+    
+    let html = '';
+    
+    // Group by severity
+    const critical = interventions.filter(i => i.severity === 'CRITICAL');
+    const high = interventions.filter(i => i.severity === 'HIGH');
+    const moderate = interventions.filter(i => i.severity === 'MODERATE');
+    const info = interventions.filter(i => i.severity === 'INFO');
+    
+    const renderIntervention = (i) => {
+      const severityClass = i.severity ? i.severity.toLowerCase() : 'info';
+      return `
+        <div class="intervention-card ${severityClass}">
+          <div class="intervention-header">
+            <span class="intervention-drug">${i.medication || 'Medication'}</span>
+            <span class="intervention-badge badge-${severityClass}">${i.severity || 'INFO'}</span>
+          </div>
+          <div class="intervention-recommendation">${i.recommendation || ''}</div>
+          <div class="intervention-rationale">${i.rationale || ''}</div>
+          ${i.evidence && i.evidence.length > 0 ? `
+            <div class="intervention-evidence">
+              <strong>📚 Source:</strong> ${i.evidence[0].filename}<br>
+              ${i.evidence[0].excerpt ? `<small>${i.evidence[0].excerpt.substring(0, 150)}...</small>` : ''}
+            </div>
+          ` : ''}
+          ${i.no_evidence ? `
+            <div class="intervention-evidence">
+              ⚠️ Evidence not found in local protocol.
+            </div>
+          ` : ''}
+        </div>
+      `;
     };
     
-    let html = '<div style="margin-bottom:16px;"><strong>🔍 Clinical Findings:</strong></div>';
-    
-    if (grouped.CRITICAL.length > 0) {
-      html += '<div style="margin-bottom:12px;"><span class="finding-badge badge-critical">CRITICAL</span></div>';
-      grouped.CRITICAL.forEach(f => {
-        html += `
-          <div class="finding-item critical">
-            <div style="margin-bottom:8px;"><strong>${f.type || 'Critical Finding'}</strong></div>
-            <div style="margin-bottom:8px;">${f.problem || ''}</div>
-            <div style="color:#4b5563;">${f.correction || ''}</div>
-          </div>
-        `;
-      });
+    if (critical.length > 0) {
+      html += '<h3 style="margin: 20px 0 10px 0; color:#991b1b;">🔴 CRITICAL INTERVENTIONS</h3>';
+      critical.forEach(i => { html += renderIntervention(i); });
     }
     
-    if (grouped.HIGH.length > 0) {
-      html += '<div style="margin:12px 0;"><span class="finding-badge badge-high">HIGH</span></div>';
-      grouped.HIGH.forEach(f => {
-        html += `
-          <div class="finding-item high">
-            <div style="margin-bottom:8px;"><strong>${f.type || 'High Risk'}</strong></div>
-            <div style="margin-bottom:8px;">${f.problem || ''}</div>
-            <div style="color:#4b5563;">${f.correction || ''}</div>
-          </div>
-        `;
-      });
+    if (high.length > 0) {
+      html += '<h3 style="margin: 20px 0 10px 0; color:#92400e;">🟠 HIGH PRIORITY</h3>';
+      high.forEach(i => { html += renderIntervention(i); });
     }
     
-    if (grouped.MODERATE.length > 0) {
-      html += '<div style="margin:12px 0;"><span class="finding-badge badge-moderate">MODERATE</span></div>';
-      grouped.MODERATE.forEach(f => {
-        html += `
-          <div class="finding-item moderate">
-            <div style="margin-bottom:8px;"><strong>${f.type || 'Observation'}</strong></div>
-            <div style="margin-bottom:8px;">${f.problem || ''}</div>
-            <div style="color:#4b5563;">${f.correction || ''}</div>
-          </div>
-        `;
-      });
+    if (moderate.length > 0) {
+      html += '<h3 style="margin: 20px 0 10px 0; color:#075985;">🟡 MODERATE</h3>';
+      moderate.forEach(i => { html += renderIntervention(i); });
     }
     
-    findingsContainer.innerHTML = html;
+    if (info.length > 0) {
+      html += '<h3 style="margin: 20px 0 10px 0; color:#475569;">ℹ️ INFORMATION</h3>';
+      info.forEach(i => { html += renderIntervention(i); });
+    }
+    
+    interventionsContainer.innerHTML = html;
+  }
+
+  function displayMissingMeds(missingMeds) {
+    if (!missingMeds || missingMeds.length === 0) return;
+    
+    let html = `
+      <div class="analysis-card" style="background:#fff9f0; border-color:#ffe2b3;">
+        <div style="font-weight:600; margin-bottom:12px;">⚠️ Medications Not Found in Protocol Database</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+    `;
+    
+    missingMeds.forEach(med => {
+      html += `<span style="background:#fee2e2; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${med}</span>`;
+    });
+    
+    html += '</div></div>';
+    missingMedsContainer.innerHTML = html;
+  }
+
+  function displayCitations(citations) {
+    if (!citations || citations.length === 0) return;
+    
+    let html = '<div style="font-weight:600; margin-bottom:12px;">📚 Protocol Citations:</div>';
+    
+    citations.forEach(c => {
+      html += `
+        <div class="citation-item">
+          <div class="citation-filename">📄 ${c.filename || 'Protocol'}</div>
+          <div class="citation-excerpt">${c.excerpt || ''}</div>
+        </div>
+      `;
+    });
+    
+    citationsContainer.innerHTML = html;
   }
 
   function clearAll() {
     caseInput.value = '';
-    soapOutput.innerText = `S: Patient — (MRN: ), __Y, __kg admitted to ICU.
+    template1Output.innerText = `S: Patient — (MRN: ), __Y, __kg admitted to ICU.
 Reason for Admission: N/A
 PMH: N/A
 Home Meds: N/A
@@ -629,19 +733,18 @@ A: Primary admission for acute issues. Clinical review performed.
 
 P:
 Current Medications:
-- No medications started
-
-Pharmacist Intervention:
-Patient reviewed; no interventions at this time.
-
-Follow-up Plan:
-- Follow-up: OK.`;
+- No medications started`;
+    
+    template2Output.innerText = '';
+    clinicalAnalysisContainer.innerHTML = '';
+    pharmacotherapyContainer.innerHTML = '';
+    interventionsContainer.innerHTML = '';
+    missingMedsContainer.innerHTML = '';
+    citationsContainer.innerHTML = '';
     errorDisplay.style.display = 'none';
-    statusBar.style.display = 'none';
-    statsSection.style.display = 'none';
-    missingMedsSection.style.display = 'none';
-    findingsContainer.style.display = 'none';
-    citationsSection.style.display = 'none';
+    
+    // Switch to first tab
+    document.querySelectorAll('.tab-btn')[0].click();
   }
 </script>
 </body>
