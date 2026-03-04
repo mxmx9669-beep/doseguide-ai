@@ -23,8 +23,8 @@ export async function onRequest(context) {
   }
 
   // ── Validate env ────────────────────────────────────────────
-  if (!env.ANTHROPIC_API_KEY) {
-    return json({ ok: false, error: "ANTHROPIC_API_KEY not configured" }, 500, CORS);
+  if (!env.OpenAI_API_KEY) {
+    return json({ ok: false, error: "OpenAI_API_KEY not configured" }, 500, CORS);
   }
 
   try {
@@ -35,7 +35,7 @@ export async function onRequest(context) {
       return json({ ok: false, error: "Missing case_text" }, 400, CORS);
     }
 
-    // ── STEP A: Extract structured JSON (via Anthropic AI) ──────
+    // ── STEP A: Extract structured JSON (via OpenAI AI) ──────
     console.log("🔍 Step A: Extracting structured data via AI...");
     const extractedData = await stepA_extract(case_text, env);
 
