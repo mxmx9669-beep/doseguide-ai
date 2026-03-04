@@ -116,7 +116,7 @@
         <div class="logo-credit">Design &amp; Concept: Clinical Pharmacist Mohammed Al-Ishaq</div>
       </div>
     </div>
-    <div class="header-badge">🔬 v3.0 · Anthropic AI · Protocol-Locked</div>
+    <div class="header-badge">🔬 v3.0 · OpenAI · Protocol-Locked</div>
   </header>
 
   <div class="status-bar">
@@ -147,9 +147,9 @@
       <div class="arch-note">
         <div class="arch-note-title">⚡ PIPELINE ARCHITECTURE</div>
         <div class="arch-note-body">
-          <b>A:</b> Anthropic AI extracts JSON — no assumptions<br>
+          <b>A:</b> OpenAI extracts JSON — no assumptions<br>
           <b>B:</b> CrCl computed in <b>pure code</b> (Cockcroft–Gault)<br>
-          <b>C1–C3:</b> General clinical reasoning (AI)<br>
+          <b>C1–C3:</b> General clinical reasoning (OpenAI)<br>
           <b>C4:</b> <b>Protocol-locked</b> — vector store citations required<br>
           <b>Rule:</b> Missing data → N/A or —
         </div>
@@ -180,7 +180,7 @@
 
 <script>
 // ══ CONFIG ════════════════════════════════════════════════════
-// Calls /functions/api/ask.js via Cloudflare Pages routing
+// Calls /functions/api/ask.js via Cloudflare Pages routing (OpenAI backend)
 const API_ENDPOINT = "/api/ask";
 
 // ══ TABS ══════════════════════════════════════════════════════
@@ -362,7 +362,11 @@ function clearProcessing() {
     if(el && el.querySelector(".empty-sub")?.textContent==="Generating…") el.innerHTML=empty("—","Interrupted","");
   });
 }
-function showError(msg) { const b=document.getElementById("errorBox"); b.style.display="block"; b.innerHTML=`<strong>Error:</strong> ${esc(msg)}<br><small>Endpoint: <code>${API_ENDPOINT}</code> · Check ANTHROPIC_API_KEY · ask.js expects <code>case_text</code></small>`; }
+function showError(msg) { 
+  const b=document.getElementById("errorBox"); 
+  b.style.display="block"; 
+  b.innerHTML=`<strong>Error:</strong> ${esc(msg)}<br><small>Endpoint: <code>${API_ENDPOINT}</code> · Check OPENAI_API_KEY · ask.js expects <code>case_text</code></small>`; 
+}
 function hideError() { document.getElementById("errorBox").style.display="none"; }
 function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function empty(icon,title,sub) { return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></div>`; }
