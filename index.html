@@ -1,1383 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clinical Pharmacist AI Platform · Mohammed Al-Ishaq</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <style>
-    /* ===== RESET & VARIABLES ===== */
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{
-      --navy:#0a1e3c;
-      --blue:#1e4a7a;
-      --blue-lt:#e8f0fe;
-      --blue-mid:#d4e2fc;
-      --bg:#f5f9ff;
-      --surface:#ffffff;
-      --surface2:#f8fafd;
-      --border:#e2e9f2;
-      --text:#13294b;
-      --text2:#2c3f5c;
-      --text3:#5e6f8d;
-      --red:#c41e3a;
-      --amber:#b45f06;
-      --amber-lt:#fef7e7;
-      --green:#1e7e5e;
-      --green-lt:#e6f3ef;
-      --purple:#5e4b8b;
-      --purple-lt:#f0ebf9;
-      --mono:'JetBrains Mono',monospace;
-      --sans:'Inter',sans-serif;
-      --shadow-sm:0 4px 12px rgba(0,20,40,0.08);
-      --shadow-md:0 8px 24px rgba(0,20,40,0.12);
-      --transition:all 0.2s ease;
-    }
-    body{
-      font-family:var(--sans);
-      background:var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      padding:20px;
-      line-height:1.5;
-    }
-    ::-webkit-scrollbar{width:6px;height:6px}
-    ::-webkit-scrollbar-track{background:#eef2f8}
-    ::-webkit-scrollbar-thumb{background:#b4c2d6;border-radius:4px}
-    ::-webkit-scrollbar-thumb:hover{background:#8fa0bc}
-    
-    /* ===== LAYOUT ===== */
-    .container{
-      max-width:1800px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-    
-    /* ===== HEADER ===== */
-    .header{
-      background:var(--surface);
-      border-radius:28px;
-      padding:18px 28px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      box-shadow:var(--shadow-sm);
-      border:1px solid var(--border);
-    }
-    .logo-area{
-      display:flex;
-      align-items:center;
-      gap:20px;
-    }
-    .medical-icon{
-      width:56px;
-      height:56px;
-      background:linear-gradient(145deg, #1e4a7a, #0f2b4a);
-      border-radius:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:28px;
-      color:white;
-      box-shadow:0 6px 14px rgba(26,74,120,0.3);
-      position:relative;
-      overflow:hidden;
-    }
-    .medical-icon::after{
-      content:'';
-      position:absolute;
-      top:-10px;right:-10px;
-      width:30px;height:30px;
-      background:rgba(255,255,255,0.1);
-      border-radius:50%;
-    }
-    .title-block h1{
-      font-size:1.6rem;
-      font-weight:700;
-      background:linear-gradient(135deg,#13294b,#1e4a7a);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      letter-spacing:-0.02em;
-    }
-    .title-block .creator{
-      font-size:0.85rem;
-      color:var(--text3);
-      display:flex;
-      align-items:center;
-      gap:6px;
-      margin-top:2px;
-    }
-    .creator strong{
-      color:var(--blue);
-      font-weight:600;
-      background:var(--blue-lt);
-      padding:2px 10px;
-      border-radius:40px;
-      font-size:0.8rem;
-    }
-    .badge{
-      background:var(--blue-lt);
-      color:var(--blue);
-      padding:8px 18px;
-      border-radius:60px;
-      font-size:0.85rem;
-      font-weight:600;
-      border:1px solid var(--blue-mid);
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .badge i{font-style:normal;font-size:1.1rem;}
-    
-    /* ===== MAIN GRID ===== */
-    .main-grid{
-      display:grid;
-      grid-template-columns:380px 1fr;
-      gap:16px;
-    }
-    
-    /* ===== LEFT PANEL (INPUT + STAGES) ===== */
-    .left-panel{
-      background:var(--surface);
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--shadow-sm);
-      border:1px solid var(--border);
-      display:flex;
-      flex-direction:column;
-      gap:20px;
-    }
-    .input-section h3{
-      font-size:0.95rem;
-      font-weight:600;
-      color:var(--text2);
-      margin-bottom:12px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .input-section h3 i{color:var(--blue);}
-    textarea#caseInput{
-      width:100%;
-      height:280px;
-      padding:16px;
-      font-family:var(--mono);
-      font-size:0.85rem;
-      line-height:1.7;
-      background:var(--surface2);
-      border:2px solid var(--border);
-      border-radius:20px;
-      resize:vertical;
-      outline:none;
-      transition:var(--transition);
-    }
-    textarea#caseInput:focus{
-      border-color:var(--blue);
-      background:white;
-      box-shadow:0 0 0 4px rgba(30,74,122,0.1);
-    }
-    .action-bar{
-      display:flex;
-      gap:10px;
-      margin-top:8px;
-    }
-    .btn-primary{
-      flex:1;
-      background:var(--blue);
-      color:white;
-      border:none;
-      padding:14px 20px;
-      border-radius:60px;
-      font-weight:600;
-      font-size:0.95rem;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      cursor:pointer;
-      transition:var(--transition);
-      box-shadow:0 6px 16px rgba(30,74,122,0.25);
-    }
-    .btn-primary:hover:not(:disabled){
-      background:var(--navy);
-      transform:translateY(-2px);
-      box-shadow:0 10px 20px rgba(30,74,122,0.3);
-    }
-    .btn-primary:disabled{
-      opacity:0.5;
-      cursor:not-allowed;
-    }
-    .btn-secondary{
-      background:white;
-      color:var(--text2);
-      border:2px solid var(--border);
-      padding:14px 24px;
-      border-radius:60px;
-      font-weight:500;
-      cursor:pointer;
-      transition:var(--transition);
-    }
-    .btn-secondary:hover{
-      border-color:var(--blue);
-      color:var(--blue);
-    }
-    .btn-sample{
-      background:transparent;
-      border:2px dashed var(--border);
-      border-radius:60px;
-      padding:12px;
-      color:var(--text3);
-      font-size:0.85rem;
-      cursor:pointer;
-      transition:var(--transition);
-      margin-top:6px;
-    }
-    .btn-sample:hover{
-      border-color:var(--blue);
-      color:var(--blue);
-      background:var(--blue-lt);
-    }
-    
-    /* ===== STAGE STEPPER ===== */
-    .stage-stepper{
-      background:var(--surface2);
-      border-radius:20px;
-      padding:20px 16px;
-      border:1px solid var(--border);
-    }
-    .stepper-title{
-      font-size:0.9rem;
-      font-weight:600;
-      color:var(--text2);
-      margin-bottom:16px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .stage-list{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .stage-item{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:12px 14px;
-      background:white;
-      border:2px solid var(--border);
-      border-radius:16px;
-      cursor:pointer;
-      transition:var(--transition);
-      position:relative;
-      overflow:hidden;
-    }
-    .stage-item:hover:not(.disabled){
-      border-color:var(--blue);
-      transform:translateX(4px);
-    }
-    .stage-item.active{
-      border-color:var(--blue);
-      background:var(--blue-lt);
-    }
-    .stage-item.completed{
-      border-color:var(--green);
-      background:var(--green-lt);
-    }
-    .stage-number{
-      width:32px;
-      height:32px;
-      border-radius:12px;
-      background:var(--surface2);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:700;
-      color:var(--text2);
-      transition:var(--transition);
-    }
-    .stage-item.active .stage-number{
-      background:var(--blue);
-      color:white;
-    }
-    .stage-item.completed .stage-number{
-      background:var(--green);
-      color:white;
-    }
-    .stage-info{
-      flex:1;
-    }
-    .stage-name{
-      font-weight:600;
-      font-size:0.9rem;
-      color:var(--text);
-    }
-    .stage-desc{
-      font-size:0.75rem;
-      color:var(--text3);
-    }
-    .stage-status{
-      font-size:0.8rem;
-      padding:4px 10px;
-      border-radius:40px;
-      background:var(--surface2);
-    }
-    .stage-item.active .stage-status{
-      background:var(--blue);
-      color:white;
-    }
-    .stage-item.completed .stage-status{
-      background:var(--green);
-      color:white;
-    }
-    .stage-lock{
-      position:absolute;
-      right:14px;
-      color:var(--text3);
-      opacity:0.5;
-    }
-    
-    /* ===== RIGHT PANEL (OUTPUT) ===== */
-    .right-panel{
-      background:var(--surface);
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--shadow-sm);
-      border:1px solid var(--border);
-      overflow-y:auto;
-      max-height:calc(100vh - 140px);
-    }
-    
-    /* ===== STATUS BAR ===== */
-    .status-bar{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom:20px;
-      padding-bottom:16px;
-      border-bottom:2px solid var(--border);
-    }
-    .spinner{
-      width:16px;
-      height:16px;
-      border:3px solid var(--border);
-      border-top-color:var(--blue);
-      border-radius:50%;
-      animation:spin 0.6s linear infinite;
-      display:none;
-    }
-    .spinner.on{display:block;}
-    #statusText{
-      color:var(--text2);
-      font-family:var(--mono);
-      font-size:0.8rem;
-    }
-    .pipeline-dots{
-      display:flex;
-      gap:8px;
-      margin-left:auto;
-    }
-    .pdot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:var(--border);
-      transition:var(--transition);
-    }
-    .pdot.active{
-      background:var(--blue);
-      animation:pulse 1s ease infinite;
-    }
-    .pdot.done{background:var(--green);}
-    .pdot.error{background:var(--red);}
-    
-    /* ===== OUTPUT CARDS ===== */
-    .output-section{
-      animation:fadeUp 0.3s ease;
-    }
-    .section-title{
-      font-size:1.1rem;
-      font-weight:700;
-      color:var(--text);
-      margin-bottom:16px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .section-title i{font-size:1.3rem;}
-    .card-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-      gap:16px;
-      margin-bottom:20px;
-    }
-    .card{
-      background:var(--surface2);
-      border:2px solid var(--border);
-      border-radius:20px;
-      padding:18px;
-      transition:var(--transition);
-    }
-    .card:hover{
-      border-color:var(--blue);
-      transform:translateY(-2px);
-      box-shadow:var(--shadow-sm);
-    }
-    .card-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:12px;
-    }
-    .card-title{
-      font-weight:700;
-      color:var(--blue);
-      font-size:0.95rem;
-    }
-    .card-badge{
-      padding:4px 10px;
-      border-radius:40px;
-      font-size:0.7rem;
-      font-weight:600;
-      background:white;
-    }
-    .card-badge.match{background:var(--green-lt);color:var(--green);}
-    .card-badge.partial{background:var(--amber-lt);color:var(--amber);}
-    .card-badge.missing{background:#fee2e2;color:var(--red);}
-    
-    /* ===== MEDICATION CHECK ===== */
-    .med-check-item{
-      margin-bottom:12px;
-      border-bottom:1px solid var(--border);
-      padding-bottom:12px;
-    }
-    .med-name{
-      font-weight:700;
-      color:var(--navy);
-      margin-bottom:8px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .check-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-      gap:8px;
-      font-size:0.8rem;
-    }
-    .check-item{
-      background:white;
-      border-radius:12px;
-      padding:8px 10px;
-    }
-    .check-label{
-      color:var(--text3);
-      font-size:0.7rem;
-      margin-bottom:4px;
-    }
-    .check-value{
-      font-weight:600;
-      display:flex;
-      align-items:center;
-      gap:6px;
-    }
-    .check-value.ok{color:var(--green);}
-    .check-value.issue{color:var(--red);}
-    .check-value.warning{color:var(--amber);}
-    
-    /* ===== DRUG CARD ===== */
-    .drug-card{
-      background:linear-gradient(145deg, white, var(--surface2));
-      border-left:4px solid var(--purple);
-    }
-    .drug-evidence{
-      background:var(--purple-lt);
-      border-radius:12px;
-      padding:10px;
-      margin-top:12px;
-      font-size:0.75rem;
-      border:1px solid var(--purple);
-    }
-    
-    /* ===== GAPS ===== */
-    .gaps-container{
-      background:var(--amber-lt);
-      border-radius:16px;
-      padding:16px;
-      border:1px solid #fde68a;
-      margin-bottom:16px;
-    }
-    .gap-item{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 0;
-    }
-    
-    /* ===== COPY BUTTON ===== */
-    .copy-btn{
-      float:right;
-      background:white;
-      border:2px solid var(--border);
-      border-radius:30px;
-      padding:5px 12px;
-      font-size:0.7rem;
-      color:var(--text3);
-      cursor:pointer;
-      transition:var(--transition);
-      font-family:var(--mono);
-    }
-    .copy-btn:hover{
-      border-color:var(--blue);
-      color:var(--blue);
-    }
-    .copy-btn.copied{
-      border-color:var(--green);
-      color:var(--green);
-      background:var(--green-lt);
-    }
-    
-    /* ===== MISSING DATA ===== */
-    .missing-data{
-      background:var(--amber-lt);
-      border-radius:14px;
-      padding:12px 16px;
-      margin-bottom:16px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      border:1px solid #fcd34d;
-    }
-    .missing-tag{
-      background:white;
-      padding:4px 12px;
-      border-radius:40px;
-      font-size:0.8rem;
-      font-weight:500;
-      color:var(--amber);
-    }
-    
-    /* ===== UNIT CONVERSION NOTE ===== */
-    .unit-note{
-      background:var(--blue-lt);
-      border-radius:12px;
-      padding:10px 14px;
-      margin-bottom:16px;
-      font-size:0.8rem;
-      border-left:4px solid var(--blue);
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .unit-note i{font-size:1.2rem;}
-    
-    /* ===== ANIMATIONS ===== */
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes slideIn{from{transform:translateX(-10px);opacity:0}to{transform:translateX(0);opacity:1}}
-    
-    /* ===== UTILITIES ===== */
-    .empty-state{
-      text-align:center;
-      padding:60px 20px;
-      color:var(--text3);
-    }
-    .empty-state i{
-      font-size:3rem;
-      margin-bottom:16px;
-      opacity:0.3;
-    }
-    .mt-4{margin-top:16px;}
-    .mb-2{margin-bottom:8px;}
-    .text-small{font-size:0.8rem;}
-    .evidence-text{
-      background:var(--surface);
-      border-radius:12px;
-      padding:12px;
-      font-size:0.8rem;
-      border-left:3px solid var(--blue);
-    }
-    .no-evidence{
-      border-left-color:var(--amber);
-      color:var(--amber);
-    }
-    
-    @media(max-width:1200px){
-      .main-grid{grid-template-columns:1fr;}
-      .right-panel{max-height:none;}
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Clinical Pharmacist AI · Mohammed Al-Ishaq</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#f0f4f9;--surface:#ffffff;--surf2:#f8fafd;--surf3:#eef3fa;--border:#dde5f2;--border2:#c8d6ee;--ink:#0e1f38;--ink2:#2d4166;--ink3:#5a6f90;--ink4:#8fa3bf;--teal:#00877c;--teal2:#00a396;--teal-lt:#dff5f3;--teal-dim:rgba(0,135,124,0.12);--amber:#b96800;--amber-lt:#fff8ec;--red:#b91c2b;--red-lt:#fff1f2;--green:#166534;--green-lt:#f0fdf4;--blue:#1d4ed8;--blue-lt:#eff6ff;--mono:'Fira Code',monospace;--syne:'Syne',sans-serif;--body:'Nunito',sans-serif;--rad-sm:10px;--rad-md:16px;--rad-lg:22px;--sh-sm:0 2px 10px rgba(14,31,56,0.07)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
+.topbar{height:54px;background:var(--ink);display:flex;align-items:center;padding:0 22px;gap:14px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07)}
+.top-logo{width:32px;height:32px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.top-name{font-family:var(--syne);font-size:1.05rem;font-weight:700;color:#fff;letter-spacing:-0.01em}
+.top-sub{font-size:0.72rem;color:rgba(255,255,255,0.38);margin-left:2px}
+.top-spacer{flex:1}
+.top-chip{background:rgba(0,135,124,0.22);color:#5ee8df;border:1px solid rgba(0,135,124,0.35);padding:3px 12px;border-radius:40px;font-size:0.7rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.workspace{flex:1;display:grid;grid-template-columns:340px 1fr;overflow:hidden}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sb-block{padding:18px 16px;border-bottom:1px solid var(--border)}
+.sb-block:last-child{border-bottom:none;flex:1}
+.sb-label{font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+textarea{width:100%;height:200px;font-family:var(--mono);font-size:0.75rem;line-height:1.8;background:var(--surf2);border:1.5px solid var(--border);border-radius:var(--rad-sm);padding:11px 13px;resize:vertical;outline:none;color:var(--ink);transition:border-color .18s,box-shadow .18s}
+textarea:focus{border-color:var(--teal);background:var(--surface);box-shadow:0 0 0 3px var(--teal-dim)}
+textarea::placeholder{color:var(--ink4);opacity:.7}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:40px;font-family:var(--body);font-weight:600;cursor:pointer;transition:all .17s;white-space:nowrap;line-height:1}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.btn-run{width:100%;background:var(--teal);color:#fff;padding:12px 20px;font-size:0.88rem;margin-top:9px;box-shadow:0 4px 16px rgba(0,135,124,0.3)}
+.btn-run:hover{background:#006b62;box-shadow:0 6px 22px rgba(0,135,124,0.38);transform:translateY(-1px)}
+.btn-clear{width:100%;background:transparent;color:var(--ink3);border:1.5px solid var(--border);padding:9px 16px;font-size:0.8rem;margin-top:5px;border-radius:var(--rad-sm)}
+.btn-clear:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-lt)}
+.btn-sample{width:100%;background:var(--surf2);border:1.5px solid var(--border);color:var(--ink3);padding:8px 13px;font-size:0.78rem;text-align:left;border-radius:var(--rad-sm);margin-top:5px;font-weight:500;justify-content:flex-start}
+.btn-sample:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-lt)}
+.pipe-list{display:flex;flex-direction:column;gap:5px}
+.pipe-step{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--rad-sm);border:1.5px solid var(--border);background:var(--surf2);transition:all .2s}
+.pipe-step.running{background:var(--teal-lt);border-color:var(--teal2)}
+.pipe-step.done{background:var(--green-lt);border-color:#86efac}
+.pipe-step.error{background:var(--red-lt);border-color:#fca5a5}
+.pipe-num{width:24px;height:24px;border-radius:7px;background:var(--surf3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--ink3);flex-shrink:0;transition:all .2s}
+.pipe-step.running .pipe-num{background:var(--teal);color:#fff}
+.pipe-step.done .pipe-num{background:var(--green);color:#fff}
+.pipe-step.error .pipe-num{background:var(--red);color:#fff}
+.pipe-name{flex:1;font-size:0.78rem;font-weight:500;color:var(--ink2);transition:color .2s}
+.pipe-step.running .pipe-name{color:var(--teal);font-weight:600}
+.pipe-step.done .pipe-name{color:var(--green)}
+.pipe-step.error .pipe-name{color:var(--red)}
+.pipe-icon{font-size:0.9rem;opacity:.45;transition:opacity .2s}
+.pipe-step.running .pipe-icon,.pipe-step.done .pipe-icon,.pipe-step.error .pipe-icon{opacity:1}
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.tabbar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;padding:0 20px;gap:2px;overflow-x:auto;flex-shrink:0}
+.tabbar::-webkit-scrollbar{height:0}
+.tab{padding:14px 15px 12px;font-size:0.78rem;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px;user-select:none;font-family:var(--body)}
+.tab:hover:not(.locked){color:var(--ink)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.tab.locked{opacity:.35;cursor:not-allowed;pointer-events:none}
+.tab-ic{font-size:0.9rem}
+.output-scroll{flex:1;overflow-y:auto;padding:22px 24px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--border)}
+.sec-title{font-family:var(--syne);font-size:1.1rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:9px}
+.sec-icon{width:32px;height:32px;border-radius:9px;background:var(--teal-lt);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--teal);flex-shrink:0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-md);padding:16px 18px;margin-bottom:12px;transition:box-shadow .18s}
+.card:hover{box-shadow:var(--sh-sm)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.card-title{font-weight:700;font-size:0.85rem;color:var(--ink2);display:flex;align-items:center;gap:7px}
+.missing-banner{display:flex;align-items:flex-start;gap:10px;background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--rad-sm);padding:10px 14px;margin-bottom:14px;font-size:0.8rem}
+.missing-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.missing-tag{background:#fff;border:1px solid #fcd34d;color:var(--amber);padding:2px 9px;border-radius:40px;font-size:0.7rem;font-weight:700}
+.soap-pre{font-family:var(--mono);font-size:0.78rem;line-height:1.85;white-space:pre-wrap;background:var(--surf2);border-radius:var(--rad-sm);padding:14px;border:1px solid var(--border);color:var(--ink2)}
+.renal-card{background:var(--ink);border-radius:var(--rad-md);padding:18px 20px;margin-bottom:12px;display:grid;grid-template-columns:140px 1fr;gap:20px;align-items:center}
+.renal-left{text-align:center;border-right:1px solid rgba(255,255,255,.12);padding-right:20px}
+.renal-num{font-family:var(--syne);font-size:2.6rem;font-weight:800;color:#5ee8df;line-height:1}
+.renal-unit{font-size:0.72rem;color:rgba(255,255,255,.4);margin-top:3px}
+.renal-grade{font-size:0.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;padding:2px 9px;border-radius:40px;display:inline-block}
+.renal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.renal-item label{display:block;font-size:0.6rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35);margin-bottom:1px}
+.renal-item span{font-family:var(--mono);font-size:0.78rem;color:#fff;font-weight:500}
+.renal-missing{grid-column:1/-1;background:rgba(185,104,0,.2);border:1px solid rgba(185,104,0,.4);border-radius:7px;padding:5px 10px;font-size:0.72rem;color:#fde68a}
+.prose{font-size:0.83rem;line-height:1.85;white-space:pre-wrap;color:var(--ink2)}
+.final-wrap{background:var(--surface);border:1.5px solid var(--teal2);border-radius:var(--rad-lg);padding:22px;position:relative}
+.final-badge{position:absolute;top:-11px;left:18px;background:var(--teal);color:#fff;font-size:0.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 11px;border-radius:40px}
+.final-text{font-family:var(--mono);font-size:0.79rem;line-height:1.9;white-space:pre-wrap;color:var(--ink)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:65vh;gap:12px;text-align:center}
+.empty-icon{width:68px;height:68px;border-radius:20px;background:var(--teal-lt);display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:6px}
+.empty h2{font-family:var(--syne);font-size:1.3rem;color:var(--ink2)}
+.empty p{color:var(--ink3);font-size:0.82rem;max-width:300px;line-height:1.6}
+.err-box{display:none;background:var(--red-lt);border:1px solid #fca5a5;border-radius:var(--rad-sm);padding:12px 16px;margin-bottom:14px;color:var(--red);font-size:0.82rem}
+.btn-copy{background:var(--surf2);border:1px solid var(--border);color:var(--ink3);padding:5px 12px;font-size:0.7rem;border-radius:6px;font-family:var(--mono);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-copy:hover{border-color:var(--teal);color:var(--teal)}
+.btn-copy.ok{background:var(--green-lt);border-color:#86efac;color:var(--green)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .25s ease forwards}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-icon{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@media(max-width:860px){.workspace{grid-template-columns:1fr}.sidebar{max-height:55vh}body{overflow:auto}}
+</style>
 </head>
 <body>
-<div class="container">
-  <!-- HEADER -->
-  <header class="header">
-    <div class="logo-area">
-      <div class="medical-icon">⚕️</div>
-      <div class="title-block">
-        <h1>Clinical Pharmacist AI Platform</h1>
-        <div class="creator">
-          <span>Created by</span>
-          <strong>Mohammed Al-Ishaq</strong>
-          <span>· Clinical Pharmacist</span>
-        </div>
-      </div>
-    </div>
-    <div class="badge">
-      <i>⚡</i> Staged Clinical Workflow v3.0
-    </div>
-  </header>
-
-  <!-- MAIN GRID -->
-  <div class="main-grid">
-    <!-- LEFT PANEL: INPUT + STAGES -->
-    <div class="left-panel">
-      <div class="input-section">
-        <h3><i>📋</i> Clinical Case Input</h3>
-        <textarea id="caseInput" placeholder="Paste patient history, vitals, labs, medications, imaging, notes…"></textarea>
-        <div class="action-bar">
-          <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">
-            <span id="btnContent">🔍 Analyze Case</span>
-          </button>
-          <button class="btn-secondary" onclick="clearAll()">Clear</button>
-        </div>
-        <button class="btn-sample" onclick="loadSample1()">
-          📋 Sample 1: Cardiac Tamponade (Complex)
-        </button>
-        <button class="btn-sample" onclick="loadSample2()">
-          📋 Sample 2: ACS with Renal Impairment
-        </button>
-      </div>
-
-      <!-- STAGE STEPPER -->
-      <div class="stage-stepper">
-        <div class="stepper-title">
-          <span>🔬</span> Clinical Workflow Stages
-        </div>
-        <div class="stage-list" id="stageList">
-          <div class="stage-item" data-stage="1" onclick="setStage(1)">
-            <div class="stage-number">1</div>
-            <div class="stage-info">
-              <div class="stage-name">Case Organizer</div>
-              <div class="stage-desc">Structured SOAP + renal</div>
-            </div>
-            <div class="stage-status" id="stage1Status">Pending</div>
-          </div>
-          <div class="stage-item" data-stage="2" onclick="setStage(2)">
-            <div class="stage-number">2</div>
-            <div class="stage-info">
-              <div class="stage-name">Coverage Check</div>
-              <div class="stage-desc">Problem-to-treatment gaps</div>
-            </div>
-            <div class="stage-status" id="stage2Status">Pending</div>
-          </div>
-          <div class="stage-item" data-stage="3" onclick="setStage(3)">
-            <div class="stage-number">3</div>
-            <div class="stage-info">
-              <div class="stage-name">Med Verification</div>
-              <div class="stage-desc">Per-medication checks</div>
-            </div>
-            <div class="stage-status" id="stage3Status">Pending</div>
-          </div>
-          <div class="stage-item" data-stage="4" onclick="setStage(4)">
-            <div class="stage-number">4</div>
-            <div class="stage-info">
-              <div class="stage-name">Drug Monographs</div>
-              <div class="stage-desc">Protocol-locked cards</div>
-            </div>
-            <div class="stage-status" id="stage4Status">Pending</div>
-          </div>
-          <div class="stage-item" data-stage="5" onclick="setStage(5)">
-            <div class="stage-number">5</div>
-            <div class="stage-info">
-              <div class="stage-name">Complete Note</div>
-              <div class="stage-desc">Full pharmacist SOAP</div>
-            </div>
-            <div class="stage-status" id="stage5Status">Pending</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STATUS BAR -->
-      <div class="status-bar">
-        <div class="spinner" id="spinner"></div>
-        <span id="statusText">Ready</span>
-        <div class="pipeline-dots">
-          <div class="pdot" id="pd-extract" title="Extract"></div>
-          <div class="pdot" id="pd-crcl" title="CrCl"></div>
-          <div class="pdot" id="pd-t1" title="T1 SOAP"></div>
-          <div class="pdot" id="pd-analysis" title="Analysis"></div>
-          <div class="pdot" id="pd-pharma" title="Pharma"></div>
-          <div class="pdot" id="pd-interventions" title="Interventions"></div>
-          <div class="pdot" id="pd-t2" title="T2 SOAP"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT PANEL: OUTPUT -->
-    <div class="right-panel" id="rightPanel">
-      <div class="error-box" id="errorBox" style="display:none; background:#fee2e2; border:1px solid #fecaca; border-radius:16px; padding:16px; margin-bottom:20px; color:#991b1b;"></div>
-      
-      <!-- DYNAMIC CONTENT -->
-      <div id="outputContent">
-        <div class="empty-state">
-          <i>⚕️</i>
-          <h3>Ready to Analyze</h3>
-          <p class="text-small">Enter a clinical case and select a stage to begin</p>
-        </div>
-      </div>
-    </div>
+<header class="topbar">
+  <div class="top-logo">⚕</div>
+  <div>
+    <div class="top-name">PharmAI Platform</div>
+    <div class="top-sub">Clinical Pharmacist · Mohammed Al-Ishaq</div>
   </div>
+  <div class="top-spacer"></div>
+  <div class="top-chip">v3.0 · AI-Powered</div>
+</header>
 
-  <!-- FOOTER -->
-  <div style="text-align:center; padding:16px; color:var(--text3); font-size:0.8rem; border-top:1px solid var(--border);">
-    © 2026 Clinical Pharmacist Mohammed Al-Ishaq · All rights reserved · Protocol-Locked Vector Database
+<div class="workspace">
+  <aside class="sidebar">
+    <div class="sb-block">
+      <div class="sb-label"><div class="sb-dot"></div>Clinical Case Input</div>
+      <textarea id="caseInput" placeholder="Paste case — any format.&#10;Narrative, labs, vitals, meds…&#10;&#10;Ctrl+Enter to run"></textarea>
+      <button class="btn btn-run" id="runBtn" onclick="runAnalysis()">
+        <span id="runContent">🔍&nbsp; Analyze Case</span>
+      </button>
+      <button class="btn btn-clear" onclick="clearAll()">Clear</button>
+    </div>
+    <div class="sb-block">
+      <div class="sb-label"><div class="sb-dot"></div>Sample Cases</div>
+      <button class="btn btn-sample" onclick="loadSample(1)">① Cardiac Tamponade (Complex)</button>
+      <button class="btn btn-sample" onclick="loadSample(2)">② ACS + Renal Impairment</button>
+    </div>
+    <div class="sb-block">
+      <div class="sb-label"><div class="sb-dot"></div>Analysis Pipeline</div>
+      <div class="pipe-list">
+        <div class="pipe-step" id="ps-extract"><div class="pipe-num">A</div><span class="pipe-name">Data Extraction</span><span class="pipe-icon">📥</span></div>
+        <div class="pipe-step" id="ps-crcl"><div class="pipe-num">B</div><span class="pipe-name">CrCl Calculation</span><span class="pipe-icon">🧮</span></div>
+        <div class="pipe-step" id="ps-soap"><div class="pipe-num">C1</div><span class="pipe-name">Case Organizer</span><span class="pipe-icon">📋</span></div>
+        <div class="pipe-step" id="ps-cov"><div class="pipe-num">C2</div><span class="pipe-name">Coverage Check</span><span class="pipe-icon">🎯</span></div>
+        <div class="pipe-step" id="ps-home"><div class="pipe-num">C3</div><span class="pipe-name">Home Meds Review</span><span class="pipe-icon">🏠</span></div>
+        <div class="pipe-step" id="ps-prophy"><div class="pipe-num">C4</div><span class="pipe-name">DVT / SUP Prophylaxis</span><span class="pipe-icon">🛡</span></div>
+        <div class="pipe-step" id="ps-meds"><div class="pipe-num">C5</div><span class="pipe-name">Medication Verification</span><span class="pipe-icon">💊</span></div>
+        <div class="pipe-step" id="ps-note"><div class="pipe-num">C6</div><span class="pipe-name">Final Note</span><span class="pipe-icon">📝</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="tabbar">
+      <div class="tab active locked" data-tab="soap"     onclick="switchTab('soap')"><span class="tab-ic">📋</span> SOAP</div>
+      <div class="tab locked"        data-tab="coverage" onclick="switchTab('coverage')"><span class="tab-ic">🎯</span> Coverage</div>
+      <div class="tab locked"        data-tab="home"     onclick="switchTab('home')"><span class="tab-ic">🏠</span> Home Meds</div>
+      <div class="tab locked"        data-tab="prophy"   onclick="switchTab('prophy')"><span class="tab-ic">🛡</span> Prophylaxis</div>
+      <div class="tab locked"        data-tab="meds"     onclick="switchTab('meds')"><span class="tab-ic">💊</span> Medications</div>
+      <div class="tab locked"        data-tab="note"     onclick="switchTab('note')"><span class="tab-ic">📝</span> Final Note</div>
+    </div>
+    <div class="output-scroll" id="outputScroll">
+      <div class="err-box" id="errBox"></div>
+      <div class="empty" id="emptyState">
+        <div class="empty-icon">⚕</div>
+        <h2>Ready to Analyze</h2>
+        <p>Paste a clinical case and press Analyze to start the full pharmacotherapy review pipeline.</p>
+      </div>
+      <div id="panel-soap"     style="display:none"></div>
+      <div id="panel-coverage" style="display:none"></div>
+      <div id="panel-home"     style="display:none"></div>
+      <div id="panel-prophy"   style="display:none"></div>
+      <div id="panel-meds"     style="display:none"></div>
+      <div id="panel-note"     style="display:none"></div>
+    </div>
   </div>
 </div>
 
 <script>
-// ===== CONFIGURATION =====
-const API_ENDPOINT = "/api/ask";
-let currentStage = 5;
-let currentData = null;
-let isProcessing = false;
+'use strict';
+const API='/api/ask';
+const PIPE_IDS=['extract','crcl','soap','cov','home','prophy','meds','note'];
+let _data=null,_busy=false,_pipeTimer=null;
 
-// ===== PIPELINE DOTS =====
-const PIPES = ["extract","crcl","t1","analysis","pharma","interventions","t2"];
-function dot(id, s) { 
-  const el = document.getElementById("pd-"+id); 
-  if(el) el.className = "pdot " + (s||""); 
+function setPipe(id,s){const e=document.getElementById('ps-'+id);if(e)e.className='pipe-step '+(s||'')}
+function resetPipe(){PIPE_IDS.forEach(id=>setPipe(id,''))}
+function donePipe(){PIPE_IDS.forEach(id=>setPipe(id,'done'))}
+function errPipe(){PIPE_IDS.forEach(id=>setPipe(id,'error'))}
+function startPipeAnim(){
+  resetPipe();let i=0;
+  _pipeTimer=setInterval(()=>{
+    if(i<PIPE_IDS.length){if(i>0)setPipe(PIPE_IDS[i-1],'running');setPipe(PIPE_IDS[i],'running');i++}
+    else clearInterval(_pipeTimer);
+  },750);
 }
-function allDone()  { PIPES.forEach(id => dot(id,"done")); }
-function allReset() { PIPES.forEach(id => dot(id,"")); }
+function stopPipeAnim(ok){clearInterval(_pipeTimer);ok?donePipe():errPipe()}
 
-// ===== STAGE MANAGEMENT =====
-function setStage(stage) {
-  if(isProcessing) return;
-  currentStage = stage;
-  
-  // Update UI
-  document.querySelectorAll('.stage-item').forEach(el => {
-    el.classList.remove('active');
-    if(el.dataset.stage == stage) el.classList.add('active');
-  });
-  
-  // If we have data, re-render for new stage
-  if(currentData) {
-    renderStageOutput(currentStage, currentData);
-  } else {
-    showEmptyState();
-  }
+function switchTab(name){
+  const tab=document.querySelector('.tab[data-tab="'+name+'"]');
+  if(!tab||tab.classList.contains('locked'))return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+  const panel=document.getElementById('panel-'+name);
+  if(panel){panel.style.display='block';panel.classList.remove('fade-up');void panel.offsetWidth;panel.classList.add('fade-up')}
+  document.getElementById('outputScroll').scrollTop=0;
 }
+function unlockTabs(){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('locked'))}
+function lockTabs(){document.querySelectorAll('.tab').forEach(t=>t.classList.add('locked'))}
 
-function updateStageStatus(stage, status) {
-  const el = document.getElementById(`stage${stage}Status`);
-  if(el) {
-    el.textContent = status;
-    const stageItem = document.querySelector(`.stage-item[data-stage="${stage}"]`);
-    if(stageItem) {
-      stageItem.classList.remove('completed', 'active');
-      if(status === 'Complete') {
-        stageItem.classList.add('completed');
-      }
-    }
-  }
-}
-
-// ===== MAIN ANALYSIS =====
-async function runAnalysis() {
-  const caseText = document.getElementById("caseInput").value.trim();
-  if (!caseText) { 
-    alert("Please enter a clinical case."); 
-    return; 
-  }
-
-  const btn = document.getElementById("analyzeBtn");
-  btn.disabled = true;
-  document.getElementById("btnContent").innerHTML = '<span class="spinner" style="display:inline-block;"></span> Processing…';
-  hideError(); 
-  allReset();
-  setStatus("Running pipeline…", true);
-  
-  // Reset stage statuses
-  for(let i=1; i<=5; i++) updateStageStatus(i, 'Pending');
-  
-  // Animate dots
-  let di = 0;
-  const dt = setInterval(() => {
-    if (di > 0) dot(PIPES[di-1], "done");
-    if (di < PIPES.length) { 
-      dot(PIPES[di], "active"); 
-      di++; 
-    } else clearInterval(dt);
-  }, 800);
-
-  try {
-    const res = await fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        case_text: caseText,
-        stage: currentStage
-      })
-    });
-    
-    clearInterval(dt);
-    if (!res.ok) throw new Error(`Server error ${res.status}`);
-    
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || "Unknown error");
-    
-    currentData = data;
-    allDone();
-    setStatus("✓ Complete", false);
-    
-    // Update stage statuses based on data
-    if(data.stage >= 1) updateStageStatus(1, 'Complete');
-    if(data.stage >= 2) updateStageStatus(2, 'Complete');
-    if(data.stage >= 3) updateStageStatus(3, 'Complete');
-    if(data.stage >= 4) updateStageStatus(4, 'Complete');
-    if(data.stage >= 5) updateStageStatus(5, 'Complete');
-    
-    // Render for current stage
-    renderStageOutput(currentStage, data);
-    
-  } catch(err) {
-    clearInterval(dt);
-    PIPES.forEach(id => dot(id,"error"));
-    setStatus("Error", false);
-    showError(err.message);
-  } finally {
-    btn.disabled = false;
-    document.getElementById("btnContent").textContent = "🔍 Analyze Case";
-    isProcessing = false;
+async function runAnalysis(){
+  const txt=document.getElementById('caseInput').value.trim();
+  if(!txt){showErr('Please enter a clinical case.');return}
+  if(_busy)return;
+  _busy=true;
+  const btn=document.getElementById('runBtn'),rc=document.getElementById('runContent');
+  btn.disabled=true;
+  rc.innerHTML='<span class="spin-icon"></span>&nbsp;Analyzing\u2026';
+  hideErr();lockTabs();
+  document.getElementById('emptyState').style.display='none';
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+  startPipeAnim();
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({case_text:txt})});
+    if(!res.ok)throw new Error('Server error '+res.status);
+    const data=await res.json();
+    if(!data.ok)throw new Error(data.error||'Unknown error');
+    _data=data;
+    stopPipeAnim(true);
+    buildPanels(data);
+    unlockTabs();
+    switchTab('soap');
+  }catch(err){
+    stopPipeAnim(false);
+    showErr(err.message);
+    document.getElementById('emptyState').style.display='flex';
+  }finally{
+    _busy=false;btn.disabled=false;rc.textContent='\uD83D\uDD0D\u00A0 Analyze Case';
   }
 }
 
-// ===== RENDER STAGE OUTPUT =====
-function renderStageOutput(stage, data) {
-  let html = '';
-  
-  // Add unit conversion note if SCr is in mg/dL (help users understand)
-  if(data.missing_data && data.missing_data.includes('SCr') && document.getElementById("caseInput").value.includes('mg/dL')) {
-    html += `
-      <div class="unit-note">
-        <i>💡</i>
-        <div>
-          <strong>Unit Conversion Note:</strong> The backend expects SCr in µmol/L. 
-          If you entered mg/dL, it will be marked as missing. Consider converting: 
-          mg/dL × 88.4 = µmol/L (e.g., 1.1 mg/dL = 97.2 µmol/L)
-        </div>
-      </div>
-    `;
-  }
-  
-  // Missing data alert (always show if present)
-  if(data.missing_data && data.missing_data.length > 0) {
-    html += `<div class="missing-data">
-      <span style="font-weight:600;">⚠ Missing Critical Data:</span>
-      ${data.missing_data.map(m => `<span class="missing-tag">${m}</span>`).join('')}
-      <span style="margin-left:auto; font-size:0.75rem;">Some assessments limited</span>
-    </div>`;
-  }
-  
-  switch(stage) {
-    case 1:
-      html += renderStage1(data);
-      break;
-    case 2:
-      html += renderStage2(data);
-      break;
-    case 3:
-      html += renderStage3(data);
-      break;
-    case 4:
-      html += renderStage4(data);
-      break;
-    case 5:
-      html += renderStage5(data);
-      break;
-  }
-  
-  document.getElementById('outputContent').innerHTML = html;
+function buildPanels(d){
+  set('panel-soap',     buildSOAP(d));
+  set('panel-coverage', buildCoverage(d));
+  set('panel-home',     buildHome(d));
+  set('panel-prophy',   buildProphy(d));
+  set('panel-meds',     buildMeds(d));
+  set('panel-note',     buildNote(d));
 }
+function set(id,html){const e=document.getElementById(id);if(e)e.innerHTML=html}
 
-// ===== STAGE 1: Case Organizer =====
-function renderStage1(data) {
-  return `
-    <div class="output-section">
-      <div class="section-title">
-        <i>📋</i> Stage 1: Case Organizer
-        <button class="copy-btn" onclick="copyOutput()">Copy All</button>
-      </div>
-      
-      <!-- Template-1 SOAP -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Template-1 SOAP</span>
-        </div>
-        <div style="white-space:pre-wrap; font-family:var(--mono); font-size:0.85rem;">${escapeHtml(data.template1_soap || 'No data')}</div>
-      </div>
-      
-      <!-- Renal Function -->
-      ${renderRenalCard(data.renal)}
-      
-      <!-- Extracted Data (Collapsible) -->
-      <details style="margin-top:16px;">
-        <summary style="cursor:pointer; color:var(--blue); font-weight:600;">📊 View Extracted Data</summary>
-        <pre style="background:var(--surface2); padding:16px; border-radius:12px; margin-top:12px; font-size:0.8rem; overflow-x:auto;">${escapeHtml(JSON.stringify(data.extracted_data || {}, null, 2))}</pre>
-      </details>
+function x(s){
+  if(s==null)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function missingBanner(m){
+  if(!m||!m.length)return'';
+  return`<div class="missing-banner"><span>⚠️</span><div><strong>Missing critical data — assessments limited:</strong><div class="missing-tags">${m.map(v=>`<span class="missing-tag">${x(v)}</span>`).join('')}</div></div></div>`;
+}
+function copyBtn(id){return`<button class="btn-copy" onclick="doCopy('${id}',this)">Copy</button>`}
+function doCopy(id,btn){
+  const e=document.getElementById(id);if(!e)return;
+  navigator.clipboard.writeText(e.innerText||'').then(()=>{btn.textContent='✓ Copied';btn.classList.add('ok');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('ok')},2000)}).catch(()=>{});
+}
+function renalCard(r){
+  if(!r)return'';
+  const lvls=[[90,'Normal (G1)','#34d399'],[60,'Mild Decrease (G2)','#a3e635'],[30,'Moderate Decrease (G3)','#fbbf24'],[15,'Severe Decrease (G4)','#f87171'],[0,'Kidney Failure (G5)','#ef4444']];
+  let grade=null;
+  if(r.crcl!=null)for(const[t,lbl,col]of lvls){if(r.crcl>=t){grade={lbl,col};break}}
+  return`<div class="renal-card">
+    <div class="renal-left">
+      <div class="renal-num">${r.crcl!=null?r.crcl:'—'}</div>
+      <div class="renal-unit">mL / min</div>
+      ${grade?`<div class="renal-grade" style="background:${grade.col}22;color:${grade.col}">${grade.lbl}</div>`:''}
     </div>
-  `;
-}
-
-// ===== STAGE 2: Coverage Check =====
-function renderStage2(data) {
-  let html = `
-    <div class="output-section">
-      <div class="section-title">
-        <i>🎯</i> Stage 2: Problem-to-Treatment Coverage
-        <button class="copy-btn" onclick="copyOutput()">Copy All</button>
-      </div>
-  `;
-  
-  // Problem List
-  if(data.problem_list && data.problem_list.length) {
-    html += `<h4 style="margin:0 0 12px 0;">Identified Problems</h4>`;
-    html += `
-      <div class="card-grid">
-        ${data.problem_list.map(p => `
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">${escapeHtml(p.name)}</span>
-            </div>
-            <div class="text-small">${escapeHtml(p.context || '')}</div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-  
-  // Coverage Check
-  if(data.coverage_check && data.coverage_check.problems) {
-    html += `<h4 style="margin:20px 0 12px;">Coverage Status</h4>`;
-    data.coverage_check.problems.forEach(p => {
-      const statusClass = p.status === 'MATCHED' ? 'match' : (p.status === 'PARTIAL' ? 'partial' : 'missing');
-      html += `
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-header">
-            <span class="card-title">${escapeHtml(p.name)}</span>
-            <span class="card-badge ${statusClass}">${p.status}</span>
-          </div>
-          <div class="text-small mb-2"><strong>Recommended:</strong> ${escapeHtml(p.recommended_therapy || '')}</div>
-          <div class="text-small mb-2"><strong>Current:</strong> ${escapeHtml(p.current_coverage || '')}</div>
-          ${p.gaps && p.gaps.length ? `
-            <div style="margin-top:12px;">
-              <strong>Gaps:</strong>
-              <ul style="margin-top:6px; padding-left:20px;">
-                ${p.gaps.map(g => `<li style="color:var(--red);">${escapeHtml(g)}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          <div class="evidence-text mt-4">
-            <strong>Evidence:</strong> ${escapeHtml(p.evidence || 'Not found')}
-          </div>
-        </div>
-      `;
-    });
-  }
-  
-  // Gaps Summary
-  if(data.gaps && data.gaps.length) {
-    html += `
-      <div class="gaps-container">
-        <strong style="display:block; margin-bottom:10px;">⚠ Treatment Gaps Summary</strong>
-        ${data.gaps.map(g => `
-          <div class="gap-item">
-            <span>•</span> ${escapeHtml(g)}
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-  
-  html += `</div>`;
-  return html;
-}
-
-// ===== STAGE 3: Medication Verification =====
-function renderStage3(data) {
-  let html = `
-    <div class="output-section">
-      <div class="section-title">
-        <i>💊</i> Stage 3: Medication Verification
-        <button class="copy-btn" onclick="copyOutput()">Copy All</button>
-      </div>
-  `;
-  
-  if(data.med_checks && data.med_checks.medications) {
-    data.med_checks.medications.forEach(med => {
-      const hasIssues = med.issues && med.issues.length > 0;
-      html += `
-        <div class="card" style="margin-bottom:16px; ${hasIssues ? 'border-left-color:var(--red); border-left-width:4px;' : ''}">
-          <div class="card-header">
-            <span class="card-title">${escapeHtml(med.name)}</span>
-            ${hasIssues ? '<span class="card-badge missing">⚠ Issues Found</span>' : ''}
-          </div>
-          
-          <div class="check-grid">
-            ${Object.entries(med.checks || {}).map(([key, check]) => `
-              <div class="check-item">
-                <div class="check-label">${key.replace(/_/g,' ')}</div>
-                <div class="check-value ${(check.status || '').toLowerCase()}">
-                  ${check.status === 'OK' ? '✅' : (check.status === 'ISSUE' ? '⚠️' : '❓')}
-                  ${escapeHtml(check.note || '')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          
-          ${med.issues && med.issues.length ? `
-            <div style="margin-top:12px; padding:10px; background:#fee2e2; border-radius:10px;">
-              <strong style="color:var(--red);">Issues:</strong>
-              <ul style="margin-top:6px; padding-left:20px; color:var(--red);">
-                ${med.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          
-          ${med.missing_data_needed && med.missing_data_needed.length ? `
-            <div class="missing-data" style="margin-top:12px; padding:8px;">
-              <span>📋 Missing for full assessment: ${med.missing_data_needed.join(', ')}</span>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
-  } else {
-    html += `<div class="card">No medication verification data available</div>`;
-  }
-  
-  html += `</div>`;
-  return html;
-}
-
-// ===== STAGE 4: Drug Monographs =====
-function renderStage4(data) {
-  let html = `
-    <div class="output-section">
-      <div class="section-title">
-        <i>📚</i> Stage 4: Drug Monograph Cards
-        <button class="copy-btn" onclick="copyOutput()">Copy All</button>
-      </div>
-  `;
-  
-  if(data.drug_cards && data.drug_cards.drug_cards && data.drug_cards.drug_cards.length) {
-    data.drug_cards.drug_cards.forEach(card => {
-      const hasInsufficientData = card.indication === "Unable to determine" || card.indication === "Unable to determine indication";
-      html += `
-        <div class="card drug-card" style="margin-bottom:16px; ${hasInsufficientData ? 'border-left-color:var(--amber);' : ''}">
-          <div class="card-header">
-            <span class="card-title">${escapeHtml(card.name)}</span>
-            ${hasInsufficientData ? '<span class="card-badge missing">⚠ Limited Data</span>' : ''}
-          </div>
-          
-          <div class="text-small mb-2"><strong>Indication:</strong> ${escapeHtml(card.indication || 'Unable to determine')}</div>
-          <div class="text-small mb-2"><strong>Dose Range:</strong> ${escapeHtml(card.dose_range || 'Unable to determine')}</div>
-          
-          ${card.monitoring ? `
-            <div style="margin:12px 0;">
-              <strong>Monitoring:</strong>
-              <ul style="margin-top:6px; padding-left:20px;">
-                ${(card.monitoring.parameters || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}
-              </ul>
-              <div class="text-small"><strong>Frequency:</strong> ${escapeHtml(card.monitoring.frequency || 'Unknown')}</div>
-              <div class="text-small"><strong>Targets:</strong> ${escapeHtml(card.monitoring.targets || 'Unknown')}</div>
-            </div>
-          ` : ''}
-          
-          ${card.contraindications && card.contraindications.length ? `
-            <div style="margin:8px 0;">
-              <strong>Contraindications:</strong>
-              <ul style="padding-left:20px; color:var(--red);">
-                ${card.contraindications.map(c => `<li>${escapeHtml(c)}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          
-          ${card.warnings && card.warnings.length ? `
-            <div style="margin:8px 0;">
-              <strong>Warnings:</strong>
-              <ul style="padding-left:20px; color:var(--amber);">
-                ${card.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          
-          ${card.pearls && card.pearls.length ? `
-            <div style="margin:8px 0;">
-              <strong>Management Pearls:</strong>
-              <ul style="padding-left:20px;">
-                ${card.pearls.map(p => `<li>${escapeHtml(p)}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          
-          <div class="drug-evidence">
-            <strong>Evidence:</strong> ${escapeHtml(card.evidence?.source || 'Not found')}
-            ${card.evidence?.year ? ` (${card.evidence.year})` : ''}
-            ${card.evidence?.section ? ` · ${card.evidence.section}` : ''}
-          </div>
-        </div>
-      `;
-    });
-  } else {
-    html += `<div class="card">No drug monograph data available</div>`;
-  }
-  
-  html += `</div>`;
-  return html;
-}
-
-// ===== STAGE 5: Complete Note (Backward Compatible) =====
-function renderStage5(data) {
-  return `
-    <div class="output-section">
-      <div class="section-title">
-        <i>📋</i> Complete Pharmacist Note
-        <button class="copy-btn" onclick="copyOutput()">Copy All</button>
-      </div>
-      
-      <!-- Template-1 -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Template-1 SOAP</span>
-        </div>
-        <div style="white-space:pre-wrap; font-family:var(--mono); font-size:0.85rem;">${escapeHtml(data.template1_soap || '')}</div>
-      </div>
-      
-      <!-- Renal -->
-      ${renderRenalCard(data.renal)}
-      
-      <!-- Clinical Analysis -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Clinical Analysis</span>
-        </div>
-        <div style="white-space:pre-wrap;">${escapeHtml(data.clinical_analysis || '')}</div>
-      </div>
-      
-      <!-- Pharma Review -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Pharmacotherapy Review</span>
-        </div>
-        <div style="white-space:pre-wrap;">${escapeHtml(data.pharmacotherapy_review || '')}</div>
-      </div>
-      
-      <!-- Interventions -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Interventions</span>
-        </div>
-        <div style="white-space:pre-wrap;">${escapeHtml(data.interventions || '')}</div>
-      </div>
-      
-      <!-- Template-2 -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Pharmacist SOAP Note</span>
-        </div>
-        <div style="white-space:pre-wrap; font-family:var(--mono);">${escapeHtml(data.template2_soap || '')}</div>
-      </div>
-      
-      <!-- Additional stage data if available -->
-      ${data.problem_list ? `
-        <details style="margin-top:16px;">
-          <summary style="cursor:pointer; color:var(--blue); font-weight:600;">📊 View Stage 2-4 Data</summary>
-          <div style="margin-top:12px;">
-            <h4>Problem List</h4>
-            <pre style="background:var(--surface2); padding:12px; border-radius:8px;">${escapeHtml(JSON.stringify(data.problem_list, null, 2))}</pre>
-            
-            ${data.med_checks ? `
-              <h4 style="margin-top:16px;">Medication Checks</h4>
-              <pre style="background:var(--surface2); padding:12px; border-radius:8px;">${escapeHtml(JSON.stringify(data.med_checks, null, 2))}</pre>
-            ` : ''}
-          </div>
-        </details>
-      ` : ''}
+    <div class="renal-grid">
+      <div class="renal-item"><label>SCr</label><span>${r.scr_umol!=null?r.scr_umol+' µmol/L':'—'}</span></div>
+      <div class="renal-item"><label>SCr mg/dL</label><span>${r.scr_mgdl!=null?r.scr_mgdl:'—'}</span></div>
+      <div class="renal-item"><label>IBW</label><span>${r.ibw!=null?r.ibw+' kg':'—'}</span></div>
+      <div class="renal-item"><label>Weight used</label><span>${r.weight_used!=null?r.weight_used+' kg':'—'}</span></div>
+      <div class="renal-item" style="grid-column:1/-1"><label>Dosing rule</label><span>${x(r.weight_label)||'—'}</span></div>
+      ${r.missing&&r.missing.length?`<div class="renal-missing">⚠ Missing for calc: ${r.missing.join(', ')}</div>`:''}
     </div>
-  `;
+  </div>`;
 }
 
-// ===== RENAL CARD HELPER =====
-function renderRenalCard(r) {
-  if (!r) return '';
-  
-  const cat = r.crcl==null ? null
-    : r.crcl>=90 ? {l:"Normal (G1)",c:"#10b981"}
-    : r.crcl>=60 ? {l:"Mildly Decreased (G2)",c:"#65a30d"}
-    : r.crcl>=30 ? {l:"Moderately Decreased (G3)",c:"#f59e0b"}
-    : r.crcl>=15 ? {l:"Severely Decreased (G4)",c:"#ef4444"}
-    :              {l:"Kidney Failure (G5)",c:"#dc2626"};
-  
-  const hasMissing = r.missing && r.missing.length > 0;
-  
-  return `
-    <div class="card" style="background:linear-gradient(145deg, white, #f0f7ff); ${hasMissing ? 'border-left-color:var(--amber);' : ''}">
-      <div class="card-header">
-        <span class="card-title">Renal Function (Cockcroft-Gault)</span>
-        ${hasMissing ? '<span class="card-badge missing">Incomplete</span>' : ''}
-      </div>
-      <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-        <div>
-          <div style="font-size:2rem; font-weight:700; color:var(--navy);">${r.crcl != null ? r.crcl+' mL/min' : '—'}</div>
-          ${cat ? `<div style="color:${cat.c}; font-weight:600;">${cat.l}</div>` : ''}
-        </div>
-        <div style="flex:1; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; font-size:0.8rem;">
-          <div><span style="color:var(--text3);">SCr:</span> ${r.scr_umol || '—'} µmol/L</div>
-          <div><span style="color:var(--text3);">Weight used:</span> ${r.weight_used || '—'} kg</div>
-          <div><span style="color:var(--text3);">IBW:</span> ${r.ibw || '—'} kg</div>
-          <div><span style="color:var(--text3);">Rule:</span> ${r.weight_label || '—'}</div>
-        </div>
-      </div>
-      ${r.missing && r.missing.length ? `
-        <div style="margin-top:12px; padding:8px; background:var(--amber-lt); border-radius:8px; font-size:0.8rem;">
-          <strong>Missing:</strong> ${r.missing.join(', ')}
-        </div>
-      ` : ''}
-    </div>
-  `;
+function buildSOAP(d){return`${missingBanner(d.missing_data)}<div class="sec-head"><div class="sec-title"><div class="sec-icon">📋</div>Case Organizer — Template-1 SOAP</div>${copyBtn('soap-pre')}</div>${renalCard(d.renal)}<div class="card"><div class="card-head"><span class="card-title">SOAP Note</span></div><div class="soap-pre" id="soap-pre">${x(d.template1_soap||'No data returned.')}</div></div>`}
+
+function buildCoverage(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">🎯</div>Problem-to-Treatment Coverage</div>${copyBtn('cov-pre')}</div><div class="card"><div class="prose" id="cov-pre">${x(d.coverage||'No coverage data returned.')}</div></div>`}
+
+function buildHome(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">🏠</div>Home Medications at Admission</div>${copyBtn('home-pre')}</div><div style="font-size:0.75rem;color:var(--ink3);background:var(--teal-lt);border-radius:var(--rad-sm);padding:8px 12px;margin-bottom:12px;">Each home medication: <strong style="color:var(--teal)">CONTINUE</strong> / <strong style="color:var(--amber)">HOLD</strong> / <strong style="color:var(--blue)">SWITCH</strong></div><div class="card"><div class="prose" id="home-pre">${x(d.home_meds_review||'No home medication data returned.')}</div></div>`}
+
+function buildProphy(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">🛡</div>DVT &amp; Stress Ulcer Prophylaxis</div>${copyBtn('prophy-pre')}</div><div class="card"><div class="prose" id="prophy-pre">${x(d.prophylaxis||'No prophylaxis data returned.')}</div></div>`}
+
+function buildMeds(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">💊</div>Medication Deep Verification</div>${copyBtn('meds-pre')}</div><div style="font-size:0.72rem;color:var(--teal);background:var(--teal-lt);border-radius:var(--rad-sm);padding:7px 12px;margin-bottom:12px;">Indication · Dose · Frequency · Route · DDI · Contraindications · Drug-Lab · Monitoring</div><div class="card"><div class="prose" id="meds-pre">${x(d.med_verification||'No medication verification data returned.')}</div></div>`}
+
+function buildNote(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">📝</div>Pharmacist Consultation Note</div>${copyBtn('note-pre')}</div><p style="font-size:0.78rem;color:var(--ink3);margin-bottom:14px;">Ready to copy directly into the patient's medical record.</p><div class="final-wrap"><div class="final-badge">Pharmacist Note · Ready to Copy</div><div class="final-text" id="note-pre">${x(d.final_note||'No final note data returned.')}</div></div>`}
+
+function showErr(msg){const b=document.getElementById('errBox');b.style.display='block';b.innerHTML='<strong>⚠ Error:</strong> '+x(msg)}
+function hideErr(){const b=document.getElementById('errBox');b.style.display='none';b.innerHTML=''}
+
+function clearAll(){
+  document.getElementById('caseInput').value='';_data=null;hideErr();resetPipe();lockTabs();
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>{p.style.display='none';p.innerHTML=''});
+  document.getElementById('emptyState').style.display='flex';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="soap"]').classList.add('active');
 }
 
-// ===== UTILITIES =====
-function setStatus(msg, spin) {
-  document.getElementById("statusText").textContent = msg;
-  document.getElementById("spinner").className = "spinner" + (spin ? " on" : "");
+function loadSample(n){
+  const s={
+    1:`94-YEAR-OLD MALE BEDRIDDEN\nK/C OF: DM ON INSULIN AND OHA, HTN, CKD (Hx OF AKI AFTER CONTRAST, S/P TEMPORARY DIALYSIS), CHRONIC ANEMIA, PSYCHIATRIC ISSUE\nPREVIOUSLY ADMITTED AS ACS-NSTEMI.\n\nHOME MEDICATIONS:\nAcetylsalicylic Acid 81 MG PO OD\nClopidogrel 75 MG PO OD\nRosuvastatin 20 MG PO OD\nBisoprolol 2.5 MG PO OD\nFurosemide 40 MG PO BID\nEsomeprazole 20 MG PO OD\nNifedipine 60 MG PO OD\nEmpagliflozin 10 MG PO OD\n\nCURRENT INPATIENT MEDS:\nAcetylsalicylic Acid 81 MG PO OD\nClopidogrel 75 MG PO OD\nRosuvastatin 20 MG PO OD\nBisoprolol 2.5 MG PO OD\nFurosemide 40 MG PO BID\nEsomeprazole 20 MG PO OD\n\nPRESENTATION: Decrease level of consciousness\nVITALS: BP 125/63, HR 68, OSAT 99, Weight: 68 kg, Height: 165 cm\nLABS: WBC 17.11, HB 11.5, PLT 474, CREAT 343 umol/L, BUN 24.7, NA 123, K 4.9, INR 2.23, AST 2303\nECG: RBBB | CXR: Congestion, Cardiomegaly\nECHO: Severe pericardial effusion with cardiac tamponade`,
+    2:`65-year-old male, 75 kg, 170 cm. Admitted with ACS (NSTEMI).\n\nHOME MEDICATIONS:\n- Metformin 1000 mg PO BID\n- Amlodipine 10 mg PO OD\n- Ramipril 5 mg PO OD\n- Aspirin 81 mg PO OD\n\nCURRENT INPATIENT MEDICATIONS:\n- Ticagrelor 90 mg BID\n- Heparin infusion (started in ER)\n- Atorvastatin 80 mg OD\n\nPMH: HTN, DM type 2, CKD stage 3\nAllergies: NKDA\n\nLABS: SCr 159 umol/L, K 4.2, Na 138, Hb 13.1, WBC 11.2, PLT 220, Troponin 0.8 ng/mL, HbA1c 8.2%\nVITALS: BP 95/60 (on norepinephrine), HR 110, O2 sat 96%, Temp 37.2`
+  };
+  document.getElementById('caseInput').value=s[n]||'';
 }
 
-function hideError() { 
-  document.getElementById("errorBox").style.display = "none"; 
-}
-
-function showError(msg) { 
-  const b = document.getElementById("errorBox"); 
-  b.style.display = "block"; 
-  b.innerHTML = `<strong>Error:</strong> ${escapeHtml(msg)}`; 
-}
-
-function escapeHtml(unsafe) {
-  if(!unsafe) return '';
-  return String(unsafe)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function copyOutput() {
-  const content = document.getElementById('outputContent').innerText;
-  navigator.clipboard.writeText(content).then(() => {
-    const btn = document.querySelector('.copy-btn');
-    if(btn) {
-      btn.textContent = '✓ Copied!';
-      btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = 'Copy All';
-        btn.classList.remove('copied');
-      }, 2000);
-    }
-  });
-}
-
-function clearAll() {
-  document.getElementById("caseInput").value = '';
-  currentData = null;
-  hideError();
-  allReset();
-  setStatus("Ready", false);
-  for(let i=1; i<=5; i++) updateStageStatus(i, 'Pending');
-  document.getElementById('outputContent').innerHTML = `
-    <div class="empty-state">
-      <i>⚕️</i>
-      <h3>Ready to Analyze</h3>
-      <p class="text-small">Enter a clinical case and select a stage to begin</p>
-    </div>
-  `;
-}
-
-function loadSample1() {
-  document.getElementById("caseInput").value = `94-YEAR-OLD MALE BEDRIDDEN
-K/C OF: DM ON INSULIN AND OHA, HTN, CKD (Hx OF AKI AFTER CONTRAST, S/P TEMPORARY DIALYSIS), CHRONIC ANEMIA, PSYCHIATRIC ISSUE
-PREVIOUSLY ADMITTED AS ACS-NSTEMI.
-
-PATIENT ON:
-Acetylsalicylic Acid 81 MG PO OD
-Clopidogrel 75 MG PO OD
-Rosuvastatin 20 MG PO OD
-Bisoprolol 2.5 MG PO OD
-Furosemide 40 MG PO BID
-Esomeprazole 20 MG PO OD
-Nifedipine 60 MG PO OD
-Empagliflozin 10 MG PO OD
-
-CAME WITH DECREASE LEVEL OF CONSCIOUSNESS.
-
-VITALS: BP 125/63, HR 68, OSAT 99, Weight: 68 kg, Height: 165 cm
-
-LABS: WBC: 17.11, HB: 11.5, PLT: 474, CREAT: 343 umol/L, BUN: 24.7, NA: 123, K: 4.9, INR: 2.23, AST: 2303
-
-ECG: RBBB
-CXR: CONGESTION, CARDIOMEGALY
-BED-SIDED ECHO: SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE`;
-}
-
-function loadSample2() {
-  document.getElementById("caseInput").value = `65-year-old male, 75 kg, admitted with ACS (NSTEMI)
-
-Medications:
-- Ticagrelor 90 mg BID
-- Heparin infusion (started in ER)
-- Atorvastatin 80 mg daily
-
-Past Medical History: HTN, DM type 2, CKD stage 3
-
-Labs (on admission):
-- SCr: 1.8 mg/dL  (NOTE: Will be converted to µmol/L by backend: 159 µmol/L)
-- K+: 4.2 mEq/L
-- Hb: 13.1 g/dL
-- Troponin: Elevated
-
-Vitals:
-- BP: 95/60 on norepinephrine
-- HR: 110 bpm
-- O2 sat: 96%
-
-Allergies: NKDA`;
-}
-
-// ===== KEYBOARD SHORTCUT =====
-document.addEventListener("keydown", e => { 
-  if((e.ctrlKey||e.metaKey) && e.key==="Enter") runAnalysis(); 
-});
-
-// ===== INIT =====
-// Expose functions to window
-window.runAnalysis = runAnalysis;
-window.clearAll = clearAll;
-window.loadSample1 = loadSample1;
-window.loadSample2 = loadSample2;
-window.setStage = setStage;
-window.copyOutput = copyOutput;
-
-// Set stage 5 as default active
-document.querySelector('.stage-item[data-stage="5"]').classList.add('active');
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')runAnalysis()});
 </script>
 </body>
 </html>
