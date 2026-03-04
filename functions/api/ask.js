@@ -102,7 +102,7 @@ export async function onRequest(context) {
 }
 
 // ============================================================
-// STEP A — Extract structured data (Anthropic AI)
+// STEP A — Extract structured data (OPENAI AI)
 // ============================================================
 async function stepA_extract(caseText, env) {
   const system = `You are a clinical data extractor. Extract data from unstructured clinical text.
@@ -132,7 +132,7 @@ JSON schema (use exactly these keys):
   "missing": []
 }`;
 
-  const raw = await anthropicCall(
+  const raw = await OPENAICall(
     env,
     system,
     `Extract structured data from this clinical case:\n\n${caseText}`,
@@ -264,7 +264,7 @@ P:
 Current Medications: <list or N/A>`;
 
   const ctx = buildContext(data, renalLine);
-  return anthropicCall(env, system, `Generate Template-1 SOAP.\n\n${ctx}`, 600);
+  return OPENAICall(env, system, `Generate Template-1 SOAP.\n\n${ctx}`, 600);
 }
 
 // ============================================================
@@ -289,7 +289,7 @@ Top 3-5 concerns requiring pharmacist attention. Be specific and clinically prec
   const ctx = buildContext(data, renalResult.crcl !== null
     ? `SCr ${data.scr_umol ?? "—"} umol, CrCl ${renalResult.crcl} mL/min`
     : `SCr ${data.scr_umol ?? "—"} umol, CrCl —`);
-  return anthropicCall(env, system, `Perform clinical pharmacotherapy analysis.\n\n${ctx}`, 900);
+  return OPENAICall(env, system, `Perform clinical pharmacotherapy analysis.\n\n${ctx}`, 900);
 }
 
 // ============================================================
@@ -312,7 +312,7 @@ Use general clinical knowledge. Be concise and specific.`;
 
   const crclLine = renalResult.crcl !== null ? `CrCl: ${renalResult.crcl} mL/min` : "CrCl: — (missing data)";
   const ctx = buildContext(data, crclLine);
-  return anthropicCall(env, system,
+  return OPENAICall(env, system,
     `Review pharmacotherapy for this case.\n\n${ctx}\n\nClinical Analysis:\n${clinicalAnalysis}`, 900);
 }
 
@@ -365,7 +365,7 @@ ${pharmaReview}
 
 ${vectorContext ? `LOCAL PROTOCOL CONTENT (cite this if relevant):\n${vectorContext}` : "No local protocol files available — use international guidelines."}`;
 
-  return anthropicCall(env, system, userMsg, 900);
+  return OPENAICall(env, system, userMsg, 900);
 }
 
 // ============================================================
@@ -403,7 +403,7 @@ RULES:
 - Follow-up Plan must include specific monitoring targets and timeframes.`;
 
   const ctx = buildContext(data, renalLine);
-  return anthropicCall(env, system,
+  return OPENAICall(env, system,
     `Generate Template-2 Pharmacist SOAP Note.\n\n${ctx}\n\nInterventions:\n${interventions}`, 900);
 }
 
@@ -485,14 +485,14 @@ function extractContent(item) {
 }
 
 // ============================================================
-// HELPER: Anthropic API call (claude-sonnet-4-20250514)
+// HELPER: OPENAI API call (claude-sonnet-4-20250514)
 // ============================================================
-async function anthropicCall(env, system, userMessage, maxTokens = 800) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+async function OPENAICall(env, system, userMessage, maxTokens = 800) {
+  const res = await fetch("https://api.OPENAI.com/v1/messages", {
     method: "POST",
     headers: {
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
+      "x-api-key": env.OPENAI_API_KEY,
+      "OPENAI-version": "2023-06-01",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -505,7 +505,7 @@ async function anthropicCall(env, system, userMessage, maxTokens = 800) {
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Anthropic API error ${res.status}: ${err}`);
+    throw new Error(`OPENAI API error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
