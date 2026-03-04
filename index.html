@@ -561,6 +561,20 @@
       color:var(--amber);
     }
     
+    /* ===== UNIT CONVERSION NOTE ===== */
+    .unit-note{
+      background:var(--blue-lt);
+      border-radius:12px;
+      padding:10px 14px;
+      margin-bottom:16px;
+      font-size:0.8rem;
+      border-left:4px solid var(--blue);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .unit-note i{font-size:1.2rem;}
+    
     /* ===== ANIMATIONS ===== */
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
@@ -632,8 +646,11 @@
           </button>
           <button class="btn-secondary" onclick="clearAll()">Clear</button>
         </div>
-        <button class="btn-sample" onclick="loadSample()">
-          📋 Load Sample Case (Cardiac Tamponade)
+        <button class="btn-sample" onclick="loadSample1()">
+          📋 Sample 1: Cardiac Tamponade (Complex)
+        </button>
+        <button class="btn-sample" onclick="loadSample2()">
+          📋 Sample 2: ACS with Renal Impairment
         </button>
       </div>
 
@@ -806,7 +823,7 @@ async function runAnalysis() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         case_text: caseText,
-        stage: currentStage  // Send current stage
+        stage: currentStage
       })
     });
     
@@ -846,11 +863,26 @@ async function runAnalysis() {
 function renderStageOutput(stage, data) {
   let html = '';
   
+  // Add unit conversion note if SCr is in mg/dL (help users understand)
+  if(data.missing_data && data.missing_data.includes('SCr') && document.getElementById("caseInput").value.includes('mg/dL')) {
+    html += `
+      <div class="unit-note">
+        <i>💡</i>
+        <div>
+          <strong>Unit Conversion Note:</strong> The backend expects SCr in µmol/L. 
+          If you entered mg/dL, it will be marked as missing. Consider converting: 
+          mg/dL × 88.4 = µmol/L (e.g., 1.1 mg/dL = 97.2 µmol/L)
+        </div>
+      </div>
+    `;
+  }
+  
   // Missing data alert (always show if present)
   if(data.missing_data && data.missing_data.length > 0) {
     html += `<div class="missing-data">
-      <span style="font-weight:600;">⚠ Missing Data:</span>
+      <span style="font-weight:600;">⚠ Missing Critical Data:</span>
       ${data.missing_data.map(m => `<span class="missing-tag">${m}</span>`).join('')}
+      <span style="margin-left:auto; font-size:0.75rem;">Some assessments limited</span>
     </div>`;
   }
   
@@ -898,7 +930,7 @@ function renderStage1(data) {
       <!-- Extracted Data (Collapsible) -->
       <details style="margin-top:16px;">
         <summary style="cursor:pointer; color:var(--blue); font-weight:600;">📊 View Extracted Data</summary>
-        <pre style="background:var(--surface2); padding:16px; border-radius:12px; margin-top:12px; font-size:0.8rem;">${escapeHtml(JSON.stringify(data.extracted_data || {}, null, 2))}</pre>
+        <pre style="background:var(--surface2); padding:16px; border-radius:12px; margin-top:12px; font-size:0.8rem; overflow-x:auto;">${escapeHtml(JSON.stringify(data.extracted_data || {}, null, 2))}</pre>
       </details>
     </div>
   `;
@@ -916,6 +948,7 @@ function renderStage2(data) {
   
   // Problem List
   if(data.problem_list && data.problem_list.length) {
+    html += `<h4 style="margin:0 0 12px 0;">Identified Problems</h4>`;
     html += `
       <div class="card-grid">
         ${data.problem_list.map(p => `
@@ -963,7 +996,7 @@ function renderStage2(data) {
   if(data.gaps && data.gaps.length) {
     html += `
       <div class="gaps-container">
-        <strong style="display:block; margin-bottom:10px;">⚠ Treatment Gaps</strong>
+        <strong style="display:block; margin-bottom:10px;">⚠ Treatment Gaps Summary</strong>
         ${data.gaps.map(g => `
           <div class="gap-item">
             <span>•</span> ${escapeHtml(g)}
@@ -989,17 +1022,19 @@ function renderStage3(data) {
   
   if(data.med_checks && data.med_checks.medications) {
     data.med_checks.medications.forEach(med => {
+      const hasIssues = med.issues && med.issues.length > 0;
       html += `
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card" style="margin-bottom:16px; ${hasIssues ? 'border-left-color:var(--red); border-left-width:4px;' : ''}">
           <div class="card-header">
             <span class="card-title">${escapeHtml(med.name)}</span>
+            ${hasIssues ? '<span class="card-badge missing">⚠ Issues Found</span>' : ''}
           </div>
           
           <div class="check-grid">
             ${Object.entries(med.checks || {}).map(([key, check]) => `
               <div class="check-item">
                 <div class="check-label">${key.replace(/_/g,' ')}</div>
-                <div class="check-value ${check.status?.toLowerCase()}">
+                <div class="check-value ${(check.status || '').toLowerCase()}">
                   ${check.status === 'OK' ? '✅' : (check.status === 'ISSUE' ? '⚠️' : '❓')}
                   ${escapeHtml(check.note || '')}
                 </div>
@@ -1008,9 +1043,9 @@ function renderStage3(data) {
           </div>
           
           ${med.issues && med.issues.length ? `
-            <div style="margin-top:12px; color:var(--red);">
-              <strong>Issues:</strong>
-              <ul style="margin-top:6px; padding-left:20px;">
+            <div style="margin-top:12px; padding:10px; background:#fee2e2; border-radius:10px;">
+              <strong style="color:var(--red);">Issues:</strong>
+              <ul style="margin-top:6px; padding-left:20px; color:var(--red);">
                 ${med.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}
               </ul>
             </div>
@@ -1024,6 +1059,8 @@ function renderStage3(data) {
         </div>
       `;
     });
+  } else {
+    html += `<div class="card">No medication verification data available</div>`;
   }
   
   html += `</div>`;
@@ -1040,16 +1077,18 @@ function renderStage4(data) {
       </div>
   `;
   
-  if(data.drug_cards && data.drug_cards.drug_cards) {
+  if(data.drug_cards && data.drug_cards.drug_cards && data.drug_cards.drug_cards.length) {
     data.drug_cards.drug_cards.forEach(card => {
+      const hasInsufficientData = card.indication === "Unable to determine" || card.indication === "Unable to determine indication";
       html += `
-        <div class="card drug-card" style="margin-bottom:16px;">
+        <div class="card drug-card" style="margin-bottom:16px; ${hasInsufficientData ? 'border-left-color:var(--amber);' : ''}">
           <div class="card-header">
             <span class="card-title">${escapeHtml(card.name)}</span>
+            ${hasInsufficientData ? '<span class="card-badge missing">⚠ Limited Data</span>' : ''}
           </div>
           
-          <div class="text-small mb-2"><strong>Indication:</strong> ${escapeHtml(card.indication || '')}</div>
-          <div class="text-small mb-2"><strong>Dose Range:</strong> ${escapeHtml(card.dose_range || '')}</div>
+          <div class="text-small mb-2"><strong>Indication:</strong> ${escapeHtml(card.indication || 'Unable to determine')}</div>
+          <div class="text-small mb-2"><strong>Dose Range:</strong> ${escapeHtml(card.dose_range || 'Unable to determine')}</div>
           
           ${card.monitoring ? `
             <div style="margin:12px 0;">
@@ -1057,8 +1096,8 @@ function renderStage4(data) {
               <ul style="margin-top:6px; padding-left:20px;">
                 ${(card.monitoring.parameters || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}
               </ul>
-              <div class="text-small"><strong>Frequency:</strong> ${escapeHtml(card.monitoring.frequency || '')}</div>
-              <div class="text-small"><strong>Targets:</strong> ${escapeHtml(card.monitoring.targets || '')}</div>
+              <div class="text-small"><strong>Frequency:</strong> ${escapeHtml(card.monitoring.frequency || 'Unknown')}</div>
+              <div class="text-small"><strong>Targets:</strong> ${escapeHtml(card.monitoring.targets || 'Unknown')}</div>
             </div>
           ` : ''}
           
@@ -1097,6 +1136,8 @@ function renderStage4(data) {
         </div>
       `;
     });
+  } else {
+    html += `<div class="card">No drug monograph data available</div>`;
   }
   
   html += `</div>`;
@@ -1154,6 +1195,22 @@ function renderStage5(data) {
         </div>
         <div style="white-space:pre-wrap; font-family:var(--mono);">${escapeHtml(data.template2_soap || '')}</div>
       </div>
+      
+      <!-- Additional stage data if available -->
+      ${data.problem_list ? `
+        <details style="margin-top:16px;">
+          <summary style="cursor:pointer; color:var(--blue); font-weight:600;">📊 View Stage 2-4 Data</summary>
+          <div style="margin-top:12px;">
+            <h4>Problem List</h4>
+            <pre style="background:var(--surface2); padding:12px; border-radius:8px;">${escapeHtml(JSON.stringify(data.problem_list, null, 2))}</pre>
+            
+            ${data.med_checks ? `
+              <h4 style="margin-top:16px;">Medication Checks</h4>
+              <pre style="background:var(--surface2); padding:12px; border-radius:8px;">${escapeHtml(JSON.stringify(data.med_checks, null, 2))}</pre>
+            ` : ''}
+          </div>
+        </details>
+      ` : ''}
     </div>
   `;
 }
@@ -1169,12 +1226,15 @@ function renderRenalCard(r) {
     : r.crcl>=15 ? {l:"Severely Decreased (G4)",c:"#ef4444"}
     :              {l:"Kidney Failure (G5)",c:"#dc2626"};
   
+  const hasMissing = r.missing && r.missing.length > 0;
+  
   return `
-    <div class="card" style="background:linear-gradient(145deg, white, #f0f7ff);">
+    <div class="card" style="background:linear-gradient(145deg, white, #f0f7ff); ${hasMissing ? 'border-left-color:var(--amber);' : ''}">
       <div class="card-header">
         <span class="card-title">Renal Function (Cockcroft-Gault)</span>
+        ${hasMissing ? '<span class="card-badge missing">Incomplete</span>' : ''}
       </div>
-      <div style="display:flex; align-items:center; gap:20px;">
+      <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
         <div>
           <div style="font-size:2rem; font-weight:700; color:var(--navy);">${r.crcl != null ? r.crcl+' mL/min' : '—'}</div>
           ${cat ? `<div style="color:${cat.c}; font-weight:600;">${cat.l}</div>` : ''}
@@ -1186,6 +1246,11 @@ function renderRenalCard(r) {
           <div><span style="color:var(--text3);">Rule:</span> ${r.weight_label || '—'}</div>
         </div>
       </div>
+      ${r.missing && r.missing.length ? `
+        <div style="margin-top:12px; padding:8px; background:var(--amber-lt); border-radius:8px; font-size:0.8rem;">
+          <strong>Missing:</strong> ${r.missing.join(', ')}
+        </div>
+      ` : ''}
     </div>
   `;
 }
@@ -1247,9 +1312,8 @@ function clearAll() {
   `;
 }
 
-function loadSample() {
-  document.getElementById("caseInput").value = `SEEN BY DR MOHD ALTAYIB:
-94-YEAR-OLD MALE BEDRIDDEN
+function loadSample1() {
+  document.getElementById("caseInput").value = `94-YEAR-OLD MALE BEDRIDDEN
 K/C OF: DM ON INSULIN AND OHA, HTN, CKD (Hx OF AKI AFTER CONTRAST, S/P TEMPORARY DIALYSIS), CHRONIC ANEMIA, PSYCHIATRIC ISSUE
 PREVIOUSLY ADMITTED AS ACS-NSTEMI.
 
@@ -1267,21 +1331,35 @@ CAME WITH DECREASE LEVEL OF CONSCIOUSNESS.
 
 VITALS: BP 125/63, HR 68, OSAT 99, Weight: 68 kg, Height: 165 cm
 
-LABS: WBC: 17.11, HB: 11.5, PLT: 474, CREAT: 343 umol, BUN: 24.7, NA: 123, K: 4.9, INR: 2.23, AST: 2303
+LABS: WBC: 17.11, HB: 11.5, PLT: 474, CREAT: 343 umol/L, BUN: 24.7, NA: 123, K: 4.9, INR: 2.23, AST: 2303
 
 ECG: RBBB
 CXR: CONGESTION, CARDIOMEGALY
 BED-SIDED ECHO: SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE`;
 }
 
-function showEmptyState() {
-  document.getElementById('outputContent').innerHTML = `
-    <div class="empty-state">
-      <i>⚕️</i>
-      <h3>Select a Stage</h3>
-      <p class="text-small">Choose a workflow stage from the left panel</p>
-    </div>
-  `;
+function loadSample2() {
+  document.getElementById("caseInput").value = `65-year-old male, 75 kg, admitted with ACS (NSTEMI)
+
+Medications:
+- Ticagrelor 90 mg BID
+- Heparin infusion (started in ER)
+- Atorvastatin 80 mg daily
+
+Past Medical History: HTN, DM type 2, CKD stage 3
+
+Labs (on admission):
+- SCr: 1.8 mg/dL  (NOTE: Will be converted to µmol/L by backend: 159 µmol/L)
+- K+: 4.2 mEq/L
+- Hb: 13.1 g/dL
+- Troponin: Elevated
+
+Vitals:
+- BP: 95/60 on norepinephrine
+- HR: 110 bpm
+- O2 sat: 96%
+
+Allergies: NKDA`;
 }
 
 // ===== KEYBOARD SHORTCUT =====
@@ -1293,7 +1371,8 @@ document.addEventListener("keydown", e => {
 // Expose functions to window
 window.runAnalysis = runAnalysis;
 window.clearAll = clearAll;
-window.loadSample = loadSample;
+window.loadSample1 = loadSample1;
+window.loadSample2 = loadSample2;
 window.setStage = setStage;
 window.copyOutput = copyOutput;
 
