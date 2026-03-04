@@ -1,194 +1,101 @@
 // ============================================================
 // FILE: /functions/api/ask.js
-// CLINICAL PHARMACIST AI PLATFORM — Backend v2.2 (Fixed)
+// CLINICAL PHARMACIST AI PLATFORM — Backend v3.0
 // Runtime: Cloudflare Pages Functions
+//
+// PIPELINE (what runs internally, user only sees final output):
+//   A  → Extract & structure patient data
+//   B  → Compute CrCl (pure code, no AI)
+//   C1 → Organize case into SOAP Template-1
+//   C2 → Problem coverage check (admission context, guidelines)
+//   C3 → Home meds management at admission (continue/hold/switch)
+//   C4 → DVT & stress ulcer prophylaxis assessment
+//   C5 → Medication-by-medication deep verification
+//   C6 → Final pharmacist SOAP note (Template-2, ready to copy)
 // ============================================================
 
 export async function onRequest(context) {
   const { request, env } = context;
 
   const CORS = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin":  "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: CORS });
-  }
-  if (request.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405, CORS);
-  }
-
-  if (!env.OPENAI_API_KEY) {
-    return json({ ok: false, error: "OPENAI_API_KEY not configured" }, 500, CORS);
-  }
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+  if (request.method !== "POST")    return json({ error: "Method not allowed" }, 405, CORS);
+  if (!env.OPENAI_API_KEY)          return json({ ok: false, error: "OPENAI_API_KEY not configured" }, 500, CORS);
 
   try {
     const body = await request.json();
-    const { case_text, stage = 5 } = body;
+    const { case_text } = body;
 
-    if (!case_text || !case_text.trim()) {
-      return json({ ok: false, error: "Missing case_text" }, 400, CORS);
-    }
+    if (!case_text?.trim()) return json({ ok: false, error: "Missing case_text" }, 400, CORS);
 
-    const requestedStage = parseInt(stage);
-    if (isNaN(requestedStage) || requestedStage < 1 || requestedStage > 5) {
-      return json({ ok: false, error: "Stage must be between 1 and 5" }, 400, CORS);
-    }
+    // ── STEP A: Extract & structure ──────────────────────────
+    console.log("🔍 A: Extracting structured data...");
+    const data = await stepA_extract(case_text, env);
 
-    // ── STEP A: Extract structured JSON ─────────────────────
-    console.log("🔍 Step A: Extracting structured data...");
-    const extractedData = await stepA_extract(case_text, env);
+    // ── STEP B: CrCl — pure code, no AI ─────────────────────
+    console.log("🧮 B: Computing CrCl...");
+    const renal = stepB_computeCrCl(data);
+    data.renal = { scr_umol: data.scr_umol ?? null, ...renal };
 
-    // ── STEP B: Compute CrCl — pure code ────────────────────
-    console.log("🧮 Step B: Computing CrCl...");
-    const renalResult = stepB_computeCrCl(extractedData);
+    const scrDisp  = data.renal.scr_umol ?? "—";
+    const crclDisp = renal.crcl !== null ? renal.crcl : "—";
+    const renalLine = `SCr ${scrDisp} µmol/L → ${renal.scr_mgdl ?? "—"} mg/dL | CrCl ${crclDisp} mL/min (${renal.weight_label ?? "weight unknown"})`;
 
-    // FIX 1: Safely merge renal data — avoid overwriting scr_umol with null
-    extractedData.renal = {
-      scr_umol: extractedData.renal?.scr_umol ?? extractedData.scr_umol ?? null,
-      ...renalResult,
-    };
+    // ── STEP C1: Organize case → Template-1 SOAP ────────────
+    console.log("📋 C1: Case organizer...");
+    const template1_soap = await stepC1_organize(data, renalLine, env);
 
-    // FIX 2: Build renalLine after merge so scr_umol is guaranteed correct
-    const scrDisplay = extractedData.renal.scr_umol ?? "—";
-    const crclDisplay = renalResult.crcl !== null ? renalResult.crcl : "—";
-    const renalLine = `SCr ${scrDisplay} umol, Calculated CrCl ${crclDisplay} mL/min`;
+    // ── STEP C2: Problem coverage check ─────────────────────
+    console.log("🔬 C2: Problem coverage check...");
+    const coverage = await stepC2_problemCoverage(data, renal, env);
 
-    // ── Shared renal object for all responses ────────────────
-    const renalPayload = {
-      scr_umol:     extractedData.renal.scr_umol,
-      scr_mgdl:     renalResult.scr_mgdl,
-      crcl:         renalResult.crcl,
-      ibw:          renalResult.ibw,
-      abw_adj:      renalResult.abw_adj,
-      weight_used:  renalResult.weight_used,
-      weight_label: renalResult.weight_label,
-      missing:      renalResult.missing,
-      line:         renalLine,
-    };
+    // ── STEP C3: Home meds at admission ─────────────────────
+    console.log("💊 C3: Home medications management...");
+    const homeMedsReview = await stepC3_homeMeds(data, renal, env);
 
-    // ── STAGE 1 ──────────────────────────────────────────────
-    if (requestedStage === 1) {
-      console.log("📋 Stage 1: Case Organizer...");
-      const [template1_soap, problems] = await Promise.all([
-        stage1_caseOrganizer(extractedData, renalLine, env),
-        detectProblemsFromExtractedData(extractedData, env),
-      ]);
+    // ── STEP C4: DVT + SUP prophylaxis ──────────────────────
+    console.log("🛡️ C4: DVT & SUP prophylaxis...");
+    const prophylaxis = await stepC4_prophylaxis(data, renal, env);
 
-      return json({
-        ok: true, stage: 1,
-        template1_soap,
-        extracted_data: extractedData,
-        renal: renalPayload,
-        missing_data: extractedData.missing ?? [],
-        problems,
-      }, 200, CORS);
-    }
+    // ── STEP C5: Medication deep verification ───────────────
+    console.log("🔎 C5: Medication verification...");
+    const medVerification = await stepC5_medVerification(data, renal, env);
 
-    // ── STAGE 2 ──────────────────────────────────────────────
-    if (requestedStage === 2) {
-      console.log("📋 Stage 2: Coverage Check...");
-      const problems = await detectProblemsFromExtractedData(extractedData, env);
+    // ── STEP C6: Final pharmacist note ──────────────────────
+    console.log("📝 C6: Final pharmacist note...");
+    const finalNote = await stepC6_finalNote(
+      data, renalLine, coverage, homeMedsReview, prophylaxis, medVerification, env
+    );
 
-      // FIX 3: Run stage1 and stage2 in parallel to save time
-      const [template1_soap, coverageCheck] = await Promise.all([
-        stage1_caseOrganizer(extractedData, renalLine, env),
-        stage2_coverageCheck(extractedData, problems, env),
-      ]);
-
-      return json({
-        ok: true, stage: 2,
-        template1_soap,
-        renal: renalPayload,
-        missing_data: extractedData.missing ?? [],
-        problem_list: problems,
-        coverage_check: coverageCheck,
-        gaps: coverageCheck.gaps ?? [],
-      }, 200, CORS);
-    }
-
-    // ── STAGE 3 ──────────────────────────────────────────────
-    if (requestedStage === 3) {
-      console.log("📋 Stage 3: Medication Verification...");
-      const problems = await detectProblemsFromExtractedData(extractedData, env);
-      const [template1_soap, coverageCheck, medChecks] = await Promise.all([
-        stage1_caseOrganizer(extractedData, renalLine, env),
-        stage2_coverageCheck(extractedData, problems, env),
-        stage3_medicationVerification(extractedData, renalResult, problems, env),
-      ]);
-
-      return json({
-        ok: true, stage: 3,
-        template1_soap,
-        renal: renalPayload,
-        missing_data: extractedData.missing ?? [],
-        problem_list: problems,
-        coverage_check: coverageCheck,
-        gaps: coverageCheck.gaps ?? [],
-        med_checks: medChecks,
-      }, 200, CORS);
-    }
-
-    // ── STAGE 4 ──────────────────────────────────────────────
-    if (requestedStage === 4) {
-      console.log("📋 Stage 4: Drug Monograph Cards...");
-      const problems = await detectProblemsFromExtractedData(extractedData, env);
-      const [template1_soap, coverageCheck, medChecks] = await Promise.all([
-        stage1_caseOrganizer(extractedData, renalLine, env),
-        stage2_coverageCheck(extractedData, problems, env),
-        stage3_medicationVerification(extractedData, renalResult, problems, env),
-      ]);
-      const drugCards = await stage4_drugCards(extractedData, renalResult, medChecks, env);
-
-      return json({
-        ok: true, stage: 4,
-        template1_soap,
-        renal: renalPayload,
-        missing_data: extractedData.missing ?? [],
-        problem_list: problems,
-        coverage_check: coverageCheck,
-        gaps: coverageCheck.gaps ?? [],
-        med_checks: medChecks,
-        drug_cards: drugCards,
-      }, 200, CORS);
-    }
-
-    // ── STAGE 5: Complete Pipeline ───────────────────────────
-    console.log("📋 Stage 5: Complete pipeline...");
-    const problems = await detectProblemsFromExtractedData(extractedData, env);
-
-    // FIX 4: Run independent stages in parallel where possible
-    const [template1_soap, coverageCheck, medChecks] = await Promise.all([
-      stepC1_template1(extractedData, renalLine, env),
-      stage2_coverageCheck(extractedData, problems, env),
-      stage3_medicationVerification(extractedData, renalResult, problems, env),
-    ]);
-
-    const [drugCards, clinical_analysis] = await Promise.all([
-      stage4_drugCards(extractedData, renalResult, medChecks, env),
-      stepC2_analysis(extractedData, renalResult, env),
-    ]);
-
-    const pharmacotherapy_review = await stepC3_pharmaReview(extractedData, renalResult, clinical_analysis, env);
-    const interventions = await stepC4_interventions(extractedData, renalResult, clinical_analysis, pharmacotherapy_review, env);
-    const template2_soap = await stepC5_template2(extractedData, renalLine, clinical_analysis, interventions, env);
-
+    // ── RESPONSE ─────────────────────────────────────────────
     return json({
-      ok: true, stage: 5,
+      ok: true,
+      // Renal summary
+      renal: {
+        scr_umol:     data.renal.scr_umol,
+        scr_mgdl:     renal.scr_mgdl,
+        crcl:         renal.crcl,
+        ibw:          renal.ibw,
+        abw_adj:      renal.abw_adj,
+        weight_used:  renal.weight_used,
+        weight_label: renal.weight_label,
+        missing:      renal.missing,
+        line:         renalLine,
+      },
+      missing_data:      data.missing ?? [],
+      // Structured data for UI display
       template1_soap,
-      clinical_analysis,
-      pharmacotherapy_review,
-      interventions,
-      template2_soap,
-      renal: renalPayload,
-      missing_data: extractedData.missing ?? [],
-      problem_list: problems,
-      coverage_check: coverageCheck,
-      gaps: coverageCheck.gaps ?? [],
-      med_checks: medChecks,
-      drug_cards: drugCards,
+      coverage,
+      home_meds_review:  homeMedsReview,
+      prophylaxis,
+      med_verification:  medVerification,
+      // Final ready-to-copy note
+      final_note:        finalNote,
     }, 200, CORS);
 
   } catch (err) {
@@ -198,379 +105,20 @@ export async function onRequest(context) {
 }
 
 // ============================================================
-// STAGE 1: Case Organizer
-// ============================================================
-async function stage1_caseOrganizer(data, renalLine, env) {
-  const system = `You are a clinical documentation formatter. Generate a structured SOAP note with NO recommendations or interventions.
-
-STRICT RULES:
-- A: section → copy diagnosis/reason VERBATIM from the data. Do NOT interpret or invent.
-- If not explicitly stated → write: Primary admission for N/A
-- Renal line → copy exactly as provided.
-- Missing text fields → N/A  |  Missing numbers → —
-- DO NOT add any clinical recommendations, medication changes, or interventions.
-
-Output format (reproduce exactly this structure):
-
-S: Patient (MRN: <mrn or blank>), <age or blank> Y, <weight or blank> kg admitted to <ward or blank>.
-Reason for Admission: <text or N/A>
-PMH: <text or N/A>
-Home Meds: <list or N/A>
-
-O: Vitals: <text or N/A>
-Labs: <text or N/A>
-Renal: <renal_line>
-
-A: Primary admission for <verbatim reason or N/A>.
-
-P: [Stage 1 - Assessment only. No recommendations yet.]`;
-
-  const ctx = buildContext(data, renalLine);
-  return OpenAICall(env, system, `Generate Template-1 SOAP (Stage 1 - no recommendations).\n\n${ctx}`, 600);
-}
-
-// ============================================================
-// STAGE 2: Problem-to-Treatment Coverage Check
-// ============================================================
-async function stage2_coverageCheck(data, problems, env) {
-  // FIX 5: Guard against empty problems array early
-  if (!problems || problems.length === 0) {
-    return { problems: [], gaps: ["No problems identified in the case"] };
-  }
-
-  const medList = (data.current_meds_list || []).map(m => m.name).join(", ");
-
-  const system = `You are a clinical pharmacist performing a guideline-driven coverage check.
-
-For each problem/diagnosis identified:
-1. Determine the recommended pharmacotherapy from LOCAL protocols if available, or from international guidelines.
-2. Compare with current medications list.
-3. Classify as:
-   - MATCHED: Appropriate coverage present
-   - PARTIAL: Some elements missing
-   - NOT COVERED: Missing key therapy
-4. List specific gaps with evidence citations.
-
-CRITICAL RULES:
-- Only use problems explicitly stated in the case.
-- Every recommendation MUST have evidence citation (protocol filename, guideline with year/section).
-- If evidence not found in local protocol → cite authoritative guideline.
-- If no evidence at all → "Evidence not found in local protocol."
-
-Output ONLY valid JSON. No markdown. No explanation. No code blocks.
-{
-  "problems": [
-    {
-      "name": "problem name",
-      "recommended_therapy": "what should be given",
-      "current_coverage": "what patient is receiving",
-      "status": "MATCHED|PARTIAL|NOT COVERED",
-      "gaps": ["specific missing elements"],
-      "evidence": "citation with source and year/section"
-    }
-  ],
-  "gaps": ["summary list of all gaps"]
-}`;
-
-  const vectorContext = await searchEnhancedVectorStore(
-    `treatment guidelines for ${problems.map(p => p.name).join(" ")} ${medList}`,
-    env
-  );
-
-  const userMsg = `Perform coverage check for these problems:
-
-Problems: ${JSON.stringify(problems, null, 2)}
-
-Current Medications: ${medList || "None listed"}
-
-${vectorContext ? `LOCAL PROTOCOL CONTENT:\n${vectorContext}` : "No local protocol files available — use international guidelines."}`;
-
-  const response = await OpenAICall(env, system, userMsg, 800);
-
-  // FIX 6: Robust JSON parsing with better cleanup
-  return safeParseJSON(response, {
-    problems: problems.map(p => ({
-      name: p.name,
-      recommended_therapy: "Unable to determine",
-      current_coverage: "Unknown",
-      status: "UNKNOWN",
-      gaps: ["Insufficient data to assess"],
-      evidence: "Evidence not found in local protocol."
-    })),
-    gaps: ["Unable to assess coverage gaps"]
-  });
-}
-
-// ============================================================
-// STAGE 3: Medication-by-Medication Verification
-// ============================================================
-async function stage3_medicationVerification(data, renalResult, problems, env) {
-  const medList = data.current_meds_list || [];
-
-  // FIX 7: Guard against empty medication list
-  if (medList.length === 0) {
-    return { medications: [] };
-  }
-
-  const problemNames = problems.map(p => p.name).join(", ");
-
-  const system = `You are a clinical pharmacist performing strict medication verification.
-
-For EACH current medication, evaluate ALL of these factors using patient-specific data:
-
-1. Indication present? (from problem list / case facts)
-2. Dose correct for age/weight/renal function (CrCl: ${renalResult.crcl ?? "unknown"} mL/min)
-3. Frequency correct?
-4. Duration defined?
-5. Contraindications based on PMH and current labs/vitals?
-6. Drug–drug interactions with other meds?
-7. Drug–lab conflicts (e.g., nephrotoxic meds in AKI, K+ with ACEI/ARB, INR with warfarin, etc.)
-8. Monitoring parameters required with targets + timeframe?
-
-CRITICAL RULES:
-- MUST use actual patient data: age ${data.age ?? "unknown"}, weight ${data.weight_kg ?? "unknown"}kg, CrCl ${renalResult.crcl ?? "unknown"}
-- If data missing for any check → explicitly state "Cannot assess because missing X"
-- Every issue flagged MUST have evidence citation
-- If evidence not found → "Evidence not found in local protocol."
-
-Output ONLY valid JSON. No markdown. No explanation. No code blocks.
-{
-  "medications": [
-    {
-      "name": "medication name",
-      "checks": {
-        "indication":        {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation", "evidence": "citation"},
-        "dose":              {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation", "evidence": "citation"},
-        "frequency":         {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation"},
-        "duration":          {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation"},
-        "contraindications": {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation", "evidence": "citation"},
-        "interactions":      {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation", "evidence": "citation"},
-        "drug_lab":          {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "explanation", "evidence": "citation"},
-        "monitoring":        {"status": "OK|ISSUE|CANNOT_ASSESS", "note": "required monitoring", "evidence": "citation"}
-      },
-      "issues": ["list of specific issues found"],
-      "missing_data_needed": ["what's missing to fully assess"]
-    }
-  ]
-}`;
-
-  const vectorContext = await searchEnhancedVectorStore(
-    `medication safety monitoring contraindications dosing ${medList.map(m => m.name).join(" ")}`,
-    env
-  );
-
-  const userMsg = `Perform medication verification for this patient:
-
-Patient Data:
-- Age: ${data.age ?? "unknown"}
-- Weight: ${data.weight_kg ?? "unknown"} kg
-- CrCl: ${renalResult.crcl ?? "unknown"} mL/min
-- Sex: ${data.sex ?? "unknown"}
-- PMH: ${data.pmh ?? "N/A"}
-- Labs: ${data.labs_text ?? "N/A"}
-- Vitals: ${data.vitals_text ?? "N/A"}
-
-Problems: ${problemNames || "None identified"}
-
-Medications to verify:
-${JSON.stringify(medList, null, 2)}
-
-${vectorContext ? `LOCAL PROTOCOL CONTENT:\n${vectorContext}` : "No local protocol files available — use international guidelines."}`;
-
-  const response = await OpenAICall(env, system, userMsg, 1200);
-
-  return safeParseJSON(response, {
-    medications: medList.map(med => ({
-      name: med.name,
-      checks: {
-        indication:        { status: "CANNOT_ASSESS", note: "Unable to verify", evidence: "Evidence not found in local protocol." },
-        dose:              { status: "CANNOT_ASSESS", note: "Unable to verify", evidence: "Evidence not found in local protocol." },
-        frequency:         { status: "CANNOT_ASSESS", note: "Unable to verify" },
-        duration:          { status: "CANNOT_ASSESS", note: "Unable to verify" },
-        contraindications: { status: "CANNOT_ASSESS", note: "Unable to verify", evidence: "Evidence not found in local protocol." },
-        interactions:      { status: "CANNOT_ASSESS", note: "Unable to verify", evidence: "Evidence not found in local protocol." },
-        drug_lab:          { status: "CANNOT_ASSESS", note: "Unable to verify", evidence: "Evidence not found in local protocol." },
-        monitoring:        { status: "CANNOT_ASSESS", note: "Unable to verify", evidence: "Evidence not found in local protocol." }
-      },
-      issues: ["Unable to verify due to missing data or evidence"],
-      missing_data_needed: ["age", "weight", "SCr", "labs"].filter(f => !data[f])
-    }))
-  });
-}
-
-// ============================================================
-// STAGE 4: Drug Monograph Cards
-// ============================================================
-async function stage4_drugCards(data, renalResult, medChecks, env) {
-  const medList = data.current_meds_list || [];
-
-  // FIX 8: Guard against empty medication list
-  if (medList.length === 0) {
-    return { drug_cards: [] };
-  }
-
-  const system = `You are a clinical pharmacist generating evidence-based drug monograph cards.
-
-For each medication, provide:
-- Indication (for this patient)
-- Recommended dose range (renal-adjusted if needed, based on CrCl ${renalResult.crcl ?? "unknown"})
-- Monitoring targets and frequency
-- Key contraindications and warnings relevant to this patient
-- Management pearls
-
-CRITICAL RULES:
-- MUST cite LOCAL protocol monograph evidence if available (filename + section)
-- If local evidence missing → cite original guideline/drug reference (BNF, Lexicomp, IDSA, ACC/AHA, etc.) with year/section
-- NEVER fabricate citations
-- If no evidence found → "Evidence not found in local protocol."
-- Use patient-specific data where available
-
-Output ONLY valid JSON. No markdown. No explanation. No code blocks.
-{
-  "drug_cards": [
-    {
-      "name": "medication name",
-      "indication": "specific indication for this patient",
-      "dose_range": "recommended dose with renal adjustment if needed",
-      "monitoring": {
-        "parameters": ["list of parameters"],
-        "frequency": "monitoring frequency",
-        "targets": "therapeutic targets"
-      },
-      "contraindications": ["relevant contraindications for this patient"],
-      "warnings": ["key warnings"],
-      "pearls": ["management pearls"],
-      "evidence": {
-        "source": "citation with filename/guideline",
-        "year": "year",
-        "section": "section if available"
-      }
-    }
-  ]
-}`;
-
-  const vectorContext = await searchEnhancedVectorStore(
-    `drug monograph dosing monitoring ${medList.map(m => m.name).join(" ")}`,
-    env
-  );
-
-  const userMsg = `Generate drug monograph cards for this patient:
-
-Patient Context:
-- Age: ${data.age ?? "unknown"}
-- Weight: ${data.weight_kg ?? "unknown"} kg
-- CrCl: ${renalResult.crcl ?? "unknown"} mL/min
-- Problems: ${data.reason_admission ?? "unknown"}
-- PMH: ${data.pmh ?? "N/A"}
-
-Medications:
-${JSON.stringify(medList, null, 2)}
-
-Previous Medication Checks (for context):
-${JSON.stringify(medChecks, null, 2)}
-
-${vectorContext ? `LOCAL PROTOCOL CONTENT (CITE THIS IF RELEVANT):\n${vectorContext}` : "No local protocol files available — use international guidelines."}`;
-
-  const response = await OpenAICall(env, system, userMsg, 1200);
-
-  return safeParseJSON(response, {
-    drug_cards: medList.map(med => ({
-      name: med.name,
-      indication: "Unable to determine",
-      dose_range: "Unable to determine",
-      monitoring: { parameters: ["Unable to determine"], frequency: "Unknown", targets: "Unknown" },
-      contraindications: ["Unable to assess"],
-      warnings: ["Unable to assess"],
-      pearls: ["Insufficient data"],
-      evidence: { source: "Evidence not found in local protocol.", year: "", section: "" }
-    }))
-  });
-}
-
-// ============================================================
-// HELPER: Detect Problems
-// ============================================================
-async function detectProblemsFromExtractedData(data, env) {
-  const system = `You are a clinical data extractor. Identify ALL problems/diagnoses explicitly mentioned in the case.
-
-STRICT RULES:
-- ONLY include problems explicitly stated (reason for admission, PMH, assessment notes)
-- Do NOT infer or assume problems
-- Return ONLY valid JSON array. No markdown. No explanation. No code blocks.
-[{"name": "problem name", "context": "where mentioned"}]
-- If no problems found, return empty array []`;
-
-  const userMsg = `Extract all explicit problems/diagnoses from this data:
-
-Reason for Admission: ${data.reason_admission ?? "N/A"}
-PMH: ${data.pmh ?? "N/A"}
-Current Medications Context: ${data.current_meds_text ?? "N/A"}`;
-
-  const response = await OpenAICall(env, system, userMsg, 400);
-
-  // FIX 9: safeParseJSON returns [] fallback for problems
-  return safeParseJSON(response, []);
-}
-
-// ============================================================
-// ENHANCED HELPER: Search Vector Store
-// ============================================================
-async function searchEnhancedVectorStore(query, env, maxResults = 8) {
-  if (!env.OPENAI_API_KEY || !env.VECTOR_STORE_ID) return "";
-
-  try {
-    const res = await fetch(
-      `https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-          "OpenAI-Beta": "assistants=v2",
-        },
-        body: JSON.stringify({
-          query,
-          max_num_results: maxResults,
-          include_metadata: true,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      console.warn("Vector store search failed:", res.status);
-      return "";
-    }
-
-    const data = await res.json();
-    if (!data?.data?.length) return "";
-
-    return data.data
-      .map((item, i) => {
-        const content = extractContent(item);
-        const filename = item.filename || item.file_id || `Protocol ${i + 1}`;
-        const page = item.metadata?.page || item.metadata?.section || "";
-        const pageInfo = page ? ` [Page/Section: ${page}]` : "";
-        return `--- ${filename}${pageInfo} ---\n${content.substring(0, 500)}`;
-      })
-      .join("\n\n");
-
-  } catch (err) {
-    console.error("Vector store error:", err);
-    return "";
-  }
-}
-
-// ============================================================
-// STEP A — Extract structured data
+// STEP A — Extract structured data from any free-text input
 // ============================================================
 async function stepA_extract(caseText, env) {
-  const system = `You are a clinical data extractor. Extract data from unstructured clinical text.
-STRICT RULES:
-- NO assumptions. If data is not explicitly stated → set to null.
-- Do NOT invent diagnoses, medications, or lab values.
-- Return ONLY a valid JSON object. No markdown. No explanation. No code blocks.
+  const system = `You are a clinical data extractor for a hospital pharmacy system.
+Extract ALL available data from the unstructured clinical text.
 
-JSON schema (use exactly these keys):
+STRICT RULES:
+- NO assumptions. If not explicitly stated → null.
+- Do NOT invent diagnoses, medications, or lab values.
+- current_meds_list = medications WRITTEN/ORDERED in the hospital chart right now.
+- home_meds_list = medications the patient was taking AT HOME before admission.
+- Return ONLY valid JSON. No markdown, no explanation, no code fences.
+
+JSON schema:
 {
   "mrn": null,
   "age": null,
@@ -581,319 +129,527 @@ JSON schema (use exactly these keys):
   "reason_admission": null,
   "pmh": null,
   "allergies": null,
-  "home_meds": null,
   "vitals_text": null,
   "labs_text": null,
   "scr_umol": null,
-  "current_meds_text": null,
-  "current_meds_list": [{"name":"","dose":null,"frequency":null,"route":null}],
   "imaging": null,
+  "home_meds_text": null,
+  "home_meds_list": [{"name":"","dose":null,"frequency":null,"route":null,"indication":null}],
+  "current_meds_text": null,
+  "current_meds_list": [{"name":"","dose":null,"frequency":null,"route":null,"indication":null}],
   "missing": []
 }`;
 
-  const raw = await OpenAICall(
-    env,
-    system,
-    `Extract structured data from this clinical case:\n\n${caseText}`,
-    800
-  );
+  const raw = await OpenAICall(env, system,
+    `Extract all structured data from this clinical case:\n\n${caseText}`, 900);
 
   try {
-    const data = safeParseJSON(raw, null);
-    if (!data) throw new Error("Parse failed");
+    const parsed = safeParseJSON(raw, null);
+    if (!parsed) throw new Error("parse failed");
 
     const missing = [];
-    if (!data.age)       missing.push("age");
-    if (!data.sex)       missing.push("sex");
-    if (!data.weight_kg) missing.push("weight");
-    if (!data.scr_umol)  missing.push("SCr");
+    if (!parsed.age)       missing.push("age");
+    if (!parsed.sex)       missing.push("sex");
+    if (!parsed.weight_kg) missing.push("weight");
+    if (!parsed.scr_umol)  missing.push("SCr");
 
-    return {
-      ...data,
-      renal: { scr_umol: data.scr_umol ?? null },
-      missing,
-    };
+    return { ...parsed, missing };
   } catch {
     return {
       mrn: null, age: null, sex: null, height_raw: null, weight_kg: null,
       ward: null, reason_admission: null, pmh: null, allergies: null,
-      home_meds: null, vitals_text: null, labs_text: null, scr_umol: null,
+      vitals_text: null, labs_text: null, scr_umol: null, imaging: null,
+      home_meds_text: null, home_meds_list: [],
       current_meds_text: null, current_meds_list: [],
-      imaging: null, renal: { scr_umol: null },
       missing: ["age", "sex", "weight", "SCr"],
     };
   }
 }
 
 // ============================================================
-// STEP B — Cockcroft-Gault CrCl (PURE CODE)
+// STEP B — Cockcroft-Gault CrCl (pure code, zero AI)
 // ============================================================
 function stepB_computeCrCl(data) {
-  const result = {
+  const r = {
     scr_mgdl: null, ibw: null, abw_adj: null,
     weight_used: null, weight_label: null,
     crcl: null, missing: [],
   };
 
-  if (!data.age)       result.missing.push("age");
-  if (!data.sex)       result.missing.push("sex");
-  if (!data.weight_kg) result.missing.push("weight");
-  if (!data.scr_umol)  result.missing.push("SCr");
-  if (result.missing.length > 0) return result;
+  if (!data.age)       r.missing.push("age");
+  if (!data.sex)       r.missing.push("sex");
+  if (!data.weight_kg) r.missing.push("weight");
+  if (!data.scr_umol)  r.missing.push("SCr");
+  if (r.missing.length) return r;
 
-  result.scr_mgdl = parseFloat((data.scr_umol / 88.4).toFixed(3));
-
+  r.scr_mgdl = parseFloat((data.scr_umol / 88.4).toFixed(3));
   const female = String(data.sex).toLowerCase().startsWith("f");
 
+  // Height → inches
   let heightIn = null;
   if (data.height_raw) {
     const s = String(data.height_raw).toLowerCase();
     let cm = null;
-
     const mCm   = s.match(/(\d+\.?\d*)\s*cm/);
     const mFtIn = s.match(/(\d+)\s*(?:ft|')\s*(\d*)\s*(?:in|")?/);
     const mIn   = s.match(/(\d+\.?\d*)\s*(?:in|")/);
     const mNum  = s.match(/^(\d+\.?\d*)$/);
-
     if (mCm)        cm = parseFloat(mCm[1]);
     else if (mFtIn) cm = parseInt(mFtIn[1]) * 30.48 + parseInt(mFtIn[2] || 0) * 2.54;
     else if (mIn)   cm = parseFloat(mIn[1]) * 2.54;
     else if (mNum)  cm = parseFloat(mNum[1]) > 100 ? parseFloat(mNum[1]) : parseFloat(mNum[1]) * 2.54;
-
     if (cm) heightIn = cm / 2.54;
   }
 
+  // IBW (Devine) + ABW
   if (heightIn && heightIn > 60) {
-    result.ibw     = parseFloat((female ? 45.5 + 2.3 * (heightIn - 60) : 50 + 2.3 * (heightIn - 60)).toFixed(1));
-    result.abw_adj = parseFloat((result.ibw + 0.4 * (data.weight_kg - result.ibw)).toFixed(1));
+    r.ibw     = parseFloat((female ? 45.5 + 2.3*(heightIn-60) : 50 + 2.3*(heightIn-60)).toFixed(1));
+    r.abw_adj = parseFloat((r.ibw + 0.4*(data.weight_kg - r.ibw)).toFixed(1));
   }
 
-  if (result.ibw && data.weight_kg >= 1.2 * result.ibw) {
-    result.weight_used  = result.abw_adj;
-    result.weight_label = "ABW adjusted (obese ≥1.2×IBW)";
-  } else if (result.ibw && data.weight_kg <= result.ibw) {
-    result.weight_used  = data.weight_kg;
-    result.weight_label = "Actual BW (≤IBW)";
+  // Weight selection
+  if (r.ibw && data.weight_kg >= 1.2 * r.ibw) {
+    r.weight_used  = r.abw_adj;
+    r.weight_label = "ABW adjusted (obese ≥1.2×IBW)";
+  } else if (r.ibw && data.weight_kg <= r.ibw) {
+    r.weight_used  = data.weight_kg;
+    r.weight_label = "Actual BW (≤IBW)";
   } else {
-    result.weight_used  = data.weight_kg;
-    result.weight_label = result.ibw ? "Actual BW" : "Actual BW (height missing)";
+    r.weight_used  = data.weight_kg;
+    r.weight_label = r.ibw ? "Actual BW" : "Actual BW (height missing)";
   }
 
-  // FIX 10: Guard against division by zero if scr_mgdl somehow is 0
-  if (result.scr_mgdl > 0) {
-    result.crcl = Math.round(
-      ((140 - data.age) * result.weight_used * (female ? 0.85 : 1.0)) / (72 * result.scr_mgdl)
-    );
-    // FIX 11: CrCl should never be negative (e.g. age > 140 edge case)
-    if (result.crcl < 0) result.crcl = 0;
+  // Cockcroft-Gault
+  if (r.scr_mgdl > 0) {
+    r.crcl = Math.max(0, Math.round(
+      ((140 - data.age) * r.weight_used * (female ? 0.85 : 1.0)) / (72 * r.scr_mgdl)
+    ));
   }
 
-  return result;
+  return r;
 }
 
 // ============================================================
-// STEP C1 — Template-1 SOAP
+// STEP C1 — Organize case into structured SOAP Template-1
+// No recommendations — pure documentation
 // ============================================================
-async function stepC1_template1(data, renalLine, env) {
+async function stepC1_organize(data, renalLine, env) {
   const system = `You are a clinical documentation formatter.
-Generate EXACTLY this SOAP structure. No markdown, no bold, no extra sections.
+Organize the patient data into a structured SOAP note. NO recommendations, NO interventions, NO clinical opinions.
 
-STRICT RULES:
-- A: section → copy diagnosis/reason VERBATIM from the data. Do NOT interpret or invent.
-- If not explicitly stated → write: Primary admission for N/A
-- Renal line → copy exactly as provided.
-- Missing text fields → N/A  |  Missing numbers → —
+Output EXACTLY this format:
 
-Output format (reproduce exactly this structure):
+S: Patient (MRN: __), __ Y, __ kg admitted to __.
+Reason for Admission: __
+PMH: __
+Allergies: __
+Home Medications: __
 
-S: Patient (MRN: <mrn or blank>), <age or blank> Y, <weight or blank> kg admitted to <ward or blank>.
-Reason for Admission: <text or N/A>
-PMH: <text or N/A>
-Home Meds: <list or N/A>
+O: Vitals: __
+Labs: __
+Imaging: __
+Renal: __
 
-O: Vitals: <text or N/A>
-Labs: <text or N/A>
-Renal: <renal_line>
+A: Primary admission for __ [copied verbatim — do NOT interpret].
 
-A: Primary admission for <verbatim reason or N/A>.
+P: Current inpatient medications:
+__
 
-P:
-Current Medications: <list or N/A>`;
+RULES:
+- Missing fields → N/A
+- Missing numbers → —
+- Renal line → copy exactly as given
+- A: section → verbatim reason only`;
 
-  const ctx = buildContext(data, renalLine);
-  return OpenAICall(env, system, `Generate Template-1 SOAP.\n\n${ctx}`, 600);
-}
-
-// ============================================================
-// STEP C2 — Clinical Analysis
-// ============================================================
-async function stepC2_analysis(data, renalResult, env) {
-  const system = `You are a clinical pharmacist performing structured pharmacotherapy analysis.
-Use general medical and pharmacological knowledge.
-
-Output exactly these labeled sections (no markdown):
-
-PRIMARY ACUTE CONDITION
-Identify the main inpatient problem from documented findings only.
-
-MEDICATION REVIEW
-For each medication (home + inpatient) evaluate:
-Indication | Dose | Frequency | Duration | Contraindications | Drug interactions | Drug-lab issues | Renal dose adjustment (use the CrCl provided)
-
-CLINICAL FLAGS
-Top 3-5 concerns requiring pharmacist attention. Be specific and clinically precise.`;
-
-  const crclLine = renalResult.crcl !== null
-    ? `SCr ${data.scr_umol ?? "—"} umol, CrCl ${renalResult.crcl} mL/min`
-    : `SCr ${data.scr_umol ?? "—"} umol, CrCl —`;
-
-  const ctx = buildContext(data, crclLine);
-  return OpenAICall(env, system, `Perform clinical pharmacotherapy analysis.\n\n${ctx}`, 900);
-}
-
-// ============================================================
-// STEP C3 — Pharmacotherapy Review
-// ============================================================
-async function stepC3_pharmaReview(data, renalResult, clinicalAnalysis, env) {
-  const system = `You are a clinical pharmacist. Based on the case data and clinical analysis provided, generate a structured pharmacotherapy review.
-
-For each current medication evaluate:
-1. Indication — is it appropriate?
-2. Dose — correct for this patient (age/weight/organ function)?
-3. Frequency — appropriate?
-4. Duration — defined?
-5. Drug–drug interactions — any significant?
-6. Contraindications — any for this patient?
-7. Renal dose adjustment — required based on CrCl?
-8. Drug–lab conflicts — any?
-
-Use general clinical knowledge. Be concise and specific.`;
-
-  const crclLine = renalResult.crcl !== null ? `CrCl: ${renalResult.crcl} mL/min` : "CrCl: — (missing data)";
-  const ctx = buildContext(data, crclLine);
   return OpenAICall(env, system,
-    `Review pharmacotherapy for this case.\n\n${ctx}\n\nClinical Analysis:\n${clinicalAnalysis}`, 900);
+    `Organize this patient data into Template-1 SOAP.\n\n${buildContext(data, renalLine)}`, 700);
 }
 
 // ============================================================
-// STEP C4 — Protocol-Locked Interventions
+// STEP C2 — Problem coverage check
+// For each problem: what does the guideline say pharmacologically?
+// Is the patient receiving it? What is missing?
 // ============================================================
-async function stepC4_interventions(data, renalResult, clinicalAnalysis, pharmaReview, env) {
-  const primaryProblem = extractPrimaryProblem(clinicalAnalysis);
-  const medNames = (data.current_meds_list || []).map(m => m.name).join(", ");
+async function stepC2_problemCoverage(data, renal, env) {
+  // Search vector store for relevant guidelines
+  const allProblems = [data.reason_admission, data.pmh].filter(Boolean).join(", ");
+  const vectorCtx = await searchVectorStore(
+    `pharmacotherapy guidelines ${allProblems} inpatient management`, env
+  );
 
-  let vectorContext = "";
-  if (env.OPENAI_API_KEY && env.VECTOR_STORE_ID) {
-    vectorContext = await searchEnhancedVectorStore(
-      `${primaryProblem} pharmacist interventions dosing renal monitoring ${medNames}`,
-      env,
-      parseInt(env.TOP_K) || 8
-    );
+  const system = `You are a senior clinical pharmacist consultant reviewing an inpatient case.
+
+YOUR TASK: For each problem (primary admission diagnosis + comorbidities), evaluate PHARMACOTHERAPY ONLY.
+- Non-drug interventions (surgery, physiotherapy, oxygen, etc.) are NOT your concern here.
+- Focus exclusively on medications.
+
+ADMISSION CONTEXT RULE (CRITICAL):
+- Comorbidities in an inpatient must be managed per INPATIENT/ACUTE guidelines, NOT outpatient guidelines.
+- Example: Type 2 DM at home on oral agents → inpatient guideline recommends insulin protocol.
+- Example: Hypertension on oral antihypertensives → assess if IV needed based on BP values.
+- You MUST flag when home therapy should change because of admission context.
+
+For each problem output:
+
+PROBLEM: [name]
+GUIDELINE PHARMACOTHERAPY: [what guidelines recommend for this problem in an INPATIENT setting — drug class, specific agents, dosing targets]
+SOURCE: [guideline name + year + section — from local protocol if available, else AHA/ACC/IDSA/ADA/ASHP/BNF/UpToDate]
+PATIENT STATUS:
+  ✅ COVERED: [what's appropriately prescribed]
+  ❌ MISSING: [what's not prescribed but should be]
+  ⚠️ NEEDS REVIEW: [prescribed but requires assessment — e.g., dose, route, interaction]
+SUMMARY: [1–2 sentence verdict]
+
+---
+
+${vectorCtx ? `LOCAL PROTOCOL FILES AVAILABLE (cite these first):\n${vectorCtx}` : "No local protocol files — cite AHA/ACC/IDSA/ADA international guidelines with year and section."}`;
+
+  const userMsg = `Patient case:
+${buildContext(data, `CrCl: ${renal.crcl ?? "unknown"} mL/min`)}
+
+Perform problem-by-problem pharmacotherapy coverage check.
+Include ALL problems: reason for admission AND comorbidities from PMH.`;
+
+  return OpenAICall(env, system, userMsg, 1400);
+}
+
+// ============================================================
+// STEP C3 — Home medications management at admission
+// Should each home med be CONTINUED, HELD, or SWITCHED?
+// ============================================================
+async function stepC3_homeMeds(data, renal, env) {
+  if (!data.home_meds_list?.length && !data.home_meds_text) {
+    return "No home medications documented.";
   }
 
-  const system = `You are a clinical pharmacist generating evidence-based interventions.
+  const vectorCtx = await searchVectorStore(
+    `home medication management admission hold continue ${data.reason_admission ?? ""}`, env
+  );
 
-CRITICAL RULES:
-- Every intervention MUST have an Evidence line.
-- If local protocol text is provided below — cite it with filename + section.
-- If no local protocol → cite recognized international guidelines (Surviving Sepsis Campaign 2021, IDSA CAP 2019, ACC/AHA, ACCP, BNF, etc.) with year and section.
-- If genuinely no evidence available → write EXACTLY: "Evidence not found in local protocol."
-- NEVER fabricate citations. NEVER invent guideline content.
+  const system = `You are a senior clinical pharmacist reviewing home medications at the time of hospital admission.
 
-Format each intervention EXACTLY as:
-[N]. Intervention: <specific recommendation>
-    Rationale: <clinical reasoning>
-    Evidence: <citation — or "Evidence not found in local protocol.">
-    Priority: HIGH / MEDIUM / LOW`;
+For EACH home medication, decide:
+  ✅ CONTINUE — safe and appropriate during admission
+  ⏸️ HOLD — should be withheld during admission (state reason and when to restart)
+  🔄 SWITCH — replace with inpatient alternative (state what and why)
+  ⚠️ REVIEW — needs monitoring or dose adjustment
 
-  const crclLine = renalResult.crcl !== null ? `CrCl: ${renalResult.crcl} mL/min` : "CrCl: —";
-  const ctx = buildContext(data, crclLine);
+INPATIENT CONTEXT RULES:
+- Oral antidiabetics (metformin, SGLT2i, etc.) → typically hold at admission; switch to insulin protocol
+- ACEi/ARBs → hold if AKI, hypotension, or contrast planned
+- Antihypertensives → reassess if patient is NPO, hypotensive, or BP controlled
+- Anticoagulants → reassess based on indication, bleeding risk, procedures
+- NSAIDs → hold in AKI, GI risk, post-operative
+- Diuretics → reassess in electrolyte imbalance or volume depletion
+- Statins → continue unless liver issue
+- Always consider renal function: CrCl ${renal.crcl ?? "unknown"} mL/min
 
-  const userMsg = `Generate pharmacist interventions for this case.
+For each med output:
+DRUG: [name + dose + frequency]
+DECISION: [✅/⏸️/🔄/⚠️] [action]
+REASON: [clinical rationale]
+EVIDENCE: [guideline / protocol source — or "Evidence not found in local protocol."]
 
-${ctx}
+${vectorCtx ? `LOCAL PROTOCOL FILES:\n${vectorCtx}` : "No local protocol — use international guidelines (ADA 2024, ACC/AHA, KDIGO, etc.)"}`;
 
-Clinical Analysis:
-${clinicalAnalysis}
+  const userMsg = `Patient:
+Age: ${data.age ?? "?"} | Sex: ${data.sex ?? "?"} | Weight: ${data.weight_kg ?? "?"} kg | CrCl: ${renal.crcl ?? "?"} mL/min
+Admission Reason: ${data.reason_admission ?? "N/A"}
+PMH: ${data.pmh ?? "N/A"}
+Allergies: ${data.allergies ?? "N/A"}
+Labs: ${data.labs_text ?? "N/A"}
 
-Pharmacotherapy Review:
-${pharmaReview}
+Home Medications:
+${data.home_meds_text ?? JSON.stringify(data.home_meds_list, null, 2)}
 
-${vectorContext ? `LOCAL PROTOCOL CONTENT (cite this if relevant):\n${vectorContext}` : "No local protocol files available — use international guidelines."}`;
+Review each home medication for admission management.`;
+
+  return OpenAICall(env, system, userMsg, 1000);
+}
+
+// ============================================================
+// STEP C4 — DVT & Stress Ulcer Prophylaxis (SUP) assessment
+// ============================================================
+async function stepC4_prophylaxis(data, renal, env) {
+  const vectorCtx = await searchVectorStore(
+    `DVT VTE prophylaxis stress ulcer SUP inpatient protocol ${data.reason_admission ?? ""}`, env
+  );
+
+  const system = `You are a clinical pharmacist assessing inpatient prophylaxis needs.
+
+ASSESS TWO THINGS:
+
+━━━ 1. VTE / DVT PROPHYLAXIS ━━━
+- Use Padua Prediction Score for medical patients OR Caprini Score for surgical.
+- State the score and risk level (LOW / MODERATE / HIGH).
+- Recommend: pharmacological (LMWH / UFH / fondaparinux — renal-adjusted) or mechanical (IPC) or both.
+- Check if currently ordered. Flag if missing or wrong dose.
+- Renal consideration: CrCl ${renal.crcl ?? "unknown"} mL/min (adjust enoxaparin if CrCl <30).
+- Contraindications: active bleeding, thrombocytopenia, recent surgery, etc.
+
+━━━ 2. STRESS ULCER PROPHYLAXIS (SUP) ━━━
+- Assess SUP risk factors: ICU, mechanical ventilation >48h, coagulopathy, history of GI bleed, high-dose steroids, NSAID use, multiple organ failure.
+- If indicated → recommend PPI or H2RA (state preference + dose).
+- If NOT indicated → state clearly (avoid unnecessary PPI use).
+- Check if currently ordered appropriately.
+
+For each, output:
+INDICATION: [Yes/No + risk factors present]
+RECOMMENDED REGIMEN: [drug + dose + frequency + duration]
+CURRENT STATUS: [✅ Ordered correctly / ❌ Missing / ⚠️ Wrong dose or agent]
+EVIDENCE: [protocol or guideline source]
+
+${vectorCtx ? `LOCAL PROTOCOL:\n${vectorCtx}` : "No local protocol — cite ASHP/ACCP/CHEST/ACC guidelines with year."}`;
+
+  const userMsg = `Patient:
+Age: ${data.age ?? "?"} | Sex: ${data.sex ?? "?"} | Weight: ${data.weight_kg ?? "?"} kg | CrCl: ${renal.crcl ?? "?"} mL/min
+Admission: ${data.reason_admission ?? "N/A"}
+PMH: ${data.pmh ?? "N/A"}
+Labs: ${data.labs_text ?? "N/A"}
+Vitals: ${data.vitals_text ?? "N/A"}
+Current meds: ${data.current_meds_text ?? "N/A"}
+
+Assess DVT and SUP prophylaxis.`;
 
   return OpenAICall(env, system, userMsg, 900);
 }
 
 // ============================================================
-// STEP C5 — Template-2 Pharmacist SOAP Note
+// STEP C5 — Medication-by-medication deep verification
+// Every current inpatient med goes through a fine filter
 // ============================================================
-async function stepC5_template2(data, renalLine, clinicalAnalysis, interventions, env) {
-  const system = `You are a clinical pharmacist writing a formal Pharmacist SOAP Note.
+async function stepC5_medVerification(data, renal, env) {
+  const medList = data.current_meds_list ?? [];
 
-Output EXACTLY this structure. No markdown. No bold. No extra sections:
+  if (!medList.length) return "No current inpatient medications documented.";
 
-S: Patient (MRN: <mrn>), <age> Y, <weight> kg admitted to <ward>.
-Reason for Admission: <text or N/A>
-PMH: <text or N/A>
-Home Meds: <text or N/A>
+  const medNames = medList.map(m => m.name).join(", ");
+  const vectorCtx = await searchVectorStore(
+    `drug monograph dosing renal adjustment monitoring ${medNames}`, env
+  );
 
-O: Vitals: <text or N/A>
-Labs: <text or N/A>
-Renal: <renal_line>
+  const system = `You are a clinical pharmacist performing a rigorous medication review using the Drug Monograph (from local PDFs if available, else standard references: Lexicomp, BNF, Micromedex, UpToDate).
 
-A: Primary admission for <acute issue from case — if unclear write: acute issues>. Clinical review performed.
+For EACH medication, evaluate ALL of the following. Be SPECIFIC — use actual patient values.
 
-P:
-Current Medications:
-<list each med starting with ->
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💊 DRUG: [name]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 Indication:
+  - Is the indication documented and appropriate for this patient? [Yes / No / Unclear]
+  - Evidence: [citation]
 
-Pharmacist Intervention:
-<copy the interventions exactly as provided>
+📌 Dose:
+  - Prescribed: [what's written]
+  - Recommended: [standard range for this indication]
+  - Renal adjustment needed? CrCl = ${renal.crcl ?? "unknown"} mL/min → [adjusted dose if needed]
+  - Weight-based? → [calculated dose if applicable: weight used = ${renal.weight_used ?? "unknown"} kg]
+  - Assessment: [✅ Correct / ❌ Issue: state problem]
+  - Evidence: [citation]
 
-Follow-up Plan:
-<monitoring parameters, targets, frequency>
+📌 Frequency:
+  - Prescribed vs. recommended: [assessment]
+  - Renal or hepatic adjustment needed? [Yes/No + detail]
 
-RULES:
-- Evidence lines must be preserved exactly from the interventions provided.
-- "Evidence not found in local protocol." must be kept as-is if present.
-- Follow-up Plan must include specific monitoring targets and timeframes.`;
+📌 Route:
+  - Appropriate? [Yes/No — e.g., oral when NPO?]
 
-  const ctx = buildContext(data, renalLine);
-  return OpenAICall(env, system,
-    `Generate Template-2 Pharmacist SOAP Note.\n\n${ctx}\n\nInterventions:\n${interventions}`, 900);
+📌 Drug–Drug Interactions (DDI):
+  - With other current meds: [list any significant interactions + severity]
+  - Management: [monitor / switch / avoid]
+  - Evidence: [citation]
+
+📌 Contraindications & Drug–Disease:
+  - Any contraindication given PMH or current condition? [list if yes]
+  - Evidence: [citation]
+
+📌 Drug–Lab Conflicts:
+  - Any lab value that flags concern with this drug?
+  - Example: nephrotoxic drug + AKI, K+ rising + ACEI, INR elevated + warfarin
+  - Evidence: [citation]
+
+📌 Monitoring Required:
+  - Parameters to monitor: [list]
+  - Target values: [specific targets]
+  - Frequency: [e.g., daily, weekly, at 48h]
+
+📌 Allergies:
+  - Any documented allergy conflict? [Yes/No]
+
+📌 Overall Assessment:
+  ✅ No issues | ⚠️ Requires monitoring | ❌ Intervention needed: [what]
+
+EVIDENCE RULES:
+- Cite LOCAL protocol PDF if available (filename + section).
+- If not → cite Lexicomp / BNF / IDSA / ACC/AHA / KDIGO / UpToDate with year and section.
+- NEVER fabricate citations. If unknown → "Evidence not found in local protocol."
+
+${vectorCtx ? `LOCAL DRUG MONOGRAPH FILES:\n${vectorCtx}` : "No local drug files — use standard references (Lexicomp, BNF, UpToDate, etc.)"}`;
+
+  const userMsg = `Patient:
+Age: ${data.age ?? "?"} Y | Sex: ${data.sex ?? "?"} | Weight: ${data.weight_kg ?? "?"} kg | CrCl: ${renal.crcl ?? "?"} mL/min
+IBW: ${renal.ibw ?? "?"} kg | Weight used for dosing: ${renal.weight_used ?? "?"} kg (${renal.weight_label ?? "?"})
+PMH: ${data.pmh ?? "N/A"}
+Allergies: ${data.allergies ?? "N/A"}
+Labs: ${data.labs_text ?? "N/A"}
+Vitals: ${data.vitals_text ?? "N/A"}
+Admission: ${data.reason_admission ?? "N/A"}
+
+ALL current inpatient medications:
+${JSON.stringify(medList, null, 2)}
+
+Perform deep medication verification for each drug.`;
+
+  return OpenAICall(env, system, userMsg, 2000);
 }
 
 // ============================================================
-// HELPER: Build context block
+// STEP C6 — Final Pharmacist SOAP Note (Template-2)
+// Ready to copy and paste into the medical record
+// ============================================================
+async function stepC6_finalNote(data, renalLine, coverage, homeMedsReview, prophylaxis, medVerification, env) {
+  const system = `You are a senior clinical pharmacist writing a formal pharmacist consultation note.
+This note will be copied directly into the patient's medical record.
+
+Output EXACTLY this structure. Plain text only. No markdown, no bold, no asterisks, no code fences.
+
+════════════════════════════════════════════
+CLINICAL PHARMACIST CONSULTATION NOTE
+════════════════════════════════════════════
+
+S: Patient (MRN: __), __ Y __ admitted to __.
+Reason for Admission: __
+PMH: __
+Allergies: __
+Home Medications: __
+
+O: Vitals: __
+Labs: __
+Renal Function: __
+
+A: Clinical pharmacotherapy review performed for patient admitted with __.
+[1–2 sentence summary of key clinical findings relevant to pharmacotherapy]
+
+P:
+─── PROBLEM-BASED PHARMACOTHERAPY COVERAGE ───
+[For each problem: state guideline recommendation briefly, then current status — COVERED / PARTIAL / GAP]
+
+─── HOME MEDICATIONS AT ADMISSION ───
+[Each home med: CONTINUE / HOLD / SWITCH — one line per drug with brief reason]
+
+─── PROPHYLAXIS ───
+VTE: [recommendation + current status]
+SUP: [recommendation + current status]
+
+─── MEDICATION INTERVENTIONS ───
+[List each issue found in med verification as a numbered intervention:]
+[N]. [Drug] — [Issue] → [Recommended action]
+     Evidence: [citation]
+
+─── MONITORING PLAN ───
+[Key parameters, targets, and frequency]
+
+─── PHARMACIST SIGNATURE ───
+Clinical Pharmacist | Date: [leave blank]
+
+RULES:
+- Interventions must include evidence.
+- "Evidence not found in local protocol." if no citation available.
+- Monitoring plan must have specific targets and timeframes.
+- Summary should be concise — this is a note, not a report.`;
+
+  const userMsg = `Generate the final pharmacist note from this case review.
+
+PATIENT:
+${buildContext(data, renalLine)}
+
+PROBLEM COVERAGE REVIEW:
+${coverage}
+
+HOME MEDICATIONS REVIEW:
+${homeMedsReview}
+
+PROPHYLAXIS ASSESSMENT:
+${prophylaxis}
+
+MEDICATION VERIFICATION:
+${medVerification}`;
+
+  return OpenAICall(env, system, userMsg, 1800);
+}
+
+// ============================================================
+// HELPER: Vector Store Search — with diagnostics
+// ============================================================
+async function searchVectorStore(query, env, maxResults = 8) {
+  if (!env.OPENAI_API_KEY) { console.warn("⚠️ VS: no API key"); return ""; }
+  if (!env.VECTOR_STORE_ID) { console.warn("⚠️ VS: no VECTOR_STORE_ID"); return ""; }
+
+  console.log(`🔎 VS search: "${query.substring(0, 80)}..."`);
+
+  try {
+    const res = await fetch(
+      `https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+          "Content-Type":  "application/json",
+          "OpenAI-Beta":   "assistants=v2",
+        },
+        body: JSON.stringify({ query, max_num_results: maxResults, include_metadata: true }),
+      }
+    );
+
+    console.log(`🔎 VS status: ${res.status}`);
+    if (!res.ok) {
+      const err = await res.text();
+      console.error(`❌ VS ${res.status}: ${err}`);
+      if (res.status === 404) console.error(`❌ VECTOR_STORE_ID "${env.VECTOR_STORE_ID}" not found`);
+      if (res.status === 401) console.error("❌ API key invalid or expired");
+      return "";
+    }
+
+    const result = await res.json();
+    const hits = result?.data?.length ?? 0;
+    console.log(`✅ VS: ${hits} hit(s)`);
+    if (!hits) return "";
+
+    return result.data.map((item, i) => {
+      const content  = extractContent(item);
+      const filename = item.filename || item.file_id || `Protocol ${i + 1}`;
+      const page     = item.metadata?.page || item.metadata?.section || "";
+      const pageInfo = page ? ` [${page}]` : "";
+      console.log(`  📄 ${filename}${pageInfo} score=${item.score?.toFixed(3) ?? "?"}`);
+      return `--- SOURCE: ${filename}${pageInfo} ---\n${content.substring(0, 600)}`;
+    }).join("\n\n");
+
+  } catch (err) {
+    console.error("❌ VS fetch error:", err.message);
+    return "";
+  }
+}
+
+// ============================================================
+// HELPER: Build patient context block
 // ============================================================
 function buildContext(data, renalLine) {
-  return `
-PATIENT DATA:
-MRN: ${data.mrn ?? ""}
-Age: ${data.age ?? "—"} Y  |  Sex: ${data.sex ?? "—"}  |  Weight: ${data.weight_kg ?? "—"} kg  |  Height: ${data.height_raw ?? "—"}
+  return `MRN: ${data.mrn ?? "—"}
+Age: ${data.age ?? "—"} Y | Sex: ${data.sex ?? "—"} | Weight: ${data.weight_kg ?? "—"} kg | Height: ${data.height_raw ?? "—"}
 Ward: ${data.ward ?? "—"}
 Reason for Admission: ${data.reason_admission ?? "N/A"}
 PMH: ${data.pmh ?? "N/A"}
 Allergies: ${data.allergies ?? "N/A"}
-Home Medications: ${data.home_meds ?? "N/A"}
+Home Medications: ${data.home_meds_text ?? "N/A"}
 Vitals: ${data.vitals_text ?? "N/A"}
 Labs: ${data.labs_text ?? "N/A"}
 Imaging: ${data.imaging ?? "N/A"}
-Current Medications: ${data.current_meds_text ?? "N/A"}
-Renal (pre-calculated): ${renalLine}
-`.trim();
+Current Inpatient Medications: ${data.current_meds_text ?? "N/A"}
+Renal: ${renalLine}`.trim();
 }
 
 // ============================================================
-// HELPER: Extract primary problem from analysis text
-// ============================================================
-function extractPrimaryProblem(analysisText) {
-  const match = analysisText?.match(/PRIMARY ACUTE CONDITION[\s\S]{0,5}\n([^\n]+)/i);
-  return match ? match[1].trim() : "acute inpatient condition";
-}
-
-// ============================================================
-// HELPER: Extract content from vector store response
+// HELPER: Extract content from vector store item
 // ============================================================
 function extractContent(item) {
   if (!item.content) return item.text || "";
@@ -904,39 +660,33 @@ function extractContent(item) {
 }
 
 // ============================================================
-// FIX 12: Centralized safe JSON parser — replaces all scattered try/catch blocks
+// HELPER: Safe JSON parse
 // ============================================================
 function safeParseJSON(raw, fallback) {
   try {
-    // Strip markdown code fences and leading/trailing whitespace
-    const clean = raw
-      .replace(/```json\s*/gi, "")
-      .replace(/```\s*/gi, "")
-      .trim();
-    return JSON.parse(clean);
+    return JSON.parse(raw.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim());
   } catch {
     return fallback;
   }
 }
 
 // ============================================================
-// HELPER: OpenAI API call
+// HELPER: OpenAI chat completion
 // ============================================================
 async function OpenAICall(env, system, userMessage, maxTokens = 800) {
   const model = env.MODEL || "gpt-4-turbo-preview";
-
-  console.log(`Calling OpenAI with model: ${model}, maxTokens: ${maxTokens}`);
+  console.log(`🤖 OpenAI call | model=${model} | maxTokens=${maxTokens}`);
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
+      "Content-Type":  "application/json",
     },
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
-      temperature: 0.3,
+      temperature: 0.2,
       messages: [
         { role: "system", content: system },
         { role: "user",   content: userMessage },
@@ -946,8 +696,8 @@ async function OpenAICall(env, system, userMessage, maxTokens = 800) {
 
   if (!res.ok) {
     const err = await res.text();
-    console.error("OpenAI API error:", err);
-    throw new Error(`OpenAI API error ${res.status}: ${err}`);
+    console.error("❌ OpenAI error:", err);
+    throw new Error(`OpenAI API ${res.status}: ${err}`);
   }
 
   const data = await res.json();
@@ -955,7 +705,7 @@ async function OpenAICall(env, system, userMessage, maxTokens = 800) {
 }
 
 // ============================================================
-// HELPER: JSON response
+// HELPER: JSON HTTP response
 // ============================================================
 function json(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
