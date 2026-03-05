@@ -15,6 +15,7 @@
       --surface: #ffffff;
       --border: #e2e8f0;
       --text-main: #1e293b;
+      --muted: #64748b;
       --font-sans: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
       --radius: 16px;
@@ -40,7 +41,7 @@
 
     header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 26px;
     }
 
     .brand h1 {
@@ -50,7 +51,7 @@
       margin-bottom: 8px;
     }
 
-    .brand p { color: #64748b; font-size: 0.9rem; }
+    .brand p { color: var(--muted); font-size: 0.95rem; }
 
     .main-grid {
       display: grid;
@@ -61,43 +62,90 @@
     .card {
       background: var(--surface);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 22px;
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
       border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      min-height: 620px;
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding-bottom: 12px;
       border-bottom: 1px solid #f1f5f9;
     }
 
-    .card-title { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+    .card-title {
+      font-weight: 800;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 1px;
+    }
 
-    textarea {
+    .subtle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+
+    textarea, input[type="text"] {
       width: 100%;
-      height: 500px;
-      padding: 20px;
+      padding: 14px 14px;
       border: 1px solid #f1f5f9;
       border-radius: 12px;
       font-family: var(--font-mono);
       font-size: 0.9rem;
-      resize: none;
       background: #f8fafc;
       transition: all 0.2s;
     }
 
-    textarea:focus { outline: none; border-color: var(--accent); background: white; }
+    textarea { height: 300px; resize: none; }
+
+    textarea:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .label-row label {
+      font-weight: 800;
+      color: #334155;
+      font-size: 0.9rem;
+    }
+
+    .hint-badge {
+      font-size: 0.72rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-weight: 800;
+      border: 1px solid #e0e7ff;
+    }
 
     .output-area {
       width: 100%;
-      height: 500px;
-      padding: 20px;
+      height: 360px;
+      padding: 16px;
       background: #ffffff;
       border-radius: 12px;
       font-family: var(--font-mono);
@@ -108,17 +156,85 @@
       border: 1px solid #f1f5f9;
     }
 
+    .sources {
+      margin-top: 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+
+    .sources-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .sources-title {
+      font-weight: 900;
+      font-size: 0.85rem;
+      color: #0f172a;
+      letter-spacing: 0.2px;
+    }
+
+    .source-item {
+      padding: 10px 10px;
+      border: 1px solid #eef2f7;
+      border-radius: 10px;
+      background: white;
+      margin-bottom: 8px;
+    }
+
+    .source-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .source-meta {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .source-excerpt {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #475569;
+      white-space: pre-wrap;
+    }
+
+    .mini-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: white;
+      color: #334155;
+      transition: all 0.15s ease;
+    }
+
+    .mini-btn:hover { background: #f8fafc; transform: translateY(-1px); }
+
     .controls {
-      margin-top: 24px;
+      margin-top: 18px;
       display: flex;
       gap: 12px;
       justify-content: center;
     }
 
     button {
-      padding: 14px 32px;
+      padding: 14px 30px;
       border-radius: 50px;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
       transition: all 0.2s;
       font-family: var(--font-sans);
@@ -137,37 +253,31 @@
       align-items: center;
       gap: 8px;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 800;
       color: var(--accent);
     }
 
     .error-message {
-      color: #ef4444;
+      color: #b91c1c;
       background: #fee2e2;
       padding: 12px;
-      border-radius: 8px;
-      margin-top: 16px;
+      border-radius: 10px;
+      margin-top: 10px;
       display: none;
+      border: 1px solid #fecaca;
+      font-weight: 800;
     }
 
     footer {
       text-align: center;
-      padding: 40px;
+      padding: 36px;
       color: #94a3b8;
-      font-size: 0.8rem;
-    }
-
-    .loading-pulse {
-      display: none;
-      text-align: center;
-      color: var(--accent);
-      font-weight: 600;
-      margin-top: 10px;
+      font-size: 0.85rem;
     }
 
     @keyframes pulse {
       0% { opacity: 1; }
-      50% { opacity: 0.3; }
+      50% { opacity: 0.25; }
       100% { opacity: 1; }
     }
 
@@ -180,34 +290,66 @@
   <header>
     <div class="brand">
       <h1>🩺 THERA GUARD AI</h1>
-      <p>Clinical Pharmacist Intelligence System</p>
+      <p>Clinical Pharmacist Intelligence System • Protocol-Locked Evidence</p>
     </div>
   </header>
 
   <div class="main-grid">
+    <!-- LEFT: INPUTS -->
     <div class="card">
       <div class="card-header">
-        <span class="card-title">Patient Raw Data</span>
-        <div id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0;"></div>
+        <span class="card-title">Inputs</span>
+        <div id="statusDot" style="width: 9px; height: 9px; border-radius: 50%; background: #e2e8f0;"></div>
       </div>
-      <textarea id="caseInput" placeholder="Paste medical history, labs, and clinical notes here..."></textarea>
+
+      <div class="field">
+        <div class="label-row">
+          <label for="questionInput">Direct Question (Ask)</label>
+          <span class="hint-badge">QUESTION mode</span>
+        </div>
+        <input id="questionInput" type="text" placeholder="Example: Renal adjustment for Piperacillin/Tazobactam when CrCl < 20?" />
+        <div class="subtle">Use this for fast, evidence-cited answers from your PDF protocols.</div>
+      </div>
+
+      <div class="field">
+        <div class="label-row">
+          <label for="caseInput">Case Data (Optional)</label>
+          <span class="hint-badge">CASE mode</span>
+        </div>
+        <textarea id="caseInput" placeholder="Paste patient note, meds, labs (age/weight/SCr) here..."></textarea>
+        <div class="subtle">If you include any case data, the system will produce the structured SOAP + dose check.</div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">GENERATE</button>
+        <button class="btn-secondary" onclick="clearAll()">CLEAR</button>
+      </div>
+
+      <div id="errorMessage" class="error-message"></div>
     </div>
 
+    <!-- RIGHT: OUTPUT -->
     <div class="card">
       <div class="card-header">
-        <span class="card-title">Structured Pharmacist SOAP</span>
+        <span class="card-title">Output</span>
         <div class="status-indicator" id="loader" style="display:none;">
           <span style="animation: pulse 1s infinite;">●</span> PROCESSING
         </div>
       </div>
-      <div id="finalOutput" class="output-area">Final report will appear here...</div>
-      <div id="errorMessage" class="error-message"></div>
-    </div>
-  </div>
 
-  <div class="controls">
-    <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">GENERATE CLINICAL REPORT</button>
-    <button class="btn-secondary" onclick="clearAll()">NEW CASE</button>
+      <div id="finalOutput" class="output-area">Report will appear here...</div>
+
+      <div class="sources" id="sourcesBox" style="display:none;">
+        <div class="sources-header">
+          <div class="sources-title">Evidence Sources (Proof of PDF retrieval)</div>
+          <button class="mini-btn" onclick="copySources()">Copy Sources</button>
+        </div>
+        <div id="sourcesList"></div>
+        <div class="subtle">
+          Tip: To enable “Open PDF”, return <b>sources[].url</b> from backend (e.g., R2 public link).
+        </div>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -217,88 +359,187 @@
 </div>
 
 <script>
-// تحديد مسار API حسب البيئة
 const API_ENDPOINT = (() => {
-  // للتطوير المحلي
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:8787/api/ask'; // أو أي بورت يستخدمه الـ local server
+    return 'http://localhost:8787/api/ask';
   }
-  // للإنتاج على Cloudflare Pages
   return '/api/ask';
 })();
 
+function decideMode(caseText, questionText) {
+  // If any case data exists -> CASE
+  if (caseText && caseText.trim().length > 0) return "CASE";
+  return "QUESTION";
+}
+
 async function runAnalysis() {
-  const input = document.getElementById("caseInput").value.trim();
+  const question = document.getElementById("questionInput").value.trim();
+  const caseText = document.getElementById("caseInput").value.trim();
+
   const output = document.getElementById("finalOutput");
   const errorDiv = document.getElementById("errorMessage");
   const btn = document.getElementById("analyzeBtn");
   const loader = document.getElementById("loader");
   const dot = document.getElementById("statusDot");
 
-  // إخفاء أي رسالة خطأ سابقة
+  const sourcesBox = document.getElementById("sourcesBox");
+  const sourcesList = document.getElementById("sourcesList");
+  sourcesBox.style.display = "none";
+  sourcesList.innerHTML = "";
+
   errorDiv.style.display = "none";
-  
-  if (!input) {
-    showError("Please enter patient data first.");
+
+  if (!question && !caseText) {
+    showError("Please enter a Direct Question or Case Data.");
     return;
   }
+
+  const mode = decideMode(caseText, question);
 
   btn.disabled = true;
   loader.style.display = "flex";
   dot.style.background = "#2563eb";
-  output.style.opacity = "0.5";
-  output.textContent = "⏳ Analyzing case against clinical protocols...\nThis may take 30-60 seconds.";
+  output.style.opacity = "0.55";
+  output.textContent = mode === "QUESTION"
+    ? "⏳ Retrieving evidence and answering your question..."
+    : "⏳ Analyzing case and checking doses against protocols...";
 
   try {
-    console.log("Sending request to:", API_ENDPOINT);
-    
     const res = await fetch(API_ENDPOINT, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify({ 
-        case_text: input
+      body: JSON.stringify({
+        mode,
+        question_text: question || "",
+        case_text: caseText || ""
       })
     });
 
-    console.log("Response status:", res.status);
-    
     const data = await res.json();
-    console.log("Response data:", data);
 
+    // Backend may return ok:false with helpful error but status 200
     if (!res.ok) {
       throw new Error(data.error || `Server error: ${res.status}`);
     }
 
     if (!data.ok) {
-      throw new Error(data.error || "Analysis failed");
+      // Show protocol-locked / no evidence message cleanly
+      showError(data.error || "Analysis failed");
+      output.textContent = "❌ Unable to generate output (see error above).";
+      dot.style.background = "#ef4444";
+      output.style.opacity = "1";
+      return;
     }
 
-    // عرض التقرير النهائي
-    if (data.final_note) {
-      output.textContent = data.final_note;
-    } else if (data.soap_note) {
-      output.textContent = data.soap_note;
-    } else if (data.template1_soap) {
-      output.textContent = data.template1_soap;
-    } else {
-      // إذا لم نجد أي من الحقول المتوقعة، نعرض البيانات المتاحة
-      output.textContent = JSON.stringify(data, null, 2);
-    }
-    
+    output.textContent = data.final_note || JSON.stringify(data, null, 2);
     output.style.opacity = "1";
     dot.style.background = "#10b981";
+
+    // Render sources if present
+    if (Array.isArray(data.sources) && data.sources.length > 0) {
+      renderSources(data.sources);
+    } else {
+      // still show box, but indicate none
+      renderSources([]);
+    }
 
   } catch (err) {
     console.error("Analysis error:", err);
     showError(err.message);
-    output.textContent = "❌ Analysis failed. Please try again.";
+    output.textContent = "❌ Request failed. Please try again.";
     dot.style.background = "#ef4444";
+    output.style.opacity = "1";
   } finally {
     btn.disabled = false;
     loader.style.display = "none";
+  }
+}
+
+function renderSources(sources) {
+  const sourcesBox = document.getElementById("sourcesBox");
+  const sourcesList = document.getElementById("sourcesList");
+
+  sourcesBox.style.display = "block";
+  sourcesList.innerHTML = "";
+
+  if (!sources || sources.length === 0) {
+    sourcesList.innerHTML = `
+      <div class="source-item">
+        <div class="source-top">
+          <div class="source-meta">No sources returned</div>
+        </div>
+        <div class="source-excerpt">If this was QUESTION mode, your backend should block answers without evidence (Protocol-Locked).</div>
+      </div>
+    `;
+    return;
+  }
+
+  sources.forEach((s) => {
+    const id = escapeHtml(s.id || "S?");
+    const filename = escapeHtml(s.filename || "N/A");
+    const page = escapeHtml(String(s.page ?? "N/A"));
+    const score = (s.score === null || s.score === undefined) ? "N/A" : String(s.score);
+    const excerpt = escapeHtml(s.excerpt || "");
+
+    const url = (typeof s.url === "string" && s.url.startsWith("http")) ? s.url : "";
+
+    const openBtn = url
+      ? `<button class="mini-btn" onclick="openPdf('${encodeURIComponent(url)}')">Open PDF</button>`
+      : `<button class="mini-btn" disabled title="Enable by returning sources[].url from backend" style="opacity:.55; cursor:not-allowed;">Open PDF</button>`;
+
+    const copyBtn = `<button class="mini-btn" onclick="copyText('${encodeURIComponent(`[${id}] ${filename} p.${page}`)}')">Copy</button>`;
+
+    sourcesList.insertAdjacentHTML("beforeend", `
+      <div class="source-item">
+        <div class="source-top">
+          <div class="source-meta">[${id}] ${filename} • p.${page} • score: ${escapeHtml(score)}</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            ${copyBtn}
+            ${openBtn}
+          </div>
+        </div>
+        <div class="source-excerpt">${excerpt}</div>
+      </div>
+    `);
+  });
+}
+
+function openPdf(encodedUrl) {
+  const url = decodeURIComponent(encodedUrl);
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+async function copySources() {
+  const list = document.querySelectorAll(".source-meta");
+  const lines = Array.from(list).map(el => el.textContent.trim()).filter(Boolean);
+  if (!lines.length) return;
+  try {
+    await navigator.clipboard.writeText(lines.join("\n"));
+  } catch {
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = lines.join("\n");
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+}
+
+async function copyText(encoded) {
+  const text = decodeURIComponent(encoded);
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
   }
 }
 
@@ -309,13 +550,25 @@ function showError(message) {
 }
 
 function clearAll() {
+  document.getElementById("questionInput").value = "";
   document.getElementById("caseInput").value = "";
-  document.getElementById("finalOutput").textContent = "Final report will appear here...";
+  document.getElementById("finalOutput").textContent = "Report will appear here...";
   document.getElementById("statusDot").style.background = "#e2e8f0";
   document.getElementById("errorMessage").style.display = "none";
+  document.getElementById("sourcesBox").style.display = "none";
+  document.getElementById("sourcesList").innerHTML = "";
 }
 
-// إضافة معالج لأي أخطاء غير متوقعة
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// Global error guard
 window.onerror = function(msg, url, lineNo, columnNo, error) {
   console.error("Global error:", {msg, url, lineNo, columnNo, error});
   showError("Unexpected error occurred");
