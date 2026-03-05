@@ -1,1258 +1,308 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>المنصة السريرية الذكية · د. محمد الإسحاق</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
-:root {
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --surface-3: #e2e8f0;
-  --border: #cbd5e1;
-  --border-light: #e2e8f0;
-  --primary: #0b5e7c;
-  --primary-light: #e6f0f5;
-  --primary-dark: #064663;
-  --secondary: #2d6a4f;
-  --secondary-light: #e8f0ee;
-  --accent: #b45309;
-  --accent-light: #fef3e2;
-  --success: #0e7b4e;
-  --success-light: #e3f2ed;
-  --warning: #b45309;
-  --warning-light: #fef3e2;
-  --danger: #b91c1c;
-  --danger-light: #fee2e2;
-  --info: #2563eb;
-  --info-light: #dbeafe;
-  --text: #0f172a;
-  --text-2: #334155;
-  --text-3: #64748b;
-  --text-4: #94a3b8;
-  --mono: 'Fira Code', monospace;
-  --title: 'Tajawal', sans-serif;
-  --body: 'Cairo', sans-serif;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.02);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  font-size: 14px;
-}
-
-body {
-  font-family: var(--body);
-  background: var(--bg);
-  color: var(--text);
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-3);
-}
-
-/* Top Bar */
-.topbar {
-  height: 60px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  gap: 16px;
-  flex-shrink: 0;
-  box-shadow: var(--shadow);
-}
-
-.top-logo {
-  width: 36px;
-  height: 36px;
-  background: var(--primary);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: white;
-  flex-shrink: 0;
-}
-
-.top-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.top-name {
-  font-family: var(--title);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
-}
-
-.top-sub {
-  font-size: 0.7rem;
-  color: var(--text-3);
-}
-
-.top-spacer {
-  flex: 1;
-}
-
-.top-chip {
-  background: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  padding: 4px 12px;
-  border-radius: 40px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-/* Workspace */
-.workspace {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  overflow: hidden;
-  gap: 1px;
-  background: var(--border-light);
-}
-
-/* Sidebar */
-.sidebar {
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.sb-block {
-  padding: 20px 18px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.sb-block:last-child {
-  border-bottom: none;
-  flex: 1;
-}
-
-.sb-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sb-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary);
-}
-
-/* Textarea */
-textarea {
-  width: 100%;
-  height: 200px;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  line-height: 1.8;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  resize: vertical;
-  outline: none;
-  color: var(--text);
-  direction: ltr;
-  transition: all 0.2s;
-}
-
-textarea:focus {
-  border-color: var(--primary);
-  background: var(--surface);
-  box-shadow: 0 0 0 3px rgba(11, 94, 124, 0.1);
-}
-
-textarea::placeholder {
-  color: var(--text-4);
-  font-size: 0.7rem;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: none;
-  border-radius: 40px;
-  font-family: var(--body);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  padding: 10px 20px;
-  font-size: 0.85rem;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  width: 100%;
-  background: var(--primary);
-  color: white;
-  margin-top: 12px;
-  box-shadow: 0 4px 12px rgba(11, 94, 124, 0.2);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(11, 94, 124, 0.3);
-}
-
-.btn-secondary {
-  width: 100%;
-  background: transparent;
-  color: var(--text-2);
-  border: 1.5px solid var(--border);
-  margin-top: 8px;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-light);
-}
-
-.btn-sample {
-  width: 100%;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
-  color: var(--text-2);
-  padding: 10px 14px;
-  font-size: 0.8rem;
-  text-align: right;
-  border-radius: var(--radius-sm);
-  margin-top: 6px;
-  font-weight: 500;
-  justify-content: flex-start;
-}
-
-.btn-sample:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-light);
-}
-
-.btn-copy {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  padding: 4px 12px;
-  font-size: 0.7rem;
-  border-radius: 6px;
-  font-family: var(--mono);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-copy:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-light);
-}
-
-.btn-copy.success {
-  background: var(--success-light);
-  border-color: var(--success);
-  color: var(--success);
-}
-
-/* Pipeline Steps */
-.pipe-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.pipe-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
-  background: var(--surface-2);
-  transition: all 0.3s;
-}
-
-.pipe-step.running {
-  background: var(--primary-light);
-  border-color: var(--primary);
-}
-
-.pipe-step.done {
-  background: var(--success-light);
-  border-color: var(--success);
-}
-
-.pipe-num {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: var(--surface-3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-2);
-  flex-shrink: 0;
-}
-
-.pipe-step.running .pipe-num {
-  background: var(--primary);
-  color: white;
-}
-
-.pipe-step.done .pipe-num {
-  background: var(--success);
-  color: white;
-}
-
-.pipe-name {
-  flex: 1;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-2);
-}
-
-.pipe-step.running .pipe-name {
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.pipe-step.done .pipe-name {
-  color: var(--success);
-}
-
-/* Main Content Area */
-.main {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg);
-}
-
-/* Tabs */
-.tabbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  align-items: stretch;
-  padding: 0 20px;
-  gap: 2px;
-  overflow-x: auto;
-  flex-shrink: 0;
-  direction: ltr;
-}
-
-.tabbar::-webkit-scrollbar {
-  height: 0;
-}
-
-.tab {
-  padding: 14px 16px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-3);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.tab:hover:not(.locked) {
-  color: var(--text);
-}
-
-.tab.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-}
-
-.tab.locked {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Output Area */
-.output-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-}
-
-/* Cards */
-.sec-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1.5px solid var(--border-light);
-}
-
-.sec-title {
-  font-family: var(--title);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sec-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: var(--primary);
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow);
-}
-
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.card-title {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--text-2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Missing Data Banner */
-.missing-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--warning-light);
-  border: 1px solid #fde68a;
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  font-size: 0.85rem;
-  color: var(--warning);
-}
-
-.missing-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.missing-tag {
-  background: white;
-  border: 1px solid #fcd34d;
-  color: var(--warning);
-  padding: 2px 10px;
-  border-radius: 40px;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-/* Renal Card */
-.renal-card {
-  background: var(--primary-dark);
-  border-radius: var(--radius-md);
-  padding: 20px 22px;
-  margin-bottom: 16px;
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 24px;
-  align-items: center;
-  color: white;
-}
-
-.renal-left {
-  text-align: center;
-  border-left: 1px solid rgba(255,255,255,0.15);
-  padding-left: 24px;
-}
-
-.renal-num {
-  font-family: var(--title);
-  font-size: 3rem;
-  font-weight: 800;
-  color: #7ab7d4;
-  line-height: 1;
-}
-
-.renal-unit {
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.5);
-  margin-top: 4px;
-}
-
-.renal-grade {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  margin-top: 8px;
-  padding: 3px 10px;
-  border-radius: 40px;
-  display: inline-block;
-  background: rgba(255,255,255,0.1);
-}
-
-.renal-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.renal-item label {
-  display: block;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 2px;
-}
-
-.renal-item span {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: white;
-  font-weight: 500;
-}
-
-.renal-missing {
-  grid-column: 1/-1;
-  background: rgba(180, 83, 9, 0.2);
-  border: 1px solid rgba(180, 83, 9, 0.4);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 0.75rem;
-  color: #fbbf24;
-}
-
-/* SOAP Pre */
-.soap-pre {
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  line-height: 1.9;
-  white-space: pre-wrap;
-  background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  border: 1px solid var(--border);
-  color: var(--text);
-  direction: ltr;
-}
-
-/* Prose */
-.prose {
-  font-size: 0.85rem;
-  line-height: 1.9;
-  white-space: pre-wrap;
-  color: var(--text-2);
-  font-family: var(--body);
-}
-
-/* Final Note */
-.final-wrap {
-  background: var(--surface);
-  border: 2px solid var(--primary);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  position: relative;
-  box-shadow: var(--shadow);
-}
-
-.final-badge {
-  position: absolute;
-  top: -12px;
-  right: 20px;
-  background: var(--primary);
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 14px;
-  border-radius: 40px;
-}
-
-.final-text {
-  font-family: var(--mono);
-  font-size: 0.82rem;
-  line-height: 2;
-  white-space: pre-wrap;
-  color: var(--text);
-  direction: ltr;
-}
-
-/* Empty State */
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 70vh;
-  gap: 16px;
-  text-align: center;
-  color: var(--text-3);
-}
-
-.empty-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 24px;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-  margin-bottom: 8px;
-  color: var(--primary);
-}
-
-.empty h2 {
-  font-family: var(--title);
-  font-size: 1.4rem;
-  color: var(--text-2);
-  font-weight: 600;
-}
-
-.empty p {
-  color: var(--text-3);
-  font-size: 0.9rem;
-  max-width: 340px;
-  line-height: 1.7;
-}
-
-/* Error Box */
-.err-box {
-  display: none;
-  background: var(--danger-light);
-  border: 1px solid #fecaca;
-  border-radius: var(--radius-sm);
-  padding: 14px 18px;
-  margin-bottom: 16px;
-  color: var(--danger);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-/* Animations */
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-up {
-  animation: fadeUp 0.3s ease forwards;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.spin-icon {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-/* Responsive */
-@media (max-width: 860px) {
-  .workspace {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    max-height: 60vh;
-  }
-  body {
-    overflow: auto;
-  }
-}
-
-/* RTL Specific */
-.renal-left {
-  border-left: 1px solid rgba(255,255,255,0.15);
-  border-right: none;
-  padding-left: 24px;
-  padding-right: 0;
-}
-
-.final-badge {
-  right: 20px;
-  left: auto;
-}
-
-.tab {
-  font-family: var(--body);
-}
-
-.btn-sample {
-  text-align: right;
-}
-</style>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THERAGUARD AI | المنصة السريرية</title>
+    </head>
 <body>
-<header class="topbar">
-  <div class="top-logo">⚕️</div>
-  <div class="top-info">
-    <div class="top-name">المنصة السريرية الذكية</div>
-    <div class="top-sub">د. محمد الإسحاق · صيدلي سريري</div>
-  </div>
-  <div class="top-spacer"></div>
-  <div class="top-chip">الإصدار 4.0 · ذكاء تحليلي</div>
-</header>
 
-<div class="workspace">
-  <aside class="sidebar">
-    <div class="sb-block">
-      <div class="sb-label"><span class="sb-dot"></span>بيانات الحالة السريرية</div>
-      <textarea id="caseInput" placeholder="الصق بيانات المريض هنا ...&#10;ملاحظات الطبيب · التحاليل · الأدوية · العلامات الحيوية&#10;&#10;Ctrl+Enter للتحليل"></textarea>
-      <button class="btn btn-primary" id="runBtn" onclick="runAnalysis()">
-        <span id="runContent">🔍 تحليل الحالة</span>
-      </button>
-      <button class="btn btn-secondary" onclick="clearAll()">مسح</button>
-    </div>
-    <div class="sb-block">
-      <div class="sb-label"><span class="sb-dot"></span>حالات تجريبية</div>
-      <button class="btn btn-sample" onclick="loadSample(1)">📋 مريض قلب · اندحاس قلبي</button>
-      <button class="btn btn-sample" onclick="loadSample(2)">❤️ متلازمة إكليلية + قصور كلوي</button>
-    </div>
-    <div class="sb-block">
-      <div class="sb-label"><span class="sb-dot"></span>خطوات التحليل</div>
-      <div class="pipe-list">
-        <div class="pipe-step" id="ps-extract"><div class="pipe-num">١</div><span class="pipe-name">استخراج البيانات</span><span>📥</span></div>
-        <div class="pipe-step" id="ps-crcl"><div class="pipe-num">٢</div><span class="pipe-name">حساب وظائف الكلى</span><span>🧮</span></div>
-        <div class="pipe-step" id="ps-soap"><div class="pipe-num">٣</div><span class="pipe-name">تنظيم الحالة (SOAP)</span><span>📋</span></div>
-        <div class="pipe-step" id="ps-cov"><div class="pipe-num">٤</div><span class="pipe-name">تغطية المشاكل الدوائية</span><span>🎯</span></div>
-        <div class="pipe-step" id="ps-home"><div class="pipe-num">٥</div><span class="pipe-name">مراجعة الأدوية المنزلية</span><span>🏠</span></div>
-        <div class="pipe-step" id="ps-prophy"><div class="pipe-num">٦</div><span class="pipe-name">الوقاية من الجلطات والقرحة</span><span>🛡️</span></div>
-        <div class="pipe-step" id="ps-meds"><div class="pipe-num">٧</div><span class="pipe-name">التحقق الدقيق من الأدوية</span><span>💊</span></div>
-        <div class="pipe-step" id="ps-note"><div class="pipe-num">٨</div><span class="pipe-name">التقرير النهائي</span><span>📝</span></div>
-      </div>
-    </div>
-  </aside>
-
-  <div class="main">
-    <div class="tabbar">
-      <div class="tab active locked" data-tab="soap"     onclick="switchTab('soap')"><span>📋</span> SOAP</div>
-      <div class="tab locked"        data-tab="coverage" onclick="switchTab('coverage')"><span>🎯</span> التغطية</div>
-      <div class="tab locked"        data-tab="home"     onclick="switchTab('home')"><span>🏠</span> الأدوية المنزلية</div>
-      <div class="tab locked"        data-tab="prophy"   onclick="switchTab('prophy')"><span>🛡️</span> الوقاية</div>
-      <div class="tab locked"        data-tab="meds"     onclick="switchTab('meds')"><span>💊</span> التحقق الدوائي</div>
-      <div class="tab locked"        data-tab="note"     onclick="switchTab('note')"><span>📝</span> التقرير النهائي</div>
-    </div>
-    <div class="output-scroll" id="outputScroll">
-      <div class="err-box" id="errBox"></div>
-      <div class="empty" id="emptyState">
-        <div class="empty-icon">⚕️</div>
-        <h2>المنصة جاهزة للتحليل</h2>
-        <p>الصق بيانات الحالة السريرية واضغط "تحليل" لبدء المراجعة الدوائية الشاملة</p>
-      </div>
-      <div id="panel-soap" style="display:none"></div>
-      <div id="panel-coverage" style="display:none"></div>
-      <div id="panel-home" style="display:none"></div>
-      <div id="panel-prophy" style="display:none"></div>
-      <div id="panel-meds" style="display:none"></div>
-      <div id="panel-note" style="display:none"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-'use strict';
-const API = '/api/ask';
-const PIPE_IDS = ['extract','crcl','soap','cov','home','prophy','meds','note'];
-let _data = null;
-let _busy = false;
-let _pipeTimer = null;
-
-// دوال مساعدة
-function setPipe(id, status) {
-  const el = document.getElementById('ps-' + id);
-  if (el) {
-    el.className = 'pipe-step';
-    if (status) el.classList.add(status);
-  }
-}
-
-function resetPipe() {
-  PIPE_IDS.forEach(id => setPipe(id, ''));
-}
-
-function donePipe() {
-  PIPE_IDS.forEach(id => setPipe(id, 'done'));
-}
-
-function errPipe() {
-  PIPE_IDS.forEach(id => setPipe(id, 'error'));
-}
-
-function startPipeAnim() {
-  resetPipe();
-  let i = 0;
-  _pipeTimer = setInterval(() => {
-    if (i < PIPE_IDS.length) {
-      if (i > 0) setPipe(PIPE_IDS[i-1], 'running');
-      setPipe(PIPE_IDS[i], 'running');
-      i++;
-    } else {
-      clearInterval(_pipeTimer);
-    }
-  }, 700);
-}
-
-function stopPipeAnim(ok) {
-  clearInterval(_pipeTimer);
-  ok ? donePipe() : errPipe();
-}
-
-// التبديل بين التبويبات
-function switchTab(name) {
-  const tab = document.querySelector('.tab[data-tab="' + name + '"]');
-  if (!tab || tab.classList.contains('locked')) return;
-  
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  tab.classList.add('active');
-  
-  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
-  const panel = document.getElementById('panel-' + name);
-  if (panel) {
-    panel.style.display = 'block';
-    panel.classList.remove('fade-up');
-    void panel.offsetWidth;
-    panel.classList.add('fade-up');
-  }
-  document.getElementById('outputScroll').scrollTop = 0;
-}
-
-function unlockTabs() {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('locked'));
-}
-
-function lockTabs() {
-  document.querySelectorAll('.tab').forEach(t => t.classList.add('locked'));
-}
-
-// التحليل الرئيسي
-async function runAnalysis() {
-  const txt = document.getElementById('caseInput').value.trim();
-  if (!txt) {
-    showErr('الرجاء إدخال بيانات الحالة السريرية');
-    return;
-  }
-  if (_busy) return;
-  
-  _busy = true;
-  const btn = document.getElementById('runBtn');
-  const rc = document.getElementById('runContent');
-  btn.disabled = true;
-  rc.innerHTML = '<span class="spin-icon"></span>&nbsp;جاري التحليل...';
-  
-  hideErr();
-  lockTabs();
-  document.getElementById('emptyState').style.display = 'none';
-  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
-  startPipeAnim();
-  
-  try {
-    const res = await fetch(API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ case_text: txt })
-    });
-    
-    if (!res.ok) throw new Error('خطأ في الخادم ' + res.status);
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'خطأ غير معروف');
-    
-    _data = data;
-    stopPipeAnim(true);
-    buildPanels(data);
-    unlockTabs();
-    switchTab('soap');
-  } catch (err) {
-    stopPipeAnim(false);
-    showErr(err.message);
-    document.getElementById('emptyState').style.display = 'flex';
-  } finally {
-    _busy = false;
-    btn.disabled = false;
-    rc.innerHTML = '🔍 تحليل الحالة';
-  }
-}
-
-// بناء اللوحات
-function buildPanels(d) {
-  setPanel('soap', buildSOAP(d));
-  setPanel('coverage', buildCoverage(d));
-  setPanel('home', buildHome(d));
-  setPanel('prophy', buildProphy(d));
-  setPanel('meds', buildMeds(d));
-  setPanel('note', buildNote(d));
-}
-
-function setPanel(id, html) {
-  const el = document.getElementById('panel-' + id);
-  if (el) el.innerHTML = html;
-}
-
-// دالة حماية XSS
-function escapeHTML(s) {
-  if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-// عرض البيانات المفقودة
-function missingBanner(missing) {
-  if (!missing || !missing.length) return '';
-  const labels = {
-    age: 'العمر',
-    sex: 'الجنس',
-    weight: 'الوزن',
-    SCr: 'الكرياتينين'
-  };
-  return `
-    <div class="missing-banner">
-      <span>⚠️</span>
-      <div>
-        <strong>بيانات أساسية مفقودة - التحليل محدود:</strong>
-        <div class="missing-tags">
-          ${missing.map(v => `<span class="missing-tag">${labels[v] || v}</span>`).join('')}
+    <header class="app-header">
+        <div class="logo-area">
+            <span class="logo-icon">⚕️</span>
+            <div class="logo-text">
+                <h1>THERAGUARD <span>AI</span></h1>
+                <p>المنصة السريرية الذكية</p>
+            </div>
         </div>
-      </div>
+        <div class="header-meta">
+            <span class="status-badge">System Active</span>
+            <span class="user-badge">د. محمد الإسحاق</span>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <nav class="side-nav">
+                <button class="nav-item active" data-tab="soap">📋 تحليل SOAP</button>
+                <button class="nav-item" data-tab="coverage">🎯 التغطية الدوائية</button>
+                <button class="nav-item" data-tab="home-meds">🏠 الأدوية المنزلية</button>
+                <button class="nav-item" data-tab="prophy">🛡️ الوقاية</button>
+                <button class="nav-item" data-tab="verification">💊 التحقق الدقيق</button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Designed by Mohammed Al-Ishaq</p>
+            </div>
+        </aside>
+
+        <main class="main-dashboard">
+            <div class="metrics-bar">
+                <div class="metric-card primary">
+                    <label>CrCl (mL/min)</label>
+                    <span id="crcl-value">--</span>
+                </div>
+                <div class="metric-grid">
+                    <div class="mini-metric">SCr: <span id="scr-val">--</span></div>
+                    <div class="mini-metric">Weight: <span id="weight-val">--</span></div>
+                    <div class="mini-metric">IBW: <span id="ibw-val">--</span></div>
+                </div>
+            </div>
+
+            <section class="chat-interface" id="output-area">
+                <div class="welcome-screen">
+                    <div class="icon-circle">⚕️</div>
+                    <h2>جاهز للتحليل السريري</h2>
+                    <p>أدخل بيانات الحالة في المنطقة المخصصة لبدء المراجعة</p>
+                </div>
+                </section>
+
+            <footer class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="case-input" placeholder="الصق بيانات الحالة، التحاليل، والأدوية هنا..."></textarea>
+                    <div class="action-buttons">
+                        <button id="clear-btn" class="btn-secondary">مسح</button>
+                        <button id="analyze-btn" class="btn-primary">تحليل الحالة</button>
+                    </div>
+                </div>
+            </footer>
+        </main>
     </div>
-  `;
-}
 
-// بطاقة وظائف الكلى
-function renalCard(r) {
-  if (!r) return '';
-  
-  const levels = [
-    [90, 'طبيعي (G1)', '#0e7b4e'],
-    [60, 'انخفاض طفيف (G2)', '#2b6e3b'],
-    [30, 'انخفاض معتدل (G3)', '#b45309'],
-    [15, 'انخفاض شديد (G4)', '#b91c1c'],
-    [0, 'فشل كلوي (G5)', '#7f1d1d']
-  ];
-  
-  let grade = null;
-  if (r.crcl != null) {
-    for (const [threshold, label, color] of levels) {
-      if (r.crcl >= threshold) {
-        grade = { label, color };
-        break;
-      }
-    }
-  }
-  
-  return `
-    <div class="renal-card">
-      <div class="renal-left">
-        <div class="renal-num">${r.crcl != null ? r.crcl : '—'}</div>
-        <div class="renal-unit">مل/دقيقة</div>
-        ${grade ? `<div class="renal-grade" style="background: ${grade.color}20; color: ${grade.color}">${grade.label}</div>` : ''}
-      </div>
-      <div class="renal-grid">
-        <div class="renal-item"><label>كرياتينين</label><span>${r.scr_umol != null ? r.scr_umol + ' ميكرومول/لتر' : '—'}</span></div>
-        <div class="renal-item"><label>كرياتينين (مجم/دل)</label><span>${r.scr_mgdl != null ? r.scr_mgdl : '—'}</span></div>
-        <div class="renal-item"><label>الوزن المثالي</label><span>${r.ibw != null ? r.ibw + ' كجم' : '—'}</span></div>
-        <div class="renal-item"><label>الوزن المستخدم</label><span>${r.weight_used != null ? r.weight_used + ' كجم' : '—'}</span></div>
-        <div class="renal-item" style="grid-column:1/-1"><label>معيار الجرعات</label><span>${escapeHTML(r.weight_label) || '—'}</span></div>
-        ${r.missing && r.missing.length ? `<div class="renal-missing">⚠️ بيانات ناقصة: ${r.missing.join('، ')}</div>` : ''}
-      </div>
-    </div>
-  `;
-}
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --surface-dark: #0f172a;
+            --border-color: #1e293b;
+            --primary-cyan: #06b6d4;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent-rose: #f43f5e;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-// دالة النسخ
-function copyToClipboard(elementId, btn) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  
-  navigator.clipboard.writeText(el.innerText || '').then(() => {
-    btn.textContent = '✓ تم النسخ';
-    btn.classList.add('success');
-    setTimeout(() => {
-      btn.textContent = 'نسخ';
-      btn.classList.remove('success');
-    }, 2000);
-  }).catch(() => {});
-}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-// بناء كل لوحة
-function buildSOAP(d) {
-  return `
-    ${missingBanner(d.missing_data)}
-    <div class="sec-head">
-      <div class="sec-title"><div class="sec-icon">📋</div>تنظيم الحالة - SOAP</div>
-      <button class="btn-copy" onclick="copyToClipboard('soap-content', this)">نسخ</button>
-    </div>
-    ${renalCard(d.renal)}
-    <div class="card">
-      <div class="card-head"><span class="card-title">ملاحظات SOAP</span></div>
-      <div class="soap-pre" id="soap-content">${escapeHTML(d.template1_soap || 'لا توجد بيانات')}</div>
-    </div>
-  `;
-}
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-function buildCoverage(d) {
-  return `
-    <div class="sec-head">
-      <div class="sec-title"><div class="sec-icon">🎯</div>تغطية المشاكل الدوائية</div>
-      <button class="btn-copy" onclick="copyToClipboard('coverage-content', this)">نسخ</button>
-    </div>
-    <div class="card">
-      <div class="prose" id="coverage-content">${escapeHTML(d.coverage || 'لا توجد بيانات')}</div>
-    </div>
-  `;
-}
+        /* Header Styles */
+        .app-header {
+            height: 70px;
+            background: var(--surface-dark);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 10;
+        }
 
-function buildHome(d) {
-  return `
-    <div class="sec-head">
-      <div class="sec-title"><div class="sec-icon">🏠</div>الأدوية المنزلية عند الدخول</div>
-      <button class="btn-copy" onclick="copyToClipboard('home-content', this)">نسخ</button>
-    </div>
-    <div style="font-size:0.75rem; color:var(--text-3); background:var(--primary-light); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:12px;">
-      <strong style="color:var(--primary)">✅ استمرار</strong> · 
-      <strong style="color:var(--warning)">⏸️ إيقاف مؤقت</strong> · 
-      <strong style="color:var(--info)">🔄 تبديل</strong>
-    </div>
-    <div class="card">
-      <div class="prose" id="home-content">${escapeHTML(d.home_meds_review || 'لا توجد أدوية منزلية')}</div>
-    </div>
-  `;
-}
+        .logo-area { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon { font-size: 1.8rem; background: #0891b2; padding: 5px; border-radius: 12px; }
+        .logo-text h1 { font-size: 1.2rem; letter-spacing: 1px; }
+        .logo-text h1 span { color: var(--primary-cyan); font-weight: 300; }
+        .logo-text p { font-size: 0.7rem; color: var(--text-dim); }
 
-function buildProphy(d) {
-  return `
-    <div class="sec-head">
-      <div class="sec-title"><div class="sec-icon">🛡️</div>الوقاية من الجلطات وقرحة الإجهاد</div>
-      <button class="btn-copy" onclick="copyToClipboard('prophy-content', this)">نسخ</button>
-    </div>
-    <div class="card">
-      <div class="prose" id="prophy-content">${escapeHTML(d.prophylaxis || 'لا توجد بيانات وقائية')}</div>
-    </div>
-  `;
-}
+        .status-badge { font-size: 0.7rem; color: #10b981; border: 1px solid #10b981; padding: 4px 12px; border-radius: 20px; }
 
-function buildMeds(d) {
-  return `
-    <div class="sec-head">
-      <div class="sec-title"><div class="sec-icon">💊</div>التحقق الدقيق من الأدوية</div>
-      <button class="btn-copy" onclick="copyToClipboard('meds-content', this)">نسخ</button>
-    </div>
-    <div style="font-size:0.75rem; color:var(--text-3); background:var(--primary-light); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:12px;">
-      الجرعة · التكرار · التداخلات · موانع الاستخدام · المراقبة
-    </div>
-    <div class="card">
-      <div class="prose" id="meds-content">${escapeHTML(d.med_verification || 'لا توجد أدوية حالية')}</div>
-    </div>
-  `;
-}
+        /* Layout Structure */
+        .app-container { display: flex; flex: 1; overflow: hidden; }
 
-function buildNote(d) {
-  return `
-    <div class="sec-head">
-      <div class="sec-title"><div class="sec-icon">📝</div>تقرير الصيدلي السريري</div>
-      <button class="btn-copy" onclick="copyToClipboard('note-content', this)">نسخ</button>
-    </div>
-    <p style="font-size:0.85rem; color:var(--text-3); margin-bottom:16px;">
-      جاهز للنسخ مباشرة إلى ملف المريض
-    </p>
-    <div class="final-wrap">
-      <div class="final-badge">تقرير الصيدلي · جاهز للنسخ</div>
-      <div class="final-text" id="note-content">${escapeHTML(d.final_note || 'لا يوجد تقرير نهائي')}</div>
-    </div>
-  `;
-}
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background: var(--surface-dark);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
 
-// عرض وإخفاء الأخطاء
-function showErr(msg) {
-  const box = document.getElementById('errBox');
-  box.style.display = 'block';
-  box.innerHTML = '<strong>⚠️ خطأ:</strong> ' + escapeHTML(msg);
-}
+        .nav-item {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-dim);
+            padding: 12px 15px;
+            text-align: right;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
 
-function hideErr() {
-  const box = document.getElementById('errBox');
-  box.style.display = 'none';
-  box.innerHTML = '';
-}
+        .nav-item:hover, .nav-item.active {
+            background: #1e293b;
+            color: var(--primary-cyan);
+            border-color: #334155;
+        }
 
-// مسح الكل
-function clearAll() {
-  document.getElementById('caseInput').value = '';
-  _data = null;
-  hideErr();
-  resetPipe();
-  lockTabs();
-  
-  document.querySelectorAll('[id^="panel-"]').forEach(p => {
-    p.style.display = 'none';
-    p.innerHTML = '';
-  });
-  
-  document.getElementById('emptyState').style.display = 'flex';
-  
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.tab[data-tab="soap"]').classList.add('active');
-}
+        .sidebar-footer { margin-top: auto; font-size: 0.6rem; color: #475569; text-align: center; }
 
-// تحميل عينات
-function loadSample(n) {
-  const samples = {
-    1: `مريض 94 سنة، ذكر، طريح الفراش
-التاريخ المرضي: سكري (أنسولين + أدوية فموية)، ارتفاع ضغط، قصور كلوي (سابقاً غسيل كلوي مؤقت بعد صبغة)، أنيميا مزمنة، مشاكل نفسية، دخول سابق بجلطة قلبية
+        /* Main Dashboard */
+        .main-dashboard {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-الأدوية المنزلية:
-- أسبرين 81 مجم يومياً
-- كلوبيدوجريل 75 مجم يومياً
-- روزوفاستاتين 20 مجم يومياً
-- بيسوبرولول 2.5 مجم يومياً
-- فوروسيمايد 40 مجم مرتين يومياً
-- إيزوميبرازول 20 مجم يومياً
-- نيفيديبين 60 مجم يومياً
-- إمباغليفلوزين 10 مجم يومياً
+        .metrics-bar {
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            background: rgba(15, 23, 42, 0.5);
+        }
 
-الأدوية الحالية:
-- أسبرين 81 مجم يومياً
-- كلوبيدوجريل 75 مجم يومياً
-- روزوفاستاتين 20 مجم يومياً
-- بيسوبرولول 2.5 مجم يومياً
-- فوروسيمايد 40 مجم مرتين يومياً
-- إيزوميبرازول 20 مجم يومياً
+        .metric-card.primary { text-align: center; }
+        .metric-card.primary label { display: block; font-size: 0.6rem; color: var(--primary-cyan); font-weight: bold; }
+        .metric-card.primary span { font-size: 2.5rem; font-weight: 900; font-family: 'Courier New', Courier, monospace; }
 
-الحالة: نقص مستوى الوعي
-العلامات الحيوية: ضغط 125/63، نبض 68، تشبع 99%
-الوزن: 68 كجم، الطول: 165 سم
-التحاليل: WBC 17.11، HB 11.5، PLT 474، Creatinine 343، BUN 24.7، NA 123، K 4.9، INR 2.23، AST 2303
-تخطيط القلب: RBBB | صدر: احتقان، تضخم قلب
-إيكو: اندحاس قلبي حاد`,
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 2rem; font-size: 0.8rem; color: var(--text-dim); }
 
-    2: `مريض 65 سنة، ذكر، 75 كجم، 170 سم
-دخول: متلازمة إكليلية حادة (NSTEMI)
+        /* Chat Interface Styles */
+        .chat-interface {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
 
-الأدوية المنزلية:
-- ميتفورمين 1000 مجم مرتين يومياً
-- أملوديبين 10 مجم يومياً
-- راميبريل 5 مجم يومياً
-- أسبرين 81 مجم يومياً
+        .welcome-screen { margin: auto; text-align: center; opacity: 0.5; }
+        .icon-circle { font-size: 3rem; margin-bottom: 1rem; }
 
-الأدوية الحالية:
-- تيكاجريلور 90 مجم مرتين يومياً
-- هيبارين وريدي (بدأ في الطوارئ)
-- أتورفاستاتين 80 مجم يومياً
+        /* Input Area Styles */
+        .input-area {
+            padding: 1.5rem 2rem;
+            background: var(--surface-dark);
+            border-top: 1px solid var(--border-color);
+        }
 
-التاريخ المرضي: ارتفاع ضغط، سكري نوع 2، قصور كلوي مرحلة 3
-حساسية: لا يوجد
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
 
-التحاليل: Creatinine 159، K 4.2، Na 138، Hb 13.1، WBC 11.2، PLT 220
-العلامات الحيوية: ضغط 95/60 (على نورإبينفرين)، نبض 110، تشبع 96%، حرارة 37.2`
-  };
-  
-  document.getElementById('caseInput').value = samples[n] || '';
-}
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: #fff;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            resize: none;
+            outline: none;
+        }
 
-// اختصار لوحة المفاتيح
-document.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    runAnalysis();
-  }
-});
+        textarea:focus { border-color: var(--primary-cyan); }
 
-// جعل دوال النسخ عامة
-window.copyToClipboard = copyToClipboard;
-</script>
+        .action-buttons { display: flex; justify-content: flex-end; gap: 1rem; }
+        
+        button.btn-primary {
+            background: var(--primary-cyan);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.btn-secondary {
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--border-color);
+            padding: 12px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+    </style>
+
+    <script>
+        // DOM Elements
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const caseInput = document.getElementById('case-input');
+        const outputArea = document.getElementById('output-area');
+        
+        // Mock API Variables (Placeholders for Backend Logic)
+        let clinicalData = {
+            renal: { crcl: 75, scr: 110, weight: 80, ibw: 72 },
+            soap: "S: المريض يعاني من...\nO: النتائج المخبرية تشير إلى...\nA: التقييم السريري...",
+        };
+
+        // Function: Analyze Case
+        function runAnalysis() {
+            const text = caseInput.value.trim();
+            if(!text) return alert("الرجاء إدخال بيانات الحالة أولاً");
+
+            // UI Feedback
+            analyzeBtn.innerText = "جاري التحليل...";
+            analyzeBtn.disabled = true;
+
+            // Simulate Backend Latency
+            setTimeout(() => {
+                updateDashboard(clinicalData);
+                analyzeBtn.innerText = "تحليل الحالة";
+                analyzeBtn.disabled = false;
+            }, 1000);
+        }
+
+        // Function: Update UI Metrics
+        function updateDashboard(data) {
+            document.getElementById('crcl-value').innerText = data.renal.crcl;
+            document.getElementById('scr-val').innerText = data.renal.scr;
+            document.getElementById('weight-val').innerText = data.renal.weight;
+            document.getElementById('ibw-val').innerText = data.renal.ibw;
+
+            // Update Chat Area with SOAP Result
+            outputArea.innerHTML = `
+                <div style="background: #1e293b; padding: 2rem; border-radius: 20px; line-height: 2;">
+                    <h3 style="color: var(--primary-cyan); margin-bottom: 1rem;">نتائج التحليل (SOAP):</h3>
+                    <pre style="white-space: pre-wrap; font-family: inherit; color: #cbd5e1;">${data.soap}</pre>
+                </div>
+            `;
+        }
+
+        // Function: Clear Dashboard
+        function clearDashboard() {
+            caseInput.value = "";
+            document.getElementById('crcl-value').innerText = "--";
+            outputArea.innerHTML = `
+                <div class="welcome-screen">
+                    <div class="icon-circle">⚕️</div>
+                    <h2>جاهز للتحليل السريري</h2>
+                    <p>أدخل بيانات الحالة في المنطقة المخصصة لبدء المراجعة</p>
+                </div>
+            `;
+        }
+
+        // Event Listeners
+        analyzeBtn.addEventListener('click', runAnalysis);
+        clearBtn.addEventListener('click', clearDashboard);
+
+        // Sidebar Navigation Handling
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelector('.nav-item.active').classList.remove('active');
+                this.classList.add('active');
+            });
+        });
+    </script>
+
 </body>
 </html>
