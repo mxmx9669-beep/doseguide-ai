@@ -10,14 +10,13 @@
     :root {
       --primary: #0f172a;
       --accent: #2563eb;
-      --accent-light: #dbeafe;
-      --bg-main: #f1f5f9;
+      --bg-main: #f8fafc;
       --surface: #ffffff;
       --border: #e2e8f0;
       --text-main: #1e293b;
       --font-sans: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
-      --radius: 16px;
+      --radius: 20px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -29,43 +28,54 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      padding: 24px;
     }
 
     .app-container {
-      max-width: 1200px;
-      margin: 40px auto;
-      width: 95%;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
       flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      text-align: center;
-      margin-bottom: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding: 0 10px;
     }
 
     .brand h1 {
-      font-size: 2rem;
+      font-size: 1.5rem;
       color: var(--primary);
-      letter-spacing: -1px;
-      margin-bottom: 8px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .brand p { color: #64748b; font-size: 0.9rem; }
+    .brand p { color: #64748b; font-size: 0.85rem; }
 
     .main-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px;
+      flex: 1;
     }
 
     .card {
       background: var(--surface);
       border-radius: var(--radius);
       padding: 24px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      height: 700px;
     }
 
     .card-header {
@@ -73,45 +83,56 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #f1f5f9;
     }
 
-    .card-title { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+    .card-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
     textarea {
       width: 100%;
-      height: 500px;
+      flex: 1;
       padding: 20px;
       border: 1px solid #f1f5f9;
-      border-radius: 12px;
+      border-radius: 14px;
       font-family: var(--font-mono);
       font-size: 0.9rem;
       resize: none;
       background: #f8fafc;
+      line-height: 1.6;
       transition: all 0.2s;
     }
 
-    textarea:focus { outline: none; border-color: var(--accent); background: white; }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05);
+    }
 
-    .output-area {
+    .output-container {
       width: 100%;
-      height: 500px;
+      flex: 1;
       padding: 20px;
       background: #ffffff;
-      border-radius: 12px;
+      border-radius: 14px;
+      border: 1px solid #f1f5f9;
       font-family: var(--font-mono);
       font-size: 0.9rem;
       overflow-y: auto;
       white-space: pre-wrap;
       color: #334155;
-      border: 1px solid #f1f5f9;
+      line-height: 1.7;
     }
 
     .controls {
-      margin-top: 24px;
       display: flex;
       gap: 12px;
+      margin-top: 24px;
       justify-content: center;
     }
 
@@ -119,43 +140,66 @@
       padding: 14px 32px;
       border-radius: 50px;
       font-weight: 700;
+      font-family: var(--font-sans);
       cursor: pointer;
       transition: all 0.2s;
-      font-family: var(--font-sans);
-    }
-
-    .btn-primary { background: var(--accent); color: white; border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
-    .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-    .btn-secondary { background: white; color: #64748b; border: 1px solid var(--border); }
-    .btn-secondary:hover { background: #f8fafc; }
-
-    .status-indicator {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--accent);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: white;
+      color: #64748b;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: #f8fafc; }
+
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      background: #f1f5f9;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse-anim 1.5s infinite;
+    }
+
+    @keyframes pulse-anim {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
     }
 
     footer {
+      margin-top: 32px;
       text-align: center;
-      padding: 40px;
-      color: #94a3b8;
       font-size: 0.8rem;
+      color: #94a3b8;
     }
 
-    .loading-pulse {
-      display: none;
-      text-align: center;
-      color: var(--accent);
-      font-weight: 600;
-      margin-top: 10px;
+    @media (max-width: 1000px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .card { height: 500px; }
     }
-
-    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -163,97 +207,105 @@
 <div class="app-container">
   <header>
     <div class="brand">
-      <h1>🩺 THERA GUARD AI</h1>
-      <p>Clinical Pharmacist Intelligence System</p>
+      <h1><span>🩺</span> THERA GUARD AI</h1>
+      <p>Pharmacist-Led Clinical Intelligence</p>
     </div>
+    <div class="status-badge" id="globalStatus">System Ready</div>
   </header>
 
   <div class="main-grid">
     <div class="card">
       <div class="card-header">
-        <span class="card-title">Patient Raw Data</span>
-        <div id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0;"></div>
+        <span class="card-label">Input Case (Raw Text)</span>
       </div>
-      <textarea id="caseInput" placeholder="Paste medical history, labs, and clinical notes here..."></textarea>
+      <textarea id="caseInput" placeholder="Paste HIS records, patient history, labs, and medications..."></textarea>
     </div>
 
     <div class="card">
       <div class="card-header">
-        <span class="card-title">Structured Pharmacist SOAP</span>
-        <div class="status-indicator" id="loader" style="display:none;">
-          <span style="animation: pulse 1s infinite;">●</span> PROCESSING
+        <span class="card-label">Final Consultation Note</span>
+        <div id="processingIndicator" style="display: none;">
+          <div class="pulse"></div>
+          <span style="font-size: 0.7rem; font-weight: 700; color: var(--accent); margin-left: 5px;">PROCESSING PIPELINE...</span>
         </div>
       </div>
-      <div id="finalOutput" class="output-area">Final report will appear here...</div>
+      <div id="finalOutput" class="output-container">Analysis results will appear here after clicking "Run Analysis".</div>
     </div>
   </div>
 
   <div class="controls">
-    <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">GENERATE CLINICAL REPORT</button>
-    <button class="btn-secondary" onclick="clearAll()">NEW CASE</button>
+    <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">
+      <span>🔍</span> RUN CLINICAL ANALYSIS
+    </button>
+    <button class="btn-secondary" onclick="clearCase()">
+      <span>🔄</span> NEW CASE
+    </button>
   </div>
 
   <footer>
-    Designed & Innovated by Mohammed Al-Ishaq<br>
-    © 2026 Clinical Pharmacist Intelligence Platform • Protocol-Locked
+    Designed & Innovated by <strong>Mohammed Al-Ishaq</strong><br>
+    Clinical Pharmacist Intelligence Platform • 2026 Protocol-Locked System
   </footer>
 </div>
 
 <script>
+// تحديد مسار الـ API ليتوافق مع Cloudflare Functions
 const API_ENDPOINT = "/api/ask";
 
 async function runAnalysis() {
   const input = document.getElementById("caseInput").value.trim();
   const output = document.getElementById("finalOutput");
   const btn = document.getElementById("analyzeBtn");
-  const loader = document.getElementById("loader");
-  const dot = document.getElementById("statusDot");
+  const indicator = document.getElementById("processingIndicator");
+  const status = document.getElementById("globalStatus");
 
-  if (!input) return alert("Please enter patient data first.");
+  if (!input) {
+    alert("Please enter patient data first.");
+    return;
+  }
 
+  // وضع الواجهة في حالة المعالجة
   btn.disabled = true;
-  loader.style.display = "flex";
-  dot.style.background = "#2563eb";
-  output.style.opacity = "0.5";
-  output.textContent = "Analyzing case against clinical protocols...";
+  indicator.style.display = "flex";
+  status.textContent = "Pipeline Active...";
+  output.style.opacity = "0.6";
+  output.textContent = "Extracting data, searching protocols, and generating final pharmacist note...";
 
   try {
     const res = await fetch(API_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
-        case_text: input, 
-        mode: "case_analysis", 
-        language: "en" 
+        case_text: input 
       })
     });
 
+    if (!res.ok) throw new Error(`Server Error: ${res.status}`);
+
     const data = await res.json();
     
-    // إظهار التقرير النهائي (Template 2) مباشرة كما طلبت
-    output.textContent = data.template2_soap || data.template1_soap || "No structured output generated.";
+    if (!data.ok) throw new Error(data.error || "Unknown pipeline error");
+
+    // عرض النتيجة النهائية (Step C6: final_note)
+    // نستخدم الـ Fallback في حال لم يكتمل الـ C6 لأي سبب
+    output.textContent = data.final_note || data.template1_soap || "Analysis completed but no final note was generated.";
     output.style.opacity = "1";
-    dot.style.background = "#10b981";
+    status.textContent = "Analysis Complete";
 
   } catch (err) {
-    output.textContent = "Error: Could not connect to the analysis engine.";
-    dot.style.background = "#ef4444";
+    output.textContent = "ERROR: " + err.message;
+    output.style.opacity = "1";
+    status.textContent = "Error Occurred";
   } finally {
     btn.disabled = false;
-    loader.style.display = "none";
+    indicator.style.display = "none";
   }
 }
 
-function clearAll() {
+function clearCase() {
   document.getElementById("caseInput").value = "";
-  document.getElementById("finalOutput").textContent = "Final report will appear here...";
-  document.getElementById("statusDot").style.background = "#e2e8f0";
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
+  document.getElementById("finalOutput").textContent = "Analysis results will appear here after clicking \"Run Analysis\".";
+  document.getElementById("globalStatus").textContent = "System Ready";
 }
 </script>
 
