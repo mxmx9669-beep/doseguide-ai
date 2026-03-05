@@ -346,7 +346,7 @@
         </div>
         <div id="sourcesList"></div>
         <div class="subtle">
-          Tip: To enable “Open PDF”, return <b>sources[].url</b> from backend (e.g., R2 public link).
+          Tip: “Open PDF” works via backend <b>sources[].url</b> OR front-end mapping by <b>filename</b>.
         </div>
       </div>
     </div>
@@ -359,6 +359,50 @@
 </div>
 
 <script>
+/* =========================================================
+   FILE ↔ URL MAPPING (Front-end fallback)
+   - Put your REAL public links here (R2 public / your domain)
+   - If backend returns sources[].url, it will be used first.
+   ========================================================= */
+
+const FILE_URL_MAP = {
+  "Adalimumab (including biosimilars)_ Drug information - UpToDate.pdf": "https://YOURDOMAIN/pdfs/Adalimumab.pdf",
+  "GINA-2024-Strategy-Report-24_05_22_WMS.pdf": "https://YOURDOMAIN/pdfs/GINA-2024.pdf",
+  "Ciprofloxacin.pdf": "https://YOURDOMAIN/pdfs/Ciprofloxacin.pdf",
+  "MS-CCU-CPG-002 (9) - MANAGEMENT OF HEART FAILURE WITH SYSTOLIC DYSFUNCTION (HFrEF).pdf": "https://YOURDOMAIN/pdfs/HFrEF.pdf",
+  "POST-CATHETERIZATION COMPLICATIONS PROTOCOL.pdf": "https://YOURDOMAIN/pdfs/Post-Cath-Complications.pdf",
+  "ADULT GUIDELINES FOR ANTIMICROBIAL.pdf": "https://YOURDOMAIN/pdfs/Adult-Antimicrobial-Guidelines.pdf",
+  "ACUTE CORONARY SYNDROME (ACS) - SECONDARY PREVENTION PROTOCOL IN OUTPATIENT SETTING.pdf": "https://YOURDOMAIN/pdfs/ACS-Secondary-Prevention.pdf",
+  "Amiodarone.pdf": "https://YOURDOMAIN/pdfs/Amiodarone.pdf",
+  "MOH_Warfarin_Protocol.pdf": "https://YOURDOMAIN/pdfs/MOH_Warfarin_Protocol.pdf",
+  "MS-CCU-CPG-004 (13) - DIRECT CARDIOVERSION - DC SHOCK.pdf": "https://YOURDOMAIN/pdfs/DC-Shock.pdf",
+  "Trimethoprim-sulfamethoxazole (co-trimoxazole).pdf": "https://YOURDOMAIN/pdfs/TMP-SMX.pdf",
+  "Procainamide.pdf": "https://YOURDOMAIN/pdfs/Procainamide.pdf",
+  "VASCULAR ACCESS CLOSURE AND SHEATH REMOVAL PROTOCOL.pdf": "https://YOURDOMAIN/pdfs/Vascular-Access-Closure.pdf",
+  "ANTICOAGULATION PROTOCOL.pdf": "https://YOURDOMAIN/pdfs/Anticoagulation-Protocol.pdf",
+  "colistin.pdf": "https://YOURDOMAIN/pdfs/Colistin.pdf",
+  "Vancomycin.pdf": "https://YOURDOMAIN/pdfs/Vancomycin.pdf",
+  "Meropenem.pdf": "https://YOURDOMAIN/pdfs/Meropenem.pdf",
+  "Levofloxacin.pdf": "https://YOURDOMAIN/pdfs/Levofloxacin.pdf",
+  "ADULT GUIDELINES FOR ANTIMICROBIAL++.pdf": "https://YOURDOMAIN/pdfs/Adult-Antimicrobial-Guidelines-Plus.pdf",
+  "MOH_Vanco_TDM.pdf": "https://YOURDOMAIN/pdfs/MOH_Vanco_TDM.pdf",
+  "MS-CCU-CPG-001 (9) - MANAGEMENT OF STEMI ( ST ELEVATION OF MYCOCARDIAL INFARCTION).pdf": "https://YOURDOMAIN/pdfs/STEMI-Protocol.pdf",
+  "MS-CCU-CPG-005 (13) - PERICARDIOCENTESIS.pdf": "https://YOURDOMAIN/pdfs/Pericardiocentesis.pdf",
+  "MS-CCU-CPG-006 (13) - MANAGEMENT OF ACS (NSTEMI OR USA).pdf": "https://YOURDOMAIN/pdfs/NSTEMI-USA.pdf",
+  "Piperacillin_Tazobactam.pdf": "https://YOURDOMAIN/pdfs/Piperacillin_Tazobactam.pdf",
+  "MS-CCU-CPG-003 (5) - ATRIAL FIBRILLATION (AF).pdf": "https://YOURDOMAIN/pdfs/Atrial-Fibrillation.pdf",
+  "ANTIBIOGRAM_2024.pdf": "https://YOURDOMAIN/pdfs/Antibiogram_2024.pdf",
+  "PROTOCOL FOR MANAGING CONTRAST-INDUCED NEPHROPATHY (CIN) AND IV CONTRAST MEDIA ALLERGY IN PATIENTS UNDERGOING CORONARY ANGIOGRAPHY (2).pdf": "https://YOURDOMAIN/pdfs/CIN-Contrast-Protocol.pdf",
+  "Warfarin.pdf": "https://YOURDOMAIN/pdfs/Warfarin.pdf"
+};
+
+function withPdfPage(url, page) {
+  const p = Number(page);
+  if (!url || !Number.isFinite(p) || p <= 0) return url;
+  if (url.includes("#page=")) return url;
+  return `${url}#page=${p}`;
+}
+
 const API_ENDPOINT = (() => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8787/api/ask';
@@ -367,7 +411,6 @@ const API_ENDPOINT = (() => {
 })();
 
 function decideMode(caseText, questionText) {
-  // If any case data exists -> CASE
   if (caseText && caseText.trim().length > 0) return "CASE";
   return "QUESTION";
 }
@@ -420,13 +463,11 @@ async function runAnalysis() {
 
     const data = await res.json();
 
-    // Backend may return ok:false with helpful error but status 200
     if (!res.ok) {
       throw new Error(data.error || `Server error: ${res.status}`);
     }
 
     if (!data.ok) {
-      // Show protocol-locked / no evidence message cleanly
       showError(data.error || "Analysis failed");
       output.textContent = "❌ Unable to generate output (see error above).";
       dot.style.background = "#ef4444";
@@ -438,11 +479,9 @@ async function runAnalysis() {
     output.style.opacity = "1";
     dot.style.background = "#10b981";
 
-    // Render sources if present
     if (Array.isArray(data.sources) && data.sources.length > 0) {
       renderSources(data.sources);
     } else {
-      // still show box, but indicate none
       renderSources([]);
     }
 
@@ -479,18 +518,31 @@ function renderSources(sources) {
 
   sources.forEach((s) => {
     const id = escapeHtml(s.id || "S?");
-    const filename = escapeHtml(s.filename || "N/A");
+    const filenameRaw = (typeof s.filename === "string") ? s.filename : "N/A";
+    const filename = escapeHtml(filenameRaw);
     const page = escapeHtml(String(s.page ?? "N/A"));
     const score = (s.score === null || s.score === undefined) ? "N/A" : String(s.score);
     const excerpt = escapeHtml(s.excerpt || "");
 
-    const url = (typeof s.url === "string" && s.url.startsWith("http")) ? s.url : "";
+    // 1) Use backend URL if provided
+    let url = (typeof s.url === "string" && s.url.startsWith("http")) ? s.url : "";
+
+    // 2) Otherwise fallback to mapping by filename
+    if (!url) {
+      const mapped = FILE_URL_MAP[filenameRaw];
+      if (typeof mapped === "string" && mapped.startsWith("http")) {
+        url = mapped;
+      }
+    }
+
+    // 3) Add #page if possible
+    url = withPdfPage(url, s.page);
 
     const openBtn = url
       ? `<button class="mini-btn" onclick="openPdf('${encodeURIComponent(url)}')">Open PDF</button>`
-      : `<button class="mini-btn" disabled title="Enable by returning sources[].url from backend" style="opacity:.55; cursor:not-allowed;">Open PDF</button>`;
+      : `<button class="mini-btn" disabled title="No URL (add sources[].url in backend OR fill FILE_URL_MAP)" style="opacity:.55; cursor:not-allowed;">Open PDF</button>`;
 
-    const copyBtn = `<button class="mini-btn" onclick="copyText('${encodeURIComponent(`[${id}] ${filename} p.${page}`)}')">Copy</button>`;
+    const copyBtn = `<button class="mini-btn" onclick="copyText('${encodeURIComponent(`[${id}] ${filenameRaw} p.${String(s.page ?? "N/A")}`)}')">Copy</button>`;
 
     sourcesList.insertAdjacentHTML("beforeend", `
       <div class="source-item">
@@ -519,7 +571,6 @@ async function copySources() {
   try {
     await navigator.clipboard.writeText(lines.join("\n"));
   } catch {
-    // fallback
     const ta = document.createElement("textarea");
     ta.value = lines.join("\n");
     document.body.appendChild(ta);
@@ -568,7 +619,6 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
-// Global error guard
 window.onerror = function(msg, url, lineNo, columnNo, error) {
   console.error("Global error:", {msg, url, lineNo, columnNo, error});
   showError("Unexpected error occurred");
