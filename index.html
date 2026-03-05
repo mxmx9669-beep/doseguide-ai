@@ -1,308 +1,962 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THERAGUARD AI | المنصة السريرية</title>
-    </head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PharmAI · Clinical Pharmacist Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS — Medical Blue / Navy ───────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg:        #f0f4f9;
+  --bg2:       #e8eef6;
+  --surface:   #ffffff;
+  --surf2:     #f5f8fd;
+  --surf3:     #eaf0f9;
+
+  /* Borders */
+  --border:    #dce5f2;
+  --border2:   #c5d3e8;
+
+  /* Text */
+  --ink:       #0b1929;
+  --ink2:      #1a3050;
+  --ink3:      #3d567a;
+  --ink4:      #7a94b8;
+  --ink5:      #b0c2d8;
+
+  /* Primary — Navy Blue */
+  --navy:      #1e40af;
+  --navy2:     #2563eb;
+  --navy3:     #3b82f6;
+  --navy-lt:   #eff6ff;
+  --navy-mid:  rgba(30,64,175,.12);
+  --navy-dim:  rgba(30,64,175,.06);
+
+  /* Medical accent — Steel Blue */
+  --steel:     #1d4ed8;
+  --steel2:    #1e6bb5;
+
+  /* Sidebar */
+  --sb-bg:     #0f2044;
+  --sb-surf:   #162b57;
+  --sb-border: rgba(255,255,255,.07);
+  --sb-text:   rgba(255,255,255,.55);
+  --sb-text2:  rgba(255,255,255,.85);
+
+  /* Status colors */
+  --amber:     #92400e;
+  --amber-lt:  #fffbeb;
+  --amber-border: #fcd34d;
+
+  --red:       #991b1b;
+  --red-lt:    #fef2f2;
+  --red-border: #fca5a5;
+
+  --green:     #14532d;
+  --green-lt:  #f0fdf4;
+  --green-border: #86efac;
+
+  --purple:    #4c1d95;
+  --purple-lt: #f5f3ff;
+
+  --mono:  'JetBrains Mono', monospace;
+  --sans:  'Plus Jakarta Sans', sans-serif;
+
+  --r-sm:  8px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+
+  --sh-xs: 0 1px 4px rgba(11,25,41,.06);
+  --sh-sm: 0 2px 14px rgba(11,25,41,.09);
+  --sh-md: 0 6px 28px rgba(11,25,41,.12);
+
+  --sidebar-w: 280px;
+  --topbar-h:  56px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size: 14px; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink4); }
+
+/* ── TOPBAR ──────────────────────────────────────────────── */
+.topbar {
+  height: var(--topbar-h);
+  background: var(--sb-bg);
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  gap: 14px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sb-border);
+  position: relative;
+  z-index: 100;
+}
+
+/* thin blue accent line at very top */
+.topbar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--navy2) 0%, var(--navy3) 50%, transparent 100%);
+}
+
+.top-logo {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  box-shadow: 0 2px 12px rgba(37,99,235,.45);
+  flex-shrink: 0;
+}
+
+.top-brand { display: flex; flex-direction: column; }
+.top-name {
+  font-size: 0.95rem; font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.top-sub {
+  font-size: 0.6rem;
+  color: var(--sb-text);
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+
+.top-divider {
+  width: 1px; height: 22px;
+  background: var(--sb-border);
+  margin: 0 4px;
+}
+
+.top-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(37,99,235,.18);
+  border: 1px solid rgba(37,99,235,.35);
+  color: #93c5fd;
+  padding: 3px 11px;
+  border-radius: 40px;
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.top-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #60a5fa;
+  box-shadow: 0 0 6px #60a5fa;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+.top-spacer { flex: 1; }
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  background: var(--sb-bg);
+  border-right: 1px solid var(--sb-border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+}
+
+.sb-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--sb-border);
+}
+.sb-section:last-child { border-bottom: none; flex: 1; }
+
+.sb-head {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 11px;
+}
+.sb-head-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--navy3);
+  box-shadow: 0 0 5px rgba(59,130,246,.5);
+}
+.sb-head-label {
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sb-text);
+}
+
+textarea#caseInput {
+  width: 100%;
+  height: 180px;
+  font-family: var(--mono);
+  font-size: 0.71rem;
+  line-height: 1.85;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  color: rgba(255,255,255,.8);
+  transition: border-color .2s, box-shadow .2s;
+}
+textarea#caseInput::placeholder { color: rgba(255,255,255,.2); }
+textarea#caseInput:focus {
+  border-color: rgba(59,130,246,.5);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+  background: rgba(255,255,255,.07);
+}
+
+.btn-primary {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 11px 20px;
+  font-family: var(--sans);
+  font-size: 0.83rem; font-weight: 700;
+  cursor: pointer;
+  margin-top: 9px;
+  box-shadow: 0 3px 14px rgba(30,64,175,.4);
+  transition: all .2s;
+  letter-spacing: 0.01em;
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(37,99,235,.5);
+}
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn-secondary {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: transparent;
+  color: var(--sb-text);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--r-sm);
+  padding: 9px 16px;
+  font-family: var(--sans);
+  font-size: 0.77rem; font-weight: 600;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: all .18s;
+}
+.btn-secondary:hover {
+  border-color: rgba(59,130,246,.4);
+  color: #93c5fd;
+  background: rgba(59,130,246,.08);
+}
+
+/* ── MAIN PANEL ──────────────────────────────────────────── */
+.main {
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── TABBAR ──────────────────────────────────────────────── */
+.tabbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  padding: 0 20px;
+  gap: 2px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  box-shadow: 0 1px 0 var(--border), var(--sh-xs);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.tabbar.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tabbar::-webkit-scrollbar { height: 0; }
+
+.tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 14px 13px 12px;
+  font-family: var(--sans);
+  font-size: 0.74rem; font-weight: 600;
+  color: var(--ink4);
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  white-space: nowrap;
+  user-select: none;
+  transition: all .15s;
+}
+.tab:hover:not(.tab-locked) { color: var(--ink2); }
+.tab.tab-active {
+  color: var(--navy);
+  border-bottom-color: var(--navy2);
+}
+.tab.tab-locked { opacity: .3; cursor: not-allowed; pointer-events: none; }
+.tab-icon { font-size: 0.88rem; }
+
+/* ── CONTENT ─────────────────────────────────────────────── */
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 26px;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 70vh; gap: 14px; text-align: center;
+}
+.empty-icon-wrap {
+  width: 76px; height: 76px;
+  border-radius: 22px;
+  background: var(--navy-lt);
+  border: 2px solid rgba(30,64,175,.14);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; margin-bottom: 4px;
+  box-shadow: 0 4px 20px rgba(30,64,175,.1);
+}
+.empty-state h2 { font-size: 1.25rem; font-weight: 800; color: var(--ink2); letter-spacing: -0.02em; }
+.empty-state p  { color: var(--ink3); font-size: 0.81rem; max-width: 320px; line-height: 1.65; }
+.empty-steps { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+.empty-step-chip {
+  background: var(--navy-lt);
+  border: 1px solid rgba(30,64,175,.18);
+  border-radius: 40px; padding: 5px 12px;
+  font-size: 0.68rem; font-weight: 600; color: var(--navy);
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* Error box */
+.err-box {
+  display: none;
+  background: var(--red-lt);
+  border: 1px solid var(--red-border);
+  border-left: 3px solid var(--red);
+  border-radius: var(--r-sm);
+  padding: 12px 16px; margin-bottom: 16px;
+  color: var(--red); font-size: 0.81rem; line-height: 1.5;
+}
+
+/* ── SECTION HEADER ──────────────────────────────────────── */
+.sec-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; padding-bottom: 13px;
+  border-bottom: 1.5px solid var(--border);
+}
+.sec-title { display: flex; align-items: center; gap: 10px; }
+.sec-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--navy-lt);
+  border: 1px solid rgba(30,64,175,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.sec-icon.amber { background: var(--amber-lt); border-color: rgba(146,64,14,.14); }
+.sec-icon.blue  { background: var(--navy-lt);  border-color: rgba(30,64,175,.15); }
+.sec-icon.green { background: var(--green-lt); border-color: rgba(20,83,45,.14); }
+.sec-icon.red   { background: var(--red-lt);   border-color: rgba(153,27,27,.14); }
+
+.sec-title h3 { font-size: 0.97rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+.sec-title p  { font-size: 0.7rem; color: var(--ink3); margin-top: 1px; }
+
+/* ── CARDS ───────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px 20px; margin-bottom: 12px;
+  transition: box-shadow .18s;
+  box-shadow: var(--sh-xs);
+}
+.card:hover { box-shadow: var(--sh-sm); }
+
+.card-title {
+  font-size: 0.76rem; font-weight: 700; color: var(--ink2);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── RENAL CARD ──────────────────────────────────────────── */
+.renal-hero {
+  background: linear-gradient(135deg, var(--sb-bg) 0%, #162a52 100%);
+  border-radius: var(--r-md);
+  padding: 20px 22px; margin-bottom: 16px;
+  display: grid; grid-template-columns: 150px 1fr;
+  gap: 22px; align-items: center;
+  box-shadow: var(--sh-md);
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(37,99,235,.2);
+}
+.renal-hero::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 130px; height: 130px;
+  background: radial-gradient(circle, rgba(37,99,235,.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.renal-hero::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(37,99,235,.4) 0%, transparent 100%);
+}
+.renal-main { text-align: center; border-right: 1px solid rgba(255,255,255,.08); padding-right: 22px; }
+.renal-value {
+  font-family: var(--sans); font-size: 2.8rem; font-weight: 800;
+  color: #93c5fd; line-height: 1; letter-spacing: -0.03em;
+}
+.renal-unit { font-size: 0.66rem; color: rgba(255,255,255,.35); margin-top: 3px; letter-spacing: 0.04em; }
+.renal-grade-pill {
+  display: inline-block; font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 40px; margin-top: 8px;
+}
+.renal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.renal-cell label {
+  display: block; font-size: 0.57rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(255,255,255,.28); margin-bottom: 2px;
+}
+.renal-cell span { font-family: var(--mono); font-size: 0.8rem; color: #fff; font-weight: 500; }
+.renal-missing {
+  grid-column: 1/-1; background: rgba(146,64,14,.2);
+  border: 1px solid rgba(146,64,14,.35); border-radius: 6px;
+  padding: 6px 10px; font-size: 0.7rem; color: #fde68a;
+}
+
+/* ── ALERTS ──────────────────────────────────────────────── */
+.alert-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.alert-item {
+  display: flex; gap: 10px; border-radius: var(--r-sm);
+  padding: 12px 14px; border-left: 3px solid;
+}
+.alert-item.high   { background: var(--red-lt);   border-left-color: #dc2626; }
+.alert-item.medium { background: var(--amber-lt); border-left-color: #d97706; }
+.alert-severity {
+  font-size: 0.56rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  white-space: nowrap; padding: 2px 7px; border-radius: 4px; height: fit-content; margin-top: 1px;
+}
+.high   .alert-severity { background: rgba(153,27,27,.1);  color: var(--red); }
+.medium .alert-severity { background: rgba(146,64,14,.1); color: var(--amber); }
+.alert-body { flex: 1; }
+.alert-drug    { font-size: 0.76rem; font-weight: 700; color: var(--ink2); margin-bottom: 2px; }
+.alert-problem { font-size: 0.73rem; color: var(--ink3); margin-bottom: 5px; line-height: 1.5; }
+.alert-rec {
+  font-size: 0.71rem; color: var(--ink);
+  background: rgba(11,25,41,.04); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 8px; line-height: 1.5;
+}
+.alert-evidence { font-size: 0.63rem; color: var(--ink4); margin-top: 4px; font-family: var(--mono); }
+
+/* ── PROSE ───────────────────────────────────────────────── */
+.prose-block {
+  font-family: var(--mono); font-size: 0.75rem; line-height: 1.95;
+  color: var(--ink2); white-space: pre-wrap;
+  background: var(--surf2); border-radius: var(--r-sm);
+  padding: 14px 16px; border: 1px solid var(--border);
+}
+
+/* ── MISSING BANNER ──────────────────────────────────────── */
+.missing-banner {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--amber-lt);
+  border: 1px solid var(--amber-border); border-left: 3px solid #d97706;
+  border-radius: var(--r-sm); padding: 10px 14px;
+  margin-bottom: 16px; font-size: 0.77rem; color: var(--amber);
+}
+.missing-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.missing-chip {
+  background: #fff; border: 1px solid var(--amber-border);
+  color: var(--amber); padding: 2px 9px; border-radius: 40px;
+  font-size: 0.66rem; font-weight: 700;
+}
+
+/* ── FINAL NOTE ──────────────────────────────────────────── */
+.note-wrapper {
+  background: var(--surface); border: 2px solid var(--navy2);
+  border-radius: var(--r-lg); padding: 24px;
+  position: relative; box-shadow: var(--sh-sm);
+}
+.note-badge {
+  position: absolute; top: -11px; left: 20px;
+  background: var(--navy); color: #fff;
+  font-size: 0.6rem; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 12px; border-radius: 40px;
+}
+.note-content {
+  font-family: var(--mono); font-size: 0.76rem; line-height: 2;
+  color: var(--ink); white-space: pre-wrap;
+}
+
+/* ── COPY BUTTON ─────────────────────────────────────────── */
+.btn-copy {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surf2); border: 1px solid var(--border);
+  color: var(--ink4); padding: 5px 12px; border-radius: 6px;
+  font-family: var(--mono); font-size: 0.67rem; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.btn-copy:hover { border-color: var(--navy2); color: var(--navy); background: var(--navy-lt); }
+.btn-copy.copied { background: var(--green-lt); border-color: var(--green-border); color: var(--green); }
+
+/* ── INFO STRIP ──────────────────────────────────────────── */
+.info-strip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--navy-lt); border: 1px solid rgba(30,64,175,.18);
+  border-radius: var(--r-sm); padding: 8px 13px; margin-bottom: 14px;
+  font-size: 0.71rem; color: var(--navy); font-weight: 500;
+}
+
+/* ── ANIMATIONS ──────────────────────────────────────────── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.fade-up { animation: fadeUp .28s ease forwards; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin .65s linear infinite; flex-shrink: 0;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 860px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 700px) {
+  .workspace { grid-template-columns: 1fr; }
+  .sidebar { max-height: 50vh; }
+  body { overflow: auto; }
+}
+</style>
+</head>
 <body>
 
-    <header class="app-header">
-        <div class="logo-area">
-            <span class="logo-icon">⚕️</span>
-            <div class="logo-text">
-                <h1>THERAGUARD <span>AI</span></h1>
-                <p>المنصة السريرية الذكية</p>
-            </div>
-        </div>
-        <div class="header-meta">
-            <span class="status-badge">System Active</span>
-            <span class="user-badge">د. محمد الإسحاق</span>
-        </div>
-    </header>
+<!-- ── TOPBAR ──────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="top-logo">⚕</div>
+  <div class="top-brand">
+    <div class="top-name">PharmAI Platform</div>
+    <div class="top-sub">Clinical Pharmacist Intelligence</div>
+  </div>
+  <div class="top-divider"></div>
+  <div class="top-badge">
+    <div class="top-badge-dot"></div>
+    AI-Powered · v5.0
+  </div>
+  <div class="top-spacer"></div>
+</header>
 
-    <div class="app-container">
-        <aside class="sidebar">
-            <nav class="side-nav">
-                <button class="nav-item active" data-tab="soap">📋 تحليل SOAP</button>
-                <button class="nav-item" data-tab="coverage">🎯 التغطية الدوائية</button>
-                <button class="nav-item" data-tab="home-meds">🏠 الأدوية المنزلية</button>
-                <button class="nav-item" data-tab="prophy">🛡️ الوقاية</button>
-                <button class="nav-item" data-tab="verification">💊 التحقق الدقيق</button>
-            </nav>
-            <div class="sidebar-footer">
-                <p>Designed by Mohammed Al-Ishaq</p>
-            </div>
-        </aside>
+<!-- ── WORKSPACE ───────────────────────────────────────────── -->
+<div class="workspace">
 
-        <main class="main-dashboard">
-            <div class="metrics-bar">
-                <div class="metric-card primary">
-                    <label>CrCl (mL/min)</label>
-                    <span id="crcl-value">--</span>
-                </div>
-                <div class="metric-grid">
-                    <div class="mini-metric">SCr: <span id="scr-val">--</span></div>
-                    <div class="mini-metric">Weight: <span id="weight-val">--</span></div>
-                    <div class="mini-metric">IBW: <span id="ibw-val">--</span></div>
-                </div>
-            </div>
+  <!-- ── SIDEBAR ───────────────────────────────────────────── -->
+  <aside class="sidebar">
 
-            <section class="chat-interface" id="output-area">
-                <div class="welcome-screen">
-                    <div class="icon-circle">⚕️</div>
-                    <h2>جاهز للتحليل السريري</h2>
-                    <p>أدخل بيانات الحالة في المنطقة المخصصة لبدء المراجعة</p>
-                </div>
-                </section>
-
-            <footer class="input-area">
-                <div class="input-wrapper">
-                    <textarea id="case-input" placeholder="الصق بيانات الحالة، التحاليل، والأدوية هنا..."></textarea>
-                    <div class="action-buttons">
-                        <button id="clear-btn" class="btn-secondary">مسح</button>
-                        <button id="analyze-btn" class="btn-primary">تحليل الحالة</button>
-                    </div>
-                </div>
-            </footer>
-        </main>
+    <!-- Input -->
+    <div class="sb-section">
+      <div class="sb-head">
+        <div class="sb-head-dot"></div>
+        <div class="sb-head-label">Clinical Case Input</div>
+      </div>
+      <textarea id="caseInput" placeholder="Paste raw HIS data here...&#10;Any format: narrative, labs, vitals, medications&#10;&#10;Ctrl + Enter to run analysis"></textarea>
+      <button class="btn-primary" id="runBtn" onclick="runAnalysis()">
+        <span id="runLabel">🔍&nbsp; Analyze Case</span>
+      </button>
+      <button class="btn-secondary" onclick="clearAll()">✕&nbsp; Clear</button>
     </div>
 
-    <style>
-        :root {
-            --bg-dark: #020617;
-            --surface-dark: #0f172a;
-            --border-color: #1e293b;
-            --primary-cyan: #06b6d4;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --accent-rose: #f43f5e;
-            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: var(--font-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+  </aside>
 
-        /* Header Styles */
-        .app-header {
-            height: 70px;
-            background: var(--surface-dark);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 2rem;
-            z-index: 10;
-        }
+  <!-- ── MAIN PANEL ─────────────────────────────────────────── -->
+  <div class="main">
 
-        .logo-area { display: flex; align-items: center; gap: 1rem; }
-        .logo-icon { font-size: 1.8rem; background: #0891b2; padding: 5px; border-radius: 12px; }
-        .logo-text h1 { font-size: 1.2rem; letter-spacing: 1px; }
-        .logo-text h1 span { color: var(--primary-cyan); font-weight: 300; }
-        .logo-text p { font-size: 0.7rem; color: var(--text-dim); }
+    <!-- Tab bar -->
+    <div class="tabbar">
+      <div class="tab tab-active tab-locked" data-tab="soap"     onclick="switchTab('soap')">    <span class="tab-icon">📋</span> SOAP</div>
+      <div class="tab tab-locked"            data-tab="coverage" onclick="switchTab('coverage')"><span class="tab-icon">🎯</span> Coverage</div>
+      <div class="tab tab-locked"            data-tab="home"     onclick="switchTab('home')">    <span class="tab-icon">🏠</span> Home Meds</div>
+      <div class="tab tab-locked"            data-tab="prophy"   onclick="switchTab('prophy')">  <span class="tab-icon">🛡️</span> Prophylaxis</div>
+      <div class="tab tab-locked"            data-tab="meds"     onclick="switchTab('meds')">    <span class="tab-icon">💊</span> Medications</div>
+      <div class="tab tab-locked"            data-tab="note"     onclick="switchTab('note')">    <span class="tab-icon">📝</span> Final Note</div>
+    </div>
 
-        .status-badge { font-size: 0.7rem; color: #10b981; border: 1px solid #10b981; padding: 4px 12px; border-radius: 20px; }
+    <!-- Content -->
+    <div class="content-scroll" id="contentScroll">
+      <div class="err-box" id="errBox"></div>
 
-        /* Layout Structure */
-        .app-container { display: flex; flex: 1; overflow: hidden; }
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon-wrap">⚕</div>
+        <h2>Ready to Analyze</h2>
+        <p>Paste any clinical case — HIS export, narrative, or structured data — and run the full pharmacotherapy pipeline.</p>
+        <div class="empty-steps">
+          <div class="empty-step-chip">📥 Extract</div>
+          <div class="empty-step-chip">🧮 CrCl</div>
+          <div class="empty-step-chip">🎯 Coverage</div>
+          <div class="empty-step-chip">💊 Verify</div>
+          <div class="empty-step-chip">📝 Note</div>
+        </div>
+      </div>
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 260px;
-            background: var(--surface-dark);
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-        }
+      <!-- Panels (hidden until result) -->
+      <div id="panel-soap"     style="display:none"></div>
+      <div id="panel-coverage" style="display:none"></div>
+      <div id="panel-home"     style="display:none"></div>
+      <div id="panel-prophy"   style="display:none"></div>
+      <div id="panel-meds"     style="display:none"></div>
+      <div id="panel-note"     style="display:none"></div>
+    </div>
+  </div>
+</div>
 
-        .nav-item {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-dim);
-            padding: 12px 15px;
-            text-align: right;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
+<!-- ── JAVASCRIPT ───────────────────────────────────────────── -->
+<script>
+'use strict';
 
-        .nav-item:hover, .nav-item.active {
-            background: #1e293b;
-            color: var(--primary-cyan);
-            border-color: #334155;
-        }
+const API_ENDPOINT = '/api/ask';
 
-        .sidebar-footer { margin-top: auto; font-size: 0.6rem; color: #475569; text-align: center; }
+let _busy = false;
+let _pipeTimer = null;
+let _data = null;
 
-        /* Main Dashboard */
-        .main-dashboard {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+// ── Tab management ─────────────────────────────────────────
+function switchTab(name) {
+  const target = document.querySelector(`.tab[data-tab="${name}"]`);
+  if (!target || target.classList.contains('tab-locked')) return;
 
-        .metrics-bar {
-            padding: 1.5rem 2rem;
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            background: rgba(15, 23, 42, 0.5);
-        }
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+  target.classList.add('tab-active');
 
-        .metric-card.primary { text-align: center; }
-        .metric-card.primary label { display: block; font-size: 0.6rem; color: var(--primary-cyan); font-weight: bold; }
-        .metric-card.primary span { font-size: 2.5rem; font-weight: 900; font-family: 'Courier New', Courier, monospace; }
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
 
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 2rem; font-size: 0.8rem; color: var(--text-dim); }
+  const panel = document.getElementById('panel-' + name);
+  if (panel) {
+    panel.style.display = 'block';
+    panel.classList.remove('fade-up');
+    void panel.offsetWidth;
+    panel.classList.add('fade-up');
+  }
+  document.getElementById('contentScroll').scrollTop = 0;
+}
 
-        /* Chat Interface Styles */
-        .chat-interface {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-        }
+function unlockAllTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-locked'));
+}
 
-        .welcome-screen { margin: auto; text-align: center; opacity: 0.5; }
-        .icon-circle { font-size: 3rem; margin-bottom: 1rem; }
+function lockAllTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.add('tab-locked'));
+}
 
-        /* Input Area Styles */
-        .input-area {
-            padding: 1.5rem 2rem;
-            background: var(--surface-dark);
-            border-top: 1px solid var(--border-color);
-        }
+// ── Main analysis ──────────────────────────────────────────
+async function runAnalysis() {
+  const text = document.getElementById('caseInput').value.trim();
+  if (!text) { showError('Please enter a clinical case.'); return; }
+  if (_busy) return;
 
-        .input-wrapper {
-            max-width: 900px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+  _busy = true;
+  const btn   = document.getElementById('runBtn');
+  const label = document.getElementById('runLabel');
+  btn.disabled = true;
+  label.innerHTML = '<span class="spinner"></span>&nbsp;Analyzing…';
 
-        textarea {
-            width: 100%;
-            height: 120px;
-            background: #020617;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            color: #fff;
-            padding: 1rem;
-            font-family: 'Courier New', Courier, monospace;
-            resize: none;
-            outline: none;
-        }
+  hideError();
+  lockAllTabs();
+  document.getElementById('emptyState').style.display = 'none';
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
 
-        textarea:focus { border-color: var(--primary-cyan); }
+  try {
+    const res = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ case_text: text }),
+    });
 
-        .action-buttons { display: flex; justify-content: flex-end; gap: 1rem; }
-        
-        button.btn-primary {
-            background: var(--primary-cyan);
-            color: #fff;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Unknown server error');
 
-        button.btn-secondary {
-            background: transparent;
-            color: var(--text-dim);
-            border: 1px solid var(--border-color);
-            padding: 12px 30px;
-            border-radius: 12px;
-            cursor: pointer;
-        }
-    </style>
+    _data = data;
+    renderPanels(data);
+    unlockAllTabs();
+    document.querySelector('.tabbar').classList.add('visible');
+    switchTab('soap');
 
-    <script>
-        // DOM Elements
-        const analyzeBtn = document.getElementById('analyze-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const caseInput = document.getElementById('case-input');
-        const outputArea = document.getElementById('output-area');
-        
-        // Mock API Variables (Placeholders for Backend Logic)
-        let clinicalData = {
-            renal: { crcl: 75, scr: 110, weight: 80, ibw: 72 },
-            soap: "S: المريض يعاني من...\nO: النتائج المخبرية تشير إلى...\nA: التقييم السريري...",
-        };
+  } catch (err) {
+    showError(err.message);
+    document.getElementById('emptyState').style.display = 'flex';
+  } finally {
+    _busy = false;
+    btn.disabled = false;
+    label.textContent = '🔍  Analyze Case';
+  }
+}
 
-        // Function: Analyze Case
-        function runAnalysis() {
-            const text = caseInput.value.trim();
-            if(!text) return alert("الرجاء إدخال بيانات الحالة أولاً");
+// ── Render all panels ──────────────────────────────────────
+function renderPanels(d) {
+  setPanel('soap',     buildSOAP(d));
+  setPanel('coverage', buildCoverage(d));
+  setPanel('home',     buildHome(d));
+  setPanel('prophy',   buildProphy(d));
+  setPanel('meds',     buildMeds(d));
+  setPanel('note',     buildNote(d));
+}
 
-            // UI Feedback
-            analyzeBtn.innerText = "جاري التحليل...";
-            analyzeBtn.disabled = true;
+function setPanel(id, html) {
+  const el = document.getElementById('panel-' + id);
+  if (el) el.innerHTML = html;
+}
 
-            // Simulate Backend Latency
-            setTimeout(() => {
-                updateDashboard(clinicalData);
-                analyzeBtn.innerText = "تحليل الحالة";
-                analyzeBtn.disabled = false;
-            }, 1000);
-        }
+// ── HTML Helpers ───────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-        // Function: Update UI Metrics
-        function updateDashboard(data) {
-            document.getElementById('crcl-value').innerText = data.renal.crcl;
-            document.getElementById('scr-val').innerText = data.renal.scr;
-            document.getElementById('weight-val').innerText = data.renal.weight;
-            document.getElementById('ibw-val').innerText = data.renal.ibw;
+function copyBtn(targetId) {
+  return `<button class="btn-copy" onclick="doCopy('${targetId}',this)">📋 Copy</button>`;
+}
 
-            // Update Chat Area with SOAP Result
-            outputArea.innerHTML = `
-                <div style="background: #1e293b; padding: 2rem; border-radius: 20px; line-height: 2;">
-                    <h3 style="color: var(--primary-cyan); margin-bottom: 1rem;">نتائج التحليل (SOAP):</h3>
-                    <pre style="white-space: pre-wrap; font-family: inherit; color: #cbd5e1;">${data.soap}</pre>
-                </div>
-            `;
-        }
+function doCopy(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText || '').then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {});
+}
 
-        // Function: Clear Dashboard
-        function clearDashboard() {
-            caseInput.value = "";
-            document.getElementById('crcl-value').innerText = "--";
-            outputArea.innerHTML = `
-                <div class="welcome-screen">
-                    <div class="icon-circle">⚕️</div>
-                    <h2>جاهز للتحليل السريري</h2>
-                    <p>أدخل بيانات الحالة في المنطقة المخصصة لبدء المراجعة</p>
-                </div>
-            `;
-        }
+function missingBanner(missing) {
+  if (!missing || !missing.length) return '';
+  return `<div class="missing-banner">
+    <span>⚠️</span>
+    <div>
+      <strong>Missing critical data — some calculations limited:</strong>
+      <div class="missing-chips">${missing.map(m => `<span class="missing-chip">${esc(m)}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
 
-        // Event Listeners
-        analyzeBtn.addEventListener('click', runAnalysis);
-        clearBtn.addEventListener('click', clearDashboard);
+// Renal card
+function buildRenalCard(r) {
+  if (!r) return '';
+  const grades = [
+    [90, 'Normal (G1)', '#10b981', '#d1fae5'],
+    [60, 'Mild ↓ (G2)',  '#84cc16', '#f7fee7'],
+    [30, 'Moderate ↓ (G3)', '#f59e0b', '#fffbeb'],
+    [15, 'Severe ↓ (G4)',   '#ef4444', '#fff1f2'],
+    [0,  'Kidney Failure (G5)', '#dc2626', '#fff1f2'],
+  ];
+  let grade = null;
+  if (r.crcl != null) {
+    for (const [threshold, label, color, bg] of grades) {
+      if (r.crcl >= threshold) { grade = { label, color, bg }; break; }
+    }
+  }
 
-        // Sidebar Navigation Handling
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelector('.nav-item.active').classList.remove('active');
-                this.classList.add('active');
-            });
-        });
-    </script>
+  return `<div class="renal-hero">
+    <div class="renal-main">
+      <div class="renal-value">${r.crcl != null ? r.crcl : '—'}</div>
+      <div class="renal-unit">mL / min · CrCl</div>
+      ${grade ? `<div class="renal-grade-pill" style="background:${grade.bg};color:${grade.color}">${grade.label}</div>` : ''}
+    </div>
+    <div class="renal-grid">
+      <div class="renal-cell"><label>SCr (µmol/L)</label><span>${r.scr_umol ?? '—'}</span></div>
+      <div class="renal-cell"><label>SCr (mg/dL)</label><span>${r.scr_mgdl ?? '—'}</span></div>
+      <div class="renal-cell"><label>IBW (kg)</label><span>${r.ibw ?? '—'}</span></div>
+      <div class="renal-cell"><label>Weight used</label><span>${r.weight_used != null ? r.weight_used + ' kg' : '—'}</span></div>
+      <div class="renal-cell" style="grid-column:1/-1"><label>Dosing basis</label><span>${esc(r.weight_label) || '—'}</span></div>
+      ${r.missing && r.missing.length ? `<div class="renal-missing">⚠ Missing for calculation: ${r.missing.join(', ')}</div>` : ''}
+    </div>
+  </div>`;
+}
 
+// Local med check alerts
+function buildAlerts(checks) {
+  if (!checks || !checks.length) {
+    return `<div class="info-strip">✅ No issues detected by local rule-based checks.</div>`;
+  }
+  const items = checks.map(c => `
+    <div class="alert-item ${esc(c.severity) === 'high' ? 'high' : 'medium'}">
+      <div class="alert-severity">${esc(c.severity) === 'high' ? '🔴 HIGH' : '🟡 MED'}</div>
+      <div class="alert-body">
+        <div class="alert-drug">${esc(c.drug)}</div>
+        <div class="alert-problem">${esc(c.problem)}</div>
+        <div class="alert-rec">→ ${esc(c.recommendation)}</div>
+        <div class="alert-evidence">📄 ${esc(c.evidence)}</div>
+      </div>
+    </div>`).join('');
+  return `<div class="alert-list">${items}</div>`;
+}
+
+// ── Panel builders ─────────────────────────────────────────
+
+function buildSOAP(d) {
+  return `
+    ${missingBanner(d.missing_data)}
+    <div class="sec-header">
+      <div class="sec-title">
+        <div class="sec-icon">📋</div>
+        <div><h3>SOAP · Case Organizer</h3><p>Structured clinical summary with pharmacotherapy plan</p></div>
+      </div>
+      ${copyBtn('soap-content')}
+    </div>
+    ${buildRenalCard(d.renal)}
+    ${d.local_med_check && d.local_med_check.length ? `
+      <div class="card">
+        <div class="card-title">⚡ Local Rule-Based Alerts — Instant Detection</div>
+        ${buildAlerts(d.local_med_check)}
+      </div>` : ''}
+    <div class="card">
+      <div class="card-title">📋 SOAP Note</div>
+      <div class="prose-block" id="soap-content">${esc(d.template1_soap || 'No SOAP data returned.')}</div>
+    </div>`;
+}
+
+function buildCoverage(d) {
+  return `
+    <div class="sec-header">
+      <div class="sec-title">
+        <div class="sec-icon amber">🎯</div>
+        <div><h3>Problem-to-Treatment Coverage</h3><p>Guideline therapy vs current medications</p></div>
+      </div>
+      ${copyBtn('cov-content')}
+    </div>
+    <div class="info-strip">
+      ✅ COVERED &nbsp;|&nbsp; ⚠️ PARTIALLY COVERED &nbsp;|&nbsp; ❌ NOT COVERED &nbsp;|&nbsp; 🚫 CONTRAINDICATED
+    </div>
+    <div class="card">
+      <div class="prose-block" id="cov-content">${esc(d.coverage || 'No coverage data returned.')}</div>
+    </div>`;
+}
+
+function buildHome(d) {
+  return `
+    <div class="sec-header">
+      <div class="sec-title">
+        <div class="sec-icon blue">🏠</div>
+        <div><h3>Home Medications at Admission</h3><p>Continue / Hold / Switch / Dose-adjust review</p></div>
+      </div>
+      ${copyBtn('home-content')}
+    </div>
+    <div class="info-strip">
+      Decision for each home medication: CONTINUE · HOLD (with restart criteria) · SWITCH · DOSE-ADJUST
+    </div>
+    <div class="card">
+      <div class="prose-block" id="home-content">${esc(d.home_meds_review || 'No home medication data returned.')}</div>
+    </div>`;
+}
+
+function buildProphy(d) {
+  return `
+    <div class="sec-header">
+      <div class="sec-title">
+        <div class="sec-icon green">🛡️</div>
+        <div><h3>DVT &amp; Stress Ulcer Prophylaxis</h3><p>Risk assessment and recommendations</p></div>
+      </div>
+      ${copyBtn('prophy-content')}
+    </div>
+    <div class="card">
+      <div class="prose-block" id="prophy-content">${esc(d.prophylaxis || 'No prophylaxis data returned.')}</div>
+    </div>`;
+}
+
+function buildMeds(d) {
+  const alertHtml = d.local_med_check && d.local_med_check.length
+    ? `<div class="card"><div class="card-title">⚡ Rule-Based Alerts (instant)</div>${buildAlerts(d.local_med_check)}</div>`
+    : '';
+
+  return `
+    <div class="sec-header">
+      <div class="sec-title">
+        <div class="sec-icon red">💊</div>
+        <div><h3>Medication Deep Verification</h3><p>Indication · Dose · Route · Frequency · DDI · Monitoring</p></div>
+      </div>
+      ${copyBtn('meds-content')}
+    </div>
+    ${alertHtml}
+    <div class="card">
+      <div class="card-title">🤖 AI Deep Analysis</div>
+      <div class="prose-block" id="meds-content">${esc(d.med_verification || 'No medication verification data returned.')}</div>
+    </div>`;
+}
+
+function buildNote(d) {
+  return `
+    <div class="sec-header">
+      <div class="sec-title">
+        <div class="sec-icon">📝</div>
+        <div><h3>Pharmacist Consultation Note</h3><p>Ready to copy into the medical record</p></div>
+      </div>
+      ${copyBtn('note-content')}
+    </div>
+    <p style="font-size:.78rem;color:var(--ink3);margin-bottom:16px;">
+      Complete pharmacist note — paste directly into patient chart.
+    </p>
+    <div class="note-wrapper">
+      <div class="note-badge">Pharmacist Note · Ready to Copy</div>
+      <div class="note-content" id="note-content">${esc(d.final_note || 'No final note data returned.')}</div>
+    </div>`;
+}
+
+// ── Error helpers ──────────────────────────────────────────
+function showError(msg) {
+  const box = document.getElementById('errBox');
+  box.style.display = 'block';
+  box.innerHTML = '<strong>⚠ Error:</strong> ' + esc(msg);
+}
+function hideError() {
+  const box = document.getElementById('errBox');
+  box.style.display = 'none';
+  box.innerHTML = '';
+}
+
+// ── Clear ──────────────────────────────────────────────────
+function clearAll() {
+  document.getElementById('caseInput').value = '';
+  _data = null;
+  hideError();
+  lockAllTabs();
+  document.querySelectorAll('[id^="panel-"]').forEach(p => { p.style.display = 'none'; p.innerHTML = ''; });
+  document.getElementById('emptyState').style.display = 'flex';
+  document.querySelector('.tabbar').classList.remove('visible');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+  document.querySelector('.tab[data-tab="soap"]').classList.add('tab-active');
+}
+
+// ── Keyboard shortcut ──────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runAnalysis();
+});
+</script>
 </body>
 </html>
