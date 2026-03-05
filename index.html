@@ -1,313 +1,1258 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Clinical Pharmacist AI · Mohammed Al-Ishaq</title>
+<title>المنصة السريرية الذكية · د. محمد الإسحاق</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#f0f4f9;--surface:#ffffff;--surf2:#f8fafd;--surf3:#eef3fa;--border:#dde5f2;--border2:#c8d6ee;--ink:#0e1f38;--ink2:#2d4166;--ink3:#5a6f90;--ink4:#8fa3bf;--teal:#00877c;--teal2:#00a396;--teal-lt:#dff5f3;--teal-dim:rgba(0,135,124,0.12);--amber:#b96800;--amber-lt:#fff8ec;--red:#b91c2b;--red-lt:#fff1f2;--green:#166534;--green-lt:#f0fdf4;--blue:#1d4ed8;--blue-lt:#eff6ff;--mono:'Fira Code',monospace;--syne:'Syne',sans-serif;--body:'Nunito',sans-serif;--rad-sm:10px;--rad-md:16px;--rad-lg:22px;--sh-sm:0 2px 10px rgba(14,31,56,0.07)}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{font-size:14px}
-body{font-family:var(--body);background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex;flex-direction:column}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
-.topbar{height:54px;background:var(--ink);display:flex;align-items:center;padding:0 22px;gap:14px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07)}
-.top-logo{width:32px;height:32px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.top-name{font-family:var(--syne);font-size:1.05rem;font-weight:700;color:#fff;letter-spacing:-0.01em}
-.top-sub{font-size:0.72rem;color:rgba(255,255,255,0.38);margin-left:2px}
-.top-spacer{flex:1}
-.top-chip{background:rgba(0,135,124,0.22);color:#5ee8df;border:1px solid rgba(0,135,124,0.35);padding:3px 12px;border-radius:40px;font-size:0.7rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
-.workspace{flex:1;display:grid;grid-template-columns:340px 1fr;overflow:hidden}
-.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
-.sb-block{padding:18px 16px;border-bottom:1px solid var(--border)}
-.sb-block:last-child{border-bottom:none;flex:1}
-.sb-label{font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:11px;display:flex;align-items:center;gap:6px}
-.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
-textarea{width:100%;height:200px;font-family:var(--mono);font-size:0.75rem;line-height:1.8;background:var(--surf2);border:1.5px solid var(--border);border-radius:var(--rad-sm);padding:11px 13px;resize:vertical;outline:none;color:var(--ink);transition:border-color .18s,box-shadow .18s}
-textarea:focus{border-color:var(--teal);background:var(--surface);box-shadow:0 0 0 3px var(--teal-dim)}
-textarea::placeholder{color:var(--ink4);opacity:.7}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:40px;font-family:var(--body);font-weight:600;cursor:pointer;transition:all .17s;white-space:nowrap;line-height:1}
-.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
-.btn-run{width:100%;background:var(--teal);color:#fff;padding:12px 20px;font-size:0.88rem;margin-top:9px;box-shadow:0 4px 16px rgba(0,135,124,0.3)}
-.btn-run:hover{background:#006b62;box-shadow:0 6px 22px rgba(0,135,124,0.38);transform:translateY(-1px)}
-.btn-clear{width:100%;background:transparent;color:var(--ink3);border:1.5px solid var(--border);padding:9px 16px;font-size:0.8rem;margin-top:5px;border-radius:var(--rad-sm)}
-.btn-clear:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-lt)}
-.btn-sample{width:100%;background:var(--surf2);border:1.5px solid var(--border);color:var(--ink3);padding:8px 13px;font-size:0.78rem;text-align:left;border-radius:var(--rad-sm);margin-top:5px;font-weight:500;justify-content:flex-start}
-.btn-sample:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-lt)}
-.pipe-list{display:flex;flex-direction:column;gap:5px}
-.pipe-step{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--rad-sm);border:1.5px solid var(--border);background:var(--surf2);transition:all .2s}
-.pipe-step.running{background:var(--teal-lt);border-color:var(--teal2)}
-.pipe-step.done{background:var(--green-lt);border-color:#86efac}
-.pipe-step.error{background:var(--red-lt);border-color:#fca5a5}
-.pipe-num{width:24px;height:24px;border-radius:7px;background:var(--surf3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--ink3);flex-shrink:0;transition:all .2s}
-.pipe-step.running .pipe-num{background:var(--teal);color:#fff}
-.pipe-step.done .pipe-num{background:var(--green);color:#fff}
-.pipe-step.error .pipe-num{background:var(--red);color:#fff}
-.pipe-name{flex:1;font-size:0.78rem;font-weight:500;color:var(--ink2);transition:color .2s}
-.pipe-step.running .pipe-name{color:var(--teal);font-weight:600}
-.pipe-step.done .pipe-name{color:var(--green)}
-.pipe-step.error .pipe-name{color:var(--red)}
-.pipe-icon{font-size:0.9rem;opacity:.45;transition:opacity .2s}
-.pipe-step.running .pipe-icon,.pipe-step.done .pipe-icon,.pipe-step.error .pipe-icon{opacity:1}
-.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-.tabbar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;padding:0 20px;gap:2px;overflow-x:auto;flex-shrink:0}
-.tabbar::-webkit-scrollbar{height:0}
-.tab{padding:14px 15px 12px;font-size:0.78rem;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px;user-select:none;font-family:var(--body)}
-.tab:hover:not(.locked){color:var(--ink)}
-.tab.active{color:var(--teal);border-bottom-color:var(--teal)}
-.tab.locked{opacity:.35;cursor:not-allowed;pointer-events:none}
-.tab-ic{font-size:0.9rem}
-.output-scroll{flex:1;overflow-y:auto;padding:22px 24px}
-.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--border)}
-.sec-title{font-family:var(--syne);font-size:1.1rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:9px}
-.sec-icon{width:32px;height:32px;border-radius:9px;background:var(--teal-lt);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--teal);flex-shrink:0}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad-md);padding:16px 18px;margin-bottom:12px;transition:box-shadow .18s}
-.card:hover{box-shadow:var(--sh-sm)}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
-.card-title{font-weight:700;font-size:0.85rem;color:var(--ink2);display:flex;align-items:center;gap:7px}
-.missing-banner{display:flex;align-items:flex-start;gap:10px;background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--rad-sm);padding:10px 14px;margin-bottom:14px;font-size:0.8rem}
-.missing-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-.missing-tag{background:#fff;border:1px solid #fcd34d;color:var(--amber);padding:2px 9px;border-radius:40px;font-size:0.7rem;font-weight:700}
-.soap-pre{font-family:var(--mono);font-size:0.78rem;line-height:1.85;white-space:pre-wrap;background:var(--surf2);border-radius:var(--rad-sm);padding:14px;border:1px solid var(--border);color:var(--ink2)}
-.renal-card{background:var(--ink);border-radius:var(--rad-md);padding:18px 20px;margin-bottom:12px;display:grid;grid-template-columns:140px 1fr;gap:20px;align-items:center}
-.renal-left{text-align:center;border-right:1px solid rgba(255,255,255,.12);padding-right:20px}
-.renal-num{font-family:var(--syne);font-size:2.6rem;font-weight:800;color:#5ee8df;line-height:1}
-.renal-unit{font-size:0.72rem;color:rgba(255,255,255,.4);margin-top:3px}
-.renal-grade{font-size:0.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;padding:2px 9px;border-radius:40px;display:inline-block}
-.renal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.renal-item label{display:block;font-size:0.6rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35);margin-bottom:1px}
-.renal-item span{font-family:var(--mono);font-size:0.78rem;color:#fff;font-weight:500}
-.renal-missing{grid-column:1/-1;background:rgba(185,104,0,.2);border:1px solid rgba(185,104,0,.4);border-radius:7px;padding:5px 10px;font-size:0.72rem;color:#fde68a}
-.prose{font-size:0.83rem;line-height:1.85;white-space:pre-wrap;color:var(--ink2)}
-.final-wrap{background:var(--surface);border:1.5px solid var(--teal2);border-radius:var(--rad-lg);padding:22px;position:relative}
-.final-badge{position:absolute;top:-11px;left:18px;background:var(--teal);color:#fff;font-size:0.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 11px;border-radius:40px}
-.final-text{font-family:var(--mono);font-size:0.79rem;line-height:1.9;white-space:pre-wrap;color:var(--ink)}
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:65vh;gap:12px;text-align:center}
-.empty-icon{width:68px;height:68px;border-radius:20px;background:var(--teal-lt);display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:6px}
-.empty h2{font-family:var(--syne);font-size:1.3rem;color:var(--ink2)}
-.empty p{color:var(--ink3);font-size:0.82rem;max-width:300px;line-height:1.6}
-.err-box{display:none;background:var(--red-lt);border:1px solid #fca5a5;border-radius:var(--rad-sm);padding:12px 16px;margin-bottom:14px;color:var(--red);font-size:0.82rem}
-.btn-copy{background:var(--surf2);border:1px solid var(--border);color:var(--ink3);padding:5px 12px;font-size:0.7rem;border-radius:6px;font-family:var(--mono);cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn-copy:hover{border-color:var(--teal);color:var(--teal)}
-.btn-copy.ok{background:var(--green-lt);border-color:#86efac;color:var(--green)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
-.fade-up{animation:fadeUp .25s ease forwards}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spin-icon{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
-@media(max-width:860px){.workspace{grid-template-columns:1fr}.sidebar{max-height:55vh}body{overflow:auto}}
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --border: #cbd5e1;
+  --border-light: #e2e8f0;
+  --primary: #0b5e7c;
+  --primary-light: #e6f0f5;
+  --primary-dark: #064663;
+  --secondary: #2d6a4f;
+  --secondary-light: #e8f0ee;
+  --accent: #b45309;
+  --accent-light: #fef3e2;
+  --success: #0e7b4e;
+  --success-light: #e3f2ed;
+  --warning: #b45309;
+  --warning-light: #fef3e2;
+  --danger: #b91c1c;
+  --danger-light: #fee2e2;
+  --info: #2563eb;
+  --info-light: #dbeafe;
+  --text: #0f172a;
+  --text-2: #334155;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+  --mono: 'Fira Code', monospace;
+  --title: 'Tajawal', sans-serif;
+  --body: 'Cairo', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.02);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+}
+
+/* Top Bar */
+.topbar {
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+
+.top-logo {
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.top-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-name {
+  font-family: var(--title);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.top-sub {
+  font-size: 0.7rem;
+  color: var(--text-3);
+}
+
+.top-spacer {
+  flex: 1;
+}
+
+.top-chip {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 4px 12px;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Workspace */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  overflow: hidden;
+  gap: 1px;
+  background: var(--border-light);
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sb-block {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sb-block:last-child {
+  border-bottom: none;
+  flex: 1;
+}
+
+.sb-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* Textarea */
+textarea {
+  width: 100%;
+  height: 200px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  resize: vertical;
+  outline: none;
+  color: var(--text);
+  direction: ltr;
+  transition: all 0.2s;
+}
+
+textarea:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(11, 94, 124, 0.1);
+}
+
+textarea::placeholder {
+  color: var(--text-4);
+  font-size: 0.7rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 40px;
+  font-family: var(--body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(11, 94, 124, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(11, 94, 124, 0.3);
+}
+
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+  margin-top: 8px;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.btn-sample {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  color: var(--text-2);
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  text-align: right;
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+  font-weight: 500;
+  justify-content: flex-start;
+}
+
+.btn-sample:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.btn-copy {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-copy:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.btn-copy.success {
+  background: var(--success-light);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+/* Pipeline Steps */
+.pipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pipe-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  transition: all 0.3s;
+}
+
+.pipe-step.running {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.pipe-step.done {
+  background: var(--success-light);
+  border-color: var(--success);
+}
+
+.pipe-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+.pipe-step.running .pipe-num {
+  background: var(--primary);
+  color: white;
+}
+
+.pipe-step.done .pipe-num {
+  background: var(--success);
+  color: white;
+}
+
+.pipe-name {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.pipe-step.running .pipe-name {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.pipe-step.done .pipe-name {
+  color: var(--success);
+}
+
+/* Main Content Area */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Tabs */
+.tabbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: stretch;
+  padding: 0 20px;
+  gap: 2px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  direction: ltr;
+}
+
+.tabbar::-webkit-scrollbar {
+  height: 0;
+}
+
+.tab {
+  padding: 14px 16px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.tab:hover:not(.locked) {
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Output Area */
+.output-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Cards */
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--border-light);
+}
+
+.sec-title {
+  font-family: var(--title);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sec-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Missing Data Banner */
+.missing-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--warning-light);
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: var(--warning);
+}
+
+.missing-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.missing-tag {
+  background: white;
+  border: 1px solid #fcd34d;
+  color: var(--warning);
+  padding: 2px 10px;
+  border-radius: 40px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Renal Card */
+.renal-card {
+  background: var(--primary-dark);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 24px;
+  align-items: center;
+  color: white;
+}
+
+.renal-left {
+  text-align: center;
+  border-left: 1px solid rgba(255,255,255,0.15);
+  padding-left: 24px;
+}
+
+.renal-num {
+  font-family: var(--title);
+  font-size: 3rem;
+  font-weight: 800;
+  color: #7ab7d4;
+  line-height: 1;
+}
+
+.renal-unit {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+
+.renal-grade {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 40px;
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+}
+
+.renal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.renal-item label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 2px;
+}
+
+.renal-item span {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: white;
+  font-weight: 500;
+}
+
+.renal-missing {
+  grid-column: 1/-1;
+  background: rgba(180, 83, 9, 0.2);
+  border: 1px solid rgba(180, 83, 9, 0.4);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: #fbbf24;
+}
+
+/* SOAP Pre */
+.soap-pre {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  direction: ltr;
+}
+
+/* Prose */
+.prose {
+  font-size: 0.85rem;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  color: var(--text-2);
+  font-family: var(--body);
+}
+
+/* Final Note */
+.final-wrap {
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+
+.final-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 14px;
+  border-radius: 40px;
+}
+
+.final-text {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 2;
+  white-space: pre-wrap;
+  color: var(--text);
+  direction: ltr;
+}
+
+/* Empty State */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
+  gap: 16px;
+  text-align: center;
+  color: var(--text-3);
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+
+.empty h2 {
+  font-family: var(--title);
+  font-size: 1.4rem;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.empty p {
+  color: var(--text-3);
+  font-size: 0.9rem;
+  max-width: 340px;
+  line-height: 1.7;
+}
+
+/* Error Box */
+.err-box {
+  display: none;
+  background: var(--danger-light);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.3s ease forwards;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    max-height: 60vh;
+  }
+  body {
+    overflow: auto;
+  }
+}
+
+/* RTL Specific */
+.renal-left {
+  border-left: 1px solid rgba(255,255,255,0.15);
+  border-right: none;
+  padding-left: 24px;
+  padding-right: 0;
+}
+
+.final-badge {
+  right: 20px;
+  left: auto;
+}
+
+.tab {
+  font-family: var(--body);
+}
+
+.btn-sample {
+  text-align: right;
+}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <div class="top-logo">⚕</div>
-  <div>
-    <div class="top-name">PharmAI Platform</div>
-    <div class="top-sub">Clinical Pharmacist · Mohammed Al-Ishaq</div>
+  <div class="top-logo">⚕️</div>
+  <div class="top-info">
+    <div class="top-name">المنصة السريرية الذكية</div>
+    <div class="top-sub">د. محمد الإسحاق · صيدلي سريري</div>
   </div>
   <div class="top-spacer"></div>
-  <div class="top-chip">v3.0 · AI-Powered</div>
+  <div class="top-chip">الإصدار 4.0 · ذكاء تحليلي</div>
 </header>
 
 <div class="workspace">
   <aside class="sidebar">
     <div class="sb-block">
-      <div class="sb-label"><div class="sb-dot"></div>Clinical Case Input</div>
-      <textarea id="caseInput" placeholder="Paste case — any format.&#10;Narrative, labs, vitals, meds…&#10;&#10;Ctrl+Enter to run"></textarea>
-      <button class="btn btn-run" id="runBtn" onclick="runAnalysis()">
-        <span id="runContent">🔍&nbsp; Analyze Case</span>
+      <div class="sb-label"><span class="sb-dot"></span>بيانات الحالة السريرية</div>
+      <textarea id="caseInput" placeholder="الصق بيانات المريض هنا ...&#10;ملاحظات الطبيب · التحاليل · الأدوية · العلامات الحيوية&#10;&#10;Ctrl+Enter للتحليل"></textarea>
+      <button class="btn btn-primary" id="runBtn" onclick="runAnalysis()">
+        <span id="runContent">🔍 تحليل الحالة</span>
       </button>
-      <button class="btn btn-clear" onclick="clearAll()">Clear</button>
+      <button class="btn btn-secondary" onclick="clearAll()">مسح</button>
     </div>
     <div class="sb-block">
-      <div class="sb-label"><div class="sb-dot"></div>Sample Cases</div>
-      <button class="btn btn-sample" onclick="loadSample(1)">① Cardiac Tamponade (Complex)</button>
-      <button class="btn btn-sample" onclick="loadSample(2)">② ACS + Renal Impairment</button>
+      <div class="sb-label"><span class="sb-dot"></span>حالات تجريبية</div>
+      <button class="btn btn-sample" onclick="loadSample(1)">📋 مريض قلب · اندحاس قلبي</button>
+      <button class="btn btn-sample" onclick="loadSample(2)">❤️ متلازمة إكليلية + قصور كلوي</button>
     </div>
     <div class="sb-block">
-      <div class="sb-label"><div class="sb-dot"></div>Analysis Pipeline</div>
+      <div class="sb-label"><span class="sb-dot"></span>خطوات التحليل</div>
       <div class="pipe-list">
-        <div class="pipe-step" id="ps-extract"><div class="pipe-num">A</div><span class="pipe-name">Data Extraction</span><span class="pipe-icon">📥</span></div>
-        <div class="pipe-step" id="ps-crcl"><div class="pipe-num">B</div><span class="pipe-name">CrCl Calculation</span><span class="pipe-icon">🧮</span></div>
-        <div class="pipe-step" id="ps-soap"><div class="pipe-num">C1</div><span class="pipe-name">Case Organizer</span><span class="pipe-icon">📋</span></div>
-        <div class="pipe-step" id="ps-cov"><div class="pipe-num">C2</div><span class="pipe-name">Coverage Check</span><span class="pipe-icon">🎯</span></div>
-        <div class="pipe-step" id="ps-home"><div class="pipe-num">C3</div><span class="pipe-name">Home Meds Review</span><span class="pipe-icon">🏠</span></div>
-        <div class="pipe-step" id="ps-prophy"><div class="pipe-num">C4</div><span class="pipe-name">DVT / SUP Prophylaxis</span><span class="pipe-icon">🛡</span></div>
-        <div class="pipe-step" id="ps-meds"><div class="pipe-num">C5</div><span class="pipe-name">Medication Verification</span><span class="pipe-icon">💊</span></div>
-        <div class="pipe-step" id="ps-note"><div class="pipe-num">C6</div><span class="pipe-name">Final Note</span><span class="pipe-icon">📝</span></div>
+        <div class="pipe-step" id="ps-extract"><div class="pipe-num">١</div><span class="pipe-name">استخراج البيانات</span><span>📥</span></div>
+        <div class="pipe-step" id="ps-crcl"><div class="pipe-num">٢</div><span class="pipe-name">حساب وظائف الكلى</span><span>🧮</span></div>
+        <div class="pipe-step" id="ps-soap"><div class="pipe-num">٣</div><span class="pipe-name">تنظيم الحالة (SOAP)</span><span>📋</span></div>
+        <div class="pipe-step" id="ps-cov"><div class="pipe-num">٤</div><span class="pipe-name">تغطية المشاكل الدوائية</span><span>🎯</span></div>
+        <div class="pipe-step" id="ps-home"><div class="pipe-num">٥</div><span class="pipe-name">مراجعة الأدوية المنزلية</span><span>🏠</span></div>
+        <div class="pipe-step" id="ps-prophy"><div class="pipe-num">٦</div><span class="pipe-name">الوقاية من الجلطات والقرحة</span><span>🛡️</span></div>
+        <div class="pipe-step" id="ps-meds"><div class="pipe-num">٧</div><span class="pipe-name">التحقق الدقيق من الأدوية</span><span>💊</span></div>
+        <div class="pipe-step" id="ps-note"><div class="pipe-num">٨</div><span class="pipe-name">التقرير النهائي</span><span>📝</span></div>
       </div>
     </div>
   </aside>
 
   <div class="main">
     <div class="tabbar">
-      <div class="tab active locked" data-tab="soap"     onclick="switchTab('soap')"><span class="tab-ic">📋</span> SOAP</div>
-      <div class="tab locked"        data-tab="coverage" onclick="switchTab('coverage')"><span class="tab-ic">🎯</span> Coverage</div>
-      <div class="tab locked"        data-tab="home"     onclick="switchTab('home')"><span class="tab-ic">🏠</span> Home Meds</div>
-      <div class="tab locked"        data-tab="prophy"   onclick="switchTab('prophy')"><span class="tab-ic">🛡</span> Prophylaxis</div>
-      <div class="tab locked"        data-tab="meds"     onclick="switchTab('meds')"><span class="tab-ic">💊</span> Medications</div>
-      <div class="tab locked"        data-tab="note"     onclick="switchTab('note')"><span class="tab-ic">📝</span> Final Note</div>
+      <div class="tab active locked" data-tab="soap"     onclick="switchTab('soap')"><span>📋</span> SOAP</div>
+      <div class="tab locked"        data-tab="coverage" onclick="switchTab('coverage')"><span>🎯</span> التغطية</div>
+      <div class="tab locked"        data-tab="home"     onclick="switchTab('home')"><span>🏠</span> الأدوية المنزلية</div>
+      <div class="tab locked"        data-tab="prophy"   onclick="switchTab('prophy')"><span>🛡️</span> الوقاية</div>
+      <div class="tab locked"        data-tab="meds"     onclick="switchTab('meds')"><span>💊</span> التحقق الدوائي</div>
+      <div class="tab locked"        data-tab="note"     onclick="switchTab('note')"><span>📝</span> التقرير النهائي</div>
     </div>
     <div class="output-scroll" id="outputScroll">
       <div class="err-box" id="errBox"></div>
       <div class="empty" id="emptyState">
-        <div class="empty-icon">⚕</div>
-        <h2>Ready to Analyze</h2>
-        <p>Paste a clinical case and press Analyze to start the full pharmacotherapy review pipeline.</p>
+        <div class="empty-icon">⚕️</div>
+        <h2>المنصة جاهزة للتحليل</h2>
+        <p>الصق بيانات الحالة السريرية واضغط "تحليل" لبدء المراجعة الدوائية الشاملة</p>
       </div>
-      <div id="panel-soap"     style="display:none"></div>
+      <div id="panel-soap" style="display:none"></div>
       <div id="panel-coverage" style="display:none"></div>
-      <div id="panel-home"     style="display:none"></div>
-      <div id="panel-prophy"   style="display:none"></div>
-      <div id="panel-meds"     style="display:none"></div>
-      <div id="panel-note"     style="display:none"></div>
+      <div id="panel-home" style="display:none"></div>
+      <div id="panel-prophy" style="display:none"></div>
+      <div id="panel-meds" style="display:none"></div>
+      <div id="panel-note" style="display:none"></div>
     </div>
   </div>
 </div>
 
 <script>
 'use strict';
-const API='/api/ask';
-const PIPE_IDS=['extract','crcl','soap','cov','home','prophy','meds','note'];
-let _data=null,_busy=false,_pipeTimer=null;
+const API = '/api/ask';
+const PIPE_IDS = ['extract','crcl','soap','cov','home','prophy','meds','note'];
+let _data = null;
+let _busy = false;
+let _pipeTimer = null;
 
-function setPipe(id,s){const e=document.getElementById('ps-'+id);if(e)e.className='pipe-step '+(s||'')}
-function resetPipe(){PIPE_IDS.forEach(id=>setPipe(id,''))}
-function donePipe(){PIPE_IDS.forEach(id=>setPipe(id,'done'))}
-function errPipe(){PIPE_IDS.forEach(id=>setPipe(id,'error'))}
-function startPipeAnim(){
-  resetPipe();let i=0;
-  _pipeTimer=setInterval(()=>{
-    if(i<PIPE_IDS.length){if(i>0)setPipe(PIPE_IDS[i-1],'running');setPipe(PIPE_IDS[i],'running');i++}
-    else clearInterval(_pipeTimer);
-  },750);
+// دوال مساعدة
+function setPipe(id, status) {
+  const el = document.getElementById('ps-' + id);
+  if (el) {
+    el.className = 'pipe-step';
+    if (status) el.classList.add(status);
+  }
 }
-function stopPipeAnim(ok){clearInterval(_pipeTimer);ok?donePipe():errPipe()}
 
-function switchTab(name){
-  const tab=document.querySelector('.tab[data-tab="'+name+'"]');
-  if(!tab||tab.classList.contains('locked'))return;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+function resetPipe() {
+  PIPE_IDS.forEach(id => setPipe(id, ''));
+}
+
+function donePipe() {
+  PIPE_IDS.forEach(id => setPipe(id, 'done'));
+}
+
+function errPipe() {
+  PIPE_IDS.forEach(id => setPipe(id, 'error'));
+}
+
+function startPipeAnim() {
+  resetPipe();
+  let i = 0;
+  _pipeTimer = setInterval(() => {
+    if (i < PIPE_IDS.length) {
+      if (i > 0) setPipe(PIPE_IDS[i-1], 'running');
+      setPipe(PIPE_IDS[i], 'running');
+      i++;
+    } else {
+      clearInterval(_pipeTimer);
+    }
+  }, 700);
+}
+
+function stopPipeAnim(ok) {
+  clearInterval(_pipeTimer);
+  ok ? donePipe() : errPipe();
+}
+
+// التبديل بين التبويبات
+function switchTab(name) {
+  const tab = document.querySelector('.tab[data-tab="' + name + '"]');
+  if (!tab || tab.classList.contains('locked')) return;
+  
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
-  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
-  const panel=document.getElementById('panel-'+name);
-  if(panel){panel.style.display='block';panel.classList.remove('fade-up');void panel.offsetWidth;panel.classList.add('fade-up')}
-  document.getElementById('outputScroll').scrollTop=0;
+  
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('panel-' + name);
+  if (panel) {
+    panel.style.display = 'block';
+    panel.classList.remove('fade-up');
+    void panel.offsetWidth;
+    panel.classList.add('fade-up');
+  }
+  document.getElementById('outputScroll').scrollTop = 0;
 }
-function unlockTabs(){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('locked'))}
-function lockTabs(){document.querySelectorAll('.tab').forEach(t=>t.classList.add('locked'))}
 
-async function runAnalysis(){
-  const txt=document.getElementById('caseInput').value.trim();
-  if(!txt){showErr('Please enter a clinical case.');return}
-  if(_busy)return;
-  _busy=true;
-  const btn=document.getElementById('runBtn'),rc=document.getElementById('runContent');
-  btn.disabled=true;
-  rc.innerHTML='<span class="spin-icon"></span>&nbsp;Analyzing\u2026';
-  hideErr();lockTabs();
-  document.getElementById('emptyState').style.display='none';
-  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+function unlockTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('locked'));
+}
+
+function lockTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.add('locked'));
+}
+
+// التحليل الرئيسي
+async function runAnalysis() {
+  const txt = document.getElementById('caseInput').value.trim();
+  if (!txt) {
+    showErr('الرجاء إدخال بيانات الحالة السريرية');
+    return;
+  }
+  if (_busy) return;
+  
+  _busy = true;
+  const btn = document.getElementById('runBtn');
+  const rc = document.getElementById('runContent');
+  btn.disabled = true;
+  rc.innerHTML = '<span class="spin-icon"></span>&nbsp;جاري التحليل...';
+  
+  hideErr();
+  lockTabs();
+  document.getElementById('emptyState').style.display = 'none';
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
   startPipeAnim();
-  try{
-    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({case_text:txt})});
-    if(!res.ok)throw new Error('Server error '+res.status);
-    const data=await res.json();
-    if(!data.ok)throw new Error(data.error||'Unknown error');
-    _data=data;
+  
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ case_text: txt })
+    });
+    
+    if (!res.ok) throw new Error('خطأ في الخادم ' + res.status);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'خطأ غير معروف');
+    
+    _data = data;
     stopPipeAnim(true);
     buildPanels(data);
     unlockTabs();
     switchTab('soap');
-  }catch(err){
+  } catch (err) {
     stopPipeAnim(false);
     showErr(err.message);
-    document.getElementById('emptyState').style.display='flex';
-  }finally{
-    _busy=false;btn.disabled=false;rc.textContent='\uD83D\uDD0D\u00A0 Analyze Case';
+    document.getElementById('emptyState').style.display = 'flex';
+  } finally {
+    _busy = false;
+    btn.disabled = false;
+    rc.innerHTML = '🔍 تحليل الحالة';
   }
 }
 
-function buildPanels(d){
-  set('panel-soap',     buildSOAP(d));
-  set('panel-coverage', buildCoverage(d));
-  set('panel-home',     buildHome(d));
-  set('panel-prophy',   buildProphy(d));
-  set('panel-meds',     buildMeds(d));
-  set('panel-note',     buildNote(d));
+// بناء اللوحات
+function buildPanels(d) {
+  setPanel('soap', buildSOAP(d));
+  setPanel('coverage', buildCoverage(d));
+  setPanel('home', buildHome(d));
+  setPanel('prophy', buildProphy(d));
+  setPanel('meds', buildMeds(d));
+  setPanel('note', buildNote(d));
 }
-function set(id,html){const e=document.getElementById(id);if(e)e.innerHTML=html}
 
-function x(s){
-  if(s==null)return'';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+function setPanel(id, html) {
+  const el = document.getElementById('panel-' + id);
+  if (el) el.innerHTML = html;
 }
-function missingBanner(m){
-  if(!m||!m.length)return'';
-  return`<div class="missing-banner"><span>⚠️</span><div><strong>Missing critical data — assessments limited:</strong><div class="missing-tags">${m.map(v=>`<span class="missing-tag">${x(v)}</span>`).join('')}</div></div></div>`;
+
+// دالة حماية XSS
+function escapeHTML(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
-function copyBtn(id){return`<button class="btn-copy" onclick="doCopy('${id}',this)">Copy</button>`}
-function doCopy(id,btn){
-  const e=document.getElementById(id);if(!e)return;
-  navigator.clipboard.writeText(e.innerText||'').then(()=>{btn.textContent='✓ Copied';btn.classList.add('ok');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('ok')},2000)}).catch(()=>{});
-}
-function renalCard(r){
-  if(!r)return'';
-  const lvls=[[90,'Normal (G1)','#34d399'],[60,'Mild Decrease (G2)','#a3e635'],[30,'Moderate Decrease (G3)','#fbbf24'],[15,'Severe Decrease (G4)','#f87171'],[0,'Kidney Failure (G5)','#ef4444']];
-  let grade=null;
-  if(r.crcl!=null)for(const[t,lbl,col]of lvls){if(r.crcl>=t){grade={lbl,col};break}}
-  return`<div class="renal-card">
-    <div class="renal-left">
-      <div class="renal-num">${r.crcl!=null?r.crcl:'—'}</div>
-      <div class="renal-unit">mL / min</div>
-      ${grade?`<div class="renal-grade" style="background:${grade.col}22;color:${grade.col}">${grade.lbl}</div>`:''}
+
+// عرض البيانات المفقودة
+function missingBanner(missing) {
+  if (!missing || !missing.length) return '';
+  const labels = {
+    age: 'العمر',
+    sex: 'الجنس',
+    weight: 'الوزن',
+    SCr: 'الكرياتينين'
+  };
+  return `
+    <div class="missing-banner">
+      <span>⚠️</span>
+      <div>
+        <strong>بيانات أساسية مفقودة - التحليل محدود:</strong>
+        <div class="missing-tags">
+          ${missing.map(v => `<span class="missing-tag">${labels[v] || v}</span>`).join('')}
+        </div>
+      </div>
     </div>
-    <div class="renal-grid">
-      <div class="renal-item"><label>SCr</label><span>${r.scr_umol!=null?r.scr_umol+' µmol/L':'—'}</span></div>
-      <div class="renal-item"><label>SCr mg/dL</label><span>${r.scr_mgdl!=null?r.scr_mgdl:'—'}</span></div>
-      <div class="renal-item"><label>IBW</label><span>${r.ibw!=null?r.ibw+' kg':'—'}</span></div>
-      <div class="renal-item"><label>Weight used</label><span>${r.weight_used!=null?r.weight_used+' kg':'—'}</span></div>
-      <div class="renal-item" style="grid-column:1/-1"><label>Dosing rule</label><span>${x(r.weight_label)||'—'}</span></div>
-      ${r.missing&&r.missing.length?`<div class="renal-missing">⚠ Missing for calc: ${r.missing.join(', ')}</div>`:''}
-    </div>
-  </div>`;
+  `;
 }
 
-function buildSOAP(d){return`${missingBanner(d.missing_data)}<div class="sec-head"><div class="sec-title"><div class="sec-icon">📋</div>Case Organizer — Template-1 SOAP</div>${copyBtn('soap-pre')}</div>${renalCard(d.renal)}<div class="card"><div class="card-head"><span class="card-title">SOAP Note</span></div><div class="soap-pre" id="soap-pre">${x(d.template1_soap||'No data returned.')}</div></div>`}
+// بطاقة وظائف الكلى
+function renalCard(r) {
+  if (!r) return '';
+  
+  const levels = [
+    [90, 'طبيعي (G1)', '#0e7b4e'],
+    [60, 'انخفاض طفيف (G2)', '#2b6e3b'],
+    [30, 'انخفاض معتدل (G3)', '#b45309'],
+    [15, 'انخفاض شديد (G4)', '#b91c1c'],
+    [0, 'فشل كلوي (G5)', '#7f1d1d']
+  ];
+  
+  let grade = null;
+  if (r.crcl != null) {
+    for (const [threshold, label, color] of levels) {
+      if (r.crcl >= threshold) {
+        grade = { label, color };
+        break;
+      }
+    }
+  }
+  
+  return `
+    <div class="renal-card">
+      <div class="renal-left">
+        <div class="renal-num">${r.crcl != null ? r.crcl : '—'}</div>
+        <div class="renal-unit">مل/دقيقة</div>
+        ${grade ? `<div class="renal-grade" style="background: ${grade.color}20; color: ${grade.color}">${grade.label}</div>` : ''}
+      </div>
+      <div class="renal-grid">
+        <div class="renal-item"><label>كرياتينين</label><span>${r.scr_umol != null ? r.scr_umol + ' ميكرومول/لتر' : '—'}</span></div>
+        <div class="renal-item"><label>كرياتينين (مجم/دل)</label><span>${r.scr_mgdl != null ? r.scr_mgdl : '—'}</span></div>
+        <div class="renal-item"><label>الوزن المثالي</label><span>${r.ibw != null ? r.ibw + ' كجم' : '—'}</span></div>
+        <div class="renal-item"><label>الوزن المستخدم</label><span>${r.weight_used != null ? r.weight_used + ' كجم' : '—'}</span></div>
+        <div class="renal-item" style="grid-column:1/-1"><label>معيار الجرعات</label><span>${escapeHTML(r.weight_label) || '—'}</span></div>
+        ${r.missing && r.missing.length ? `<div class="renal-missing">⚠️ بيانات ناقصة: ${r.missing.join('، ')}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
 
-function buildCoverage(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">🎯</div>Problem-to-Treatment Coverage</div>${copyBtn('cov-pre')}</div><div class="card"><div class="prose" id="cov-pre">${x(d.coverage||'No coverage data returned.')}</div></div>`}
+// دالة النسخ
+function copyToClipboard(elementId, btn) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  navigator.clipboard.writeText(el.innerText || '').then(() => {
+    btn.textContent = '✓ تم النسخ';
+    btn.classList.add('success');
+    setTimeout(() => {
+      btn.textContent = 'نسخ';
+      btn.classList.remove('success');
+    }, 2000);
+  }).catch(() => {});
+}
 
-function buildHome(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">🏠</div>Home Medications at Admission</div>${copyBtn('home-pre')}</div><div style="font-size:0.75rem;color:var(--ink3);background:var(--teal-lt);border-radius:var(--rad-sm);padding:8px 12px;margin-bottom:12px;">Each home medication: <strong style="color:var(--teal)">CONTINUE</strong> / <strong style="color:var(--amber)">HOLD</strong> / <strong style="color:var(--blue)">SWITCH</strong></div><div class="card"><div class="prose" id="home-pre">${x(d.home_meds_review||'No home medication data returned.')}</div></div>`}
+// بناء كل لوحة
+function buildSOAP(d) {
+  return `
+    ${missingBanner(d.missing_data)}
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-icon">📋</div>تنظيم الحالة - SOAP</div>
+      <button class="btn-copy" onclick="copyToClipboard('soap-content', this)">نسخ</button>
+    </div>
+    ${renalCard(d.renal)}
+    <div class="card">
+      <div class="card-head"><span class="card-title">ملاحظات SOAP</span></div>
+      <div class="soap-pre" id="soap-content">${escapeHTML(d.template1_soap || 'لا توجد بيانات')}</div>
+    </div>
+  `;
+}
 
-function buildProphy(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">🛡</div>DVT &amp; Stress Ulcer Prophylaxis</div>${copyBtn('prophy-pre')}</div><div class="card"><div class="prose" id="prophy-pre">${x(d.prophylaxis||'No prophylaxis data returned.')}</div></div>`}
+function buildCoverage(d) {
+  return `
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-icon">🎯</div>تغطية المشاكل الدوائية</div>
+      <button class="btn-copy" onclick="copyToClipboard('coverage-content', this)">نسخ</button>
+    </div>
+    <div class="card">
+      <div class="prose" id="coverage-content">${escapeHTML(d.coverage || 'لا توجد بيانات')}</div>
+    </div>
+  `;
+}
 
-function buildMeds(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">💊</div>Medication Deep Verification</div>${copyBtn('meds-pre')}</div><div style="font-size:0.72rem;color:var(--teal);background:var(--teal-lt);border-radius:var(--rad-sm);padding:7px 12px;margin-bottom:12px;">Indication · Dose · Frequency · Route · DDI · Contraindications · Drug-Lab · Monitoring</div><div class="card"><div class="prose" id="meds-pre">${x(d.med_verification||'No medication verification data returned.')}</div></div>`}
+function buildHome(d) {
+  return `
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-icon">🏠</div>الأدوية المنزلية عند الدخول</div>
+      <button class="btn-copy" onclick="copyToClipboard('home-content', this)">نسخ</button>
+    </div>
+    <div style="font-size:0.75rem; color:var(--text-3); background:var(--primary-light); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:12px;">
+      <strong style="color:var(--primary)">✅ استمرار</strong> · 
+      <strong style="color:var(--warning)">⏸️ إيقاف مؤقت</strong> · 
+      <strong style="color:var(--info)">🔄 تبديل</strong>
+    </div>
+    <div class="card">
+      <div class="prose" id="home-content">${escapeHTML(d.home_meds_review || 'لا توجد أدوية منزلية')}</div>
+    </div>
+  `;
+}
 
-function buildNote(d){return`<div class="sec-head"><div class="sec-title"><div class="sec-icon">📝</div>Pharmacist Consultation Note</div>${copyBtn('note-pre')}</div><p style="font-size:0.78rem;color:var(--ink3);margin-bottom:14px;">Ready to copy directly into the patient's medical record.</p><div class="final-wrap"><div class="final-badge">Pharmacist Note · Ready to Copy</div><div class="final-text" id="note-pre">${x(d.final_note||'No final note data returned.')}</div></div>`}
+function buildProphy(d) {
+  return `
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-icon">🛡️</div>الوقاية من الجلطات وقرحة الإجهاد</div>
+      <button class="btn-copy" onclick="copyToClipboard('prophy-content', this)">نسخ</button>
+    </div>
+    <div class="card">
+      <div class="prose" id="prophy-content">${escapeHTML(d.prophylaxis || 'لا توجد بيانات وقائية')}</div>
+    </div>
+  `;
+}
 
-function showErr(msg){const b=document.getElementById('errBox');b.style.display='block';b.innerHTML='<strong>⚠ Error:</strong> '+x(msg)}
-function hideErr(){const b=document.getElementById('errBox');b.style.display='none';b.innerHTML=''}
+function buildMeds(d) {
+  return `
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-icon">💊</div>التحقق الدقيق من الأدوية</div>
+      <button class="btn-copy" onclick="copyToClipboard('meds-content', this)">نسخ</button>
+    </div>
+    <div style="font-size:0.75rem; color:var(--text-3); background:var(--primary-light); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:12px;">
+      الجرعة · التكرار · التداخلات · موانع الاستخدام · المراقبة
+    </div>
+    <div class="card">
+      <div class="prose" id="meds-content">${escapeHTML(d.med_verification || 'لا توجد أدوية حالية')}</div>
+    </div>
+  `;
+}
 
-function clearAll(){
-  document.getElementById('caseInput').value='';_data=null;hideErr();resetPipe();lockTabs();
-  document.querySelectorAll('[id^="panel-"]').forEach(p=>{p.style.display='none';p.innerHTML=''});
-  document.getElementById('emptyState').style.display='flex';
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+function buildNote(d) {
+  return `
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-icon">📝</div>تقرير الصيدلي السريري</div>
+      <button class="btn-copy" onclick="copyToClipboard('note-content', this)">نسخ</button>
+    </div>
+    <p style="font-size:0.85rem; color:var(--text-3); margin-bottom:16px;">
+      جاهز للنسخ مباشرة إلى ملف المريض
+    </p>
+    <div class="final-wrap">
+      <div class="final-badge">تقرير الصيدلي · جاهز للنسخ</div>
+      <div class="final-text" id="note-content">${escapeHTML(d.final_note || 'لا يوجد تقرير نهائي')}</div>
+    </div>
+  `;
+}
+
+// عرض وإخفاء الأخطاء
+function showErr(msg) {
+  const box = document.getElementById('errBox');
+  box.style.display = 'block';
+  box.innerHTML = '<strong>⚠️ خطأ:</strong> ' + escapeHTML(msg);
+}
+
+function hideErr() {
+  const box = document.getElementById('errBox');
+  box.style.display = 'none';
+  box.innerHTML = '';
+}
+
+// مسح الكل
+function clearAll() {
+  document.getElementById('caseInput').value = '';
+  _data = null;
+  hideErr();
+  resetPipe();
+  lockTabs();
+  
+  document.querySelectorAll('[id^="panel-"]').forEach(p => {
+    p.style.display = 'none';
+    p.innerHTML = '';
+  });
+  
+  document.getElementById('emptyState').style.display = 'flex';
+  
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector('.tab[data-tab="soap"]').classList.add('active');
 }
 
-function loadSample(n){
-  const s={
-    1:`94-YEAR-OLD MALE BEDRIDDEN\nK/C OF: DM ON INSULIN AND OHA, HTN, CKD (Hx OF AKI AFTER CONTRAST, S/P TEMPORARY DIALYSIS), CHRONIC ANEMIA, PSYCHIATRIC ISSUE\nPREVIOUSLY ADMITTED AS ACS-NSTEMI.\n\nHOME MEDICATIONS:\nAcetylsalicylic Acid 81 MG PO OD\nClopidogrel 75 MG PO OD\nRosuvastatin 20 MG PO OD\nBisoprolol 2.5 MG PO OD\nFurosemide 40 MG PO BID\nEsomeprazole 20 MG PO OD\nNifedipine 60 MG PO OD\nEmpagliflozin 10 MG PO OD\n\nCURRENT INPATIENT MEDS:\nAcetylsalicylic Acid 81 MG PO OD\nClopidogrel 75 MG PO OD\nRosuvastatin 20 MG PO OD\nBisoprolol 2.5 MG PO OD\nFurosemide 40 MG PO BID\nEsomeprazole 20 MG PO OD\n\nPRESENTATION: Decrease level of consciousness\nVITALS: BP 125/63, HR 68, OSAT 99, Weight: 68 kg, Height: 165 cm\nLABS: WBC 17.11, HB 11.5, PLT 474, CREAT 343 umol/L, BUN 24.7, NA 123, K 4.9, INR 2.23, AST 2303\nECG: RBBB | CXR: Congestion, Cardiomegaly\nECHO: Severe pericardial effusion with cardiac tamponade`,
-    2:`65-year-old male, 75 kg, 170 cm. Admitted with ACS (NSTEMI).\n\nHOME MEDICATIONS:\n- Metformin 1000 mg PO BID\n- Amlodipine 10 mg PO OD\n- Ramipril 5 mg PO OD\n- Aspirin 81 mg PO OD\n\nCURRENT INPATIENT MEDICATIONS:\n- Ticagrelor 90 mg BID\n- Heparin infusion (started in ER)\n- Atorvastatin 80 mg OD\n\nPMH: HTN, DM type 2, CKD stage 3\nAllergies: NKDA\n\nLABS: SCr 159 umol/L, K 4.2, Na 138, Hb 13.1, WBC 11.2, PLT 220, Troponin 0.8 ng/mL, HbA1c 8.2%\nVITALS: BP 95/60 (on norepinephrine), HR 110, O2 sat 96%, Temp 37.2`
+// تحميل عينات
+function loadSample(n) {
+  const samples = {
+    1: `مريض 94 سنة، ذكر، طريح الفراش
+التاريخ المرضي: سكري (أنسولين + أدوية فموية)، ارتفاع ضغط، قصور كلوي (سابقاً غسيل كلوي مؤقت بعد صبغة)، أنيميا مزمنة، مشاكل نفسية، دخول سابق بجلطة قلبية
+
+الأدوية المنزلية:
+- أسبرين 81 مجم يومياً
+- كلوبيدوجريل 75 مجم يومياً
+- روزوفاستاتين 20 مجم يومياً
+- بيسوبرولول 2.5 مجم يومياً
+- فوروسيمايد 40 مجم مرتين يومياً
+- إيزوميبرازول 20 مجم يومياً
+- نيفيديبين 60 مجم يومياً
+- إمباغليفلوزين 10 مجم يومياً
+
+الأدوية الحالية:
+- أسبرين 81 مجم يومياً
+- كلوبيدوجريل 75 مجم يومياً
+- روزوفاستاتين 20 مجم يومياً
+- بيسوبرولول 2.5 مجم يومياً
+- فوروسيمايد 40 مجم مرتين يومياً
+- إيزوميبرازول 20 مجم يومياً
+
+الحالة: نقص مستوى الوعي
+العلامات الحيوية: ضغط 125/63، نبض 68، تشبع 99%
+الوزن: 68 كجم، الطول: 165 سم
+التحاليل: WBC 17.11، HB 11.5، PLT 474، Creatinine 343، BUN 24.7، NA 123، K 4.9، INR 2.23، AST 2303
+تخطيط القلب: RBBB | صدر: احتقان، تضخم قلب
+إيكو: اندحاس قلبي حاد`,
+
+    2: `مريض 65 سنة، ذكر، 75 كجم، 170 سم
+دخول: متلازمة إكليلية حادة (NSTEMI)
+
+الأدوية المنزلية:
+- ميتفورمين 1000 مجم مرتين يومياً
+- أملوديبين 10 مجم يومياً
+- راميبريل 5 مجم يومياً
+- أسبرين 81 مجم يومياً
+
+الأدوية الحالية:
+- تيكاجريلور 90 مجم مرتين يومياً
+- هيبارين وريدي (بدأ في الطوارئ)
+- أتورفاستاتين 80 مجم يومياً
+
+التاريخ المرضي: ارتفاع ضغط، سكري نوع 2، قصور كلوي مرحلة 3
+حساسية: لا يوجد
+
+التحاليل: Creatinine 159، K 4.2، Na 138، Hb 13.1، WBC 11.2، PLT 220
+العلامات الحيوية: ضغط 95/60 (على نورإبينفرين)، نبض 110، تشبع 96%، حرارة 37.2`
   };
-  document.getElementById('caseInput').value=s[n]||'';
+  
+  document.getElementById('caseInput').value = samples[n] || '';
 }
 
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')runAnalysis()});
+// اختصار لوحة المفاتيح
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    runAnalysis();
+  }
+});
+
+// جعل دوال النسخ عامة
+window.copyToClipboard = copyToClipboard;
 </script>
 </body>
 </html>
