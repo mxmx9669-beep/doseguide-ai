@@ -1,6 +1,6 @@
 // ============================================================
 // FILE: /functions/api/ask.js
-// THERA GUARD AI — Backend v7 (QUESTION + CASE) — Protocol-Locked RAG
+// THERA GUARD AI — Backend v8 (QUESTION + CASE) — Protocol-Locked RAG with PDF URLs
 // Runtime: Cloudflare Pages Functions
 //
 // Required env:
@@ -8,6 +8,7 @@
 // - VECTOR_STORE_ID
 // Optional env:
 // - MODEL (default: gpt-4.1-mini)
+// - PDF_BASE_URL (default: https://yourdomain.com/pdfs/)
 //
 // Request body supports:
 // {
@@ -63,6 +64,7 @@ export async function onRequest(context) {
     }
 
     const model = env.MODEL || "gpt-4.1-mini";
+    const pdfBaseUrl = env.PDF_BASE_URL || "https://yourdomain.com/pdfs/";
 
     // ---- Extraction (best-effort) + CrCl
     const extracted = extractBasics(case_text || question_text);
@@ -72,7 +74,7 @@ export async function onRequest(context) {
     const retrievalQuery = buildRetrievalQuery({ mode, case_text, question_text, extracted, computed });
 
     // ---- RAG search (Protocol-Locked)
-    const evidence = await vectorStoreSearch(env, env.VECTOR_STORE_ID, retrievalQuery);
+    const evidence = await vectorStoreSearch(env, env.VECTOR_STORE_ID, retrievalQuery, pdfBaseUrl);
 
     // Protocol Locked behavior:
     // - For QUESTION: must have evidence; otherwise return an error (no hallucination)
@@ -124,7 +126,7 @@ export async function onRequest(context) {
       });
     }
 
-    // finalize sources proof
+    // finalize sources proof (with URLs)
     const sources = evidence.sources;
 
     return jsonResponse(
@@ -482,10 +484,10 @@ function buildRetrievalQuery({ mode, case_text, question_text, extracted, comput
 }
 
 // ============================================================
-// VECTOR STORE SEARCH (OpenAI)
+// VECTOR STORE SEARCH (OpenAI) - UPDATED WITH URL SUPPORT
 // ============================================================
 
-async function vectorStoreSearch(env, vectorStoreId, query) {
+async function vectorStoreSearch(env, vectorStoreId, query, pdfBaseUrl) {
   const url = `https://api.openai.com/v1/vector_stores/${encodeURIComponent(vectorStoreId)}/search`;
 
   const resp = await fetch(url, {
@@ -517,18 +519,47 @@ async function vectorStoreSearch(env, vectorStoreId, query) {
       // best-effort metadata
       const filename = r?.metadata?.filename || r?.metadata?.file_name || r?.filename || null;
       const page = r?.metadata?.page || r?.metadata?.page_number || null;
-
-      return { text: text.slice(0, 900), score, filename, page };
+      
+      // Try to get URL from metadata if available
+      let fileUrl = r?.metadata?.url || r?.metadata?.file_url || null;
+      
+      return { 
+        text: text.slice(0, 900), 
+        score, 
+        filename, 
+        page,
+        url: fileUrl  // Store URL from metadata
+      };
     })
     .filter((s) => s.text);
 
-  const sources = snippets.slice(0, 5).map((s, idx) => ({
-    id: `S${idx + 1}`,
-    filename: s.filename || "N/A",
-    page: s.page ?? "N/A",
-    score: s.score ?? null,
-    excerpt: s.text.slice(0, 220),
-  }));
+  // إنشاء المصادر مع URLs
+  const sources = snippets.slice(0, 5).map((s, idx) => {
+    // استراتيجية متعددة للحصول على URL:
+    let fileUrl = s.url; // 1. من metadata
+    
+    // 2. إذا لم يوجد، بناء URL من اسم الملف
+    if (!fileUrl && s.filename && s.filename !== "N/A") {
+      // تنظيف اسم الملف وجعله صالحاً للـ URL
+      const cleanFilename = s.filename
+        .replace(/[^\w\s.-]/g, '') // إزالة الرموز الخاصة
+        .replace(/\s+/g, '_');      // استبدال المسافات بـ _
+      
+      fileUrl = `${pdfBaseUrl}${encodeURIComponent(cleanFilename)}`;
+    }
+    
+    // 3. قد نحتاج mapping خاص لبعض الملفات (يمكن إضافته كـ config)
+    // هذا يمكن توسيعه لاحقاً حسب الحاجة
+    
+    return {
+      id: `S${idx + 1}`,
+      filename: s.filename || "N/A",
+      page: s.page ?? "N/A",
+      score: s.score ?? null,
+      excerpt: s.text.slice(0, 220),
+      url: fileUrl  // ✅ إضافة URL
+    };
+  });
 
   return { snippets, sources };
 }
