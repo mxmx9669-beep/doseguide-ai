@@ -1,91 +1,454 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-    <title>PharmAI · Clinical Pharmacist Platform</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinical Pharmacist AI Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--navy:#0d2b4e;--blue:#1a4c8c;--blue-lt:#e1ecfe;--bg:#f0f4f8;--surface:#fff;--surface2:#f8fafd;--border:#e2eaf5;--text:#0b1c33;--text2:#3d5166;--text3:#64748b;--red:#dc2626;--amber:#f59e0b;--sky:#0891b2;--green:#059669;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding:24px;line-height:1.5}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#c4d0e0;border-radius:3px}
+    .container{max-width:1600px;margin:0 auto}
+    .header{background:var(--surface);border-radius:24px 24px 0 0;padding:22px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 12px rgba(0,20,60,.08)}
+    .logo{display:flex;align-items:center;gap:14px}
+    .logo-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1a5c9e,#0d3b6f);display:flex;align-items:center;justify-content:center;font-size:26px}
+    .logo-name{font-size:1.45rem;font-weight:700;background:linear-gradient(135deg,#1a3b5c,#143059);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .logo-sub{font-size:.8rem;color:var(--text3);display:block;margin-top:2px}
+    .logo-credit{font-size:.7rem;color:#94a3b8;margin-top:3px}
+    .header-badge{background:var(--blue-lt);color:var(--blue);padding:7px 18px;border-radius:40px;font-size:.8rem;font-weight:600;border:1px solid rgba(29,74,139,.15)}
+    .status-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;gap:10px;height:42px}
+    .spinner{width:13px;height:13px;border:2px solid #c4d0e0;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .spinner.on{display:block}
+    #statusText{color:var(--text2);font-family:var(--mono);font-size:11px}
+    .pipe-dots{display:flex;align-items:center;gap:6px;margin-left:auto}
+    .pdot{width:8px;height:8px;border-radius:50%;background:#dde5ef;transition:background .3s;position:relative;cursor:default}
+    .pdot.active{background:var(--blue);box-shadow:0 0 0 3px rgba(26,76,140,.2);animation:pulse 1.2s ease infinite}
+    .pdot.done{background:var(--green)}
+    .pdot.error{background:var(--red)}
+    .main-grid{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border-radius:0 0 24px 24px;box-shadow:0 20px 50px -12px rgba(0,20,60,.2);overflow:hidden}
+    .left-panel{background:var(--surface2);padding:28px 32px;border-right:1px solid var(--border)}
+    .panel-title{font-size:1rem;font-weight:600;color:#13273f;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    textarea#caseInput{width:100%;min-height:460px;padding:18px;resize:vertical;font-family:var(--mono);font-size:.87rem;line-height:1.75;background:var(--surface);color:var(--text);border:1px solid #d2dce9;border-radius:16px;outline:none;transition:border-color .2s,box-shadow .2s}
+    textarea#caseInput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,76,140,.1)}
+    textarea#caseInput::placeholder{color:#94a3b8}
+    .action-bar{display:flex;gap:12px;margin-top:18px;justify-content:center}
+    .btn-primary{background:var(--blue);border:none;color:#fff;font-weight:600;padding:14px 36px;border-radius:50px;font-size:1rem;font-family:var(--sans);display:flex;align-items:center;gap:9px;box-shadow:0 6px 16px rgba(20,70,140,.3);cursor:pointer;transition:background .2s,transform .15s}
+    .btn-primary:hover:not(:disabled){background:var(--navy);transform:translateY(-2px)}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .btn-secondary{background:transparent;color:var(--text2);border:1px solid #bcc9db;border-radius:50px;padding:14px 28px;cursor:pointer;font-family:var(--sans);transition:border-color .2s,color .2s}
+    .btn-secondary:hover{border-color:var(--blue);color:var(--blue)}
+    .btn-sample{display:block;width:100%;margin-top:10px;background:transparent;border:1px dashed #bcc9db;border-radius:50px;padding:9px;color:var(--text3);font-size:.8rem;cursor:pointer;transition:border-color .2s,color .2s}
+    .btn-sample:hover{border-color:var(--blue);color:var(--blue)}
+    .loader{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+    .arch-note{margin-top:20px;background:#fff9ed;border:1px solid #fde68a;border-radius:12px;padding:14px 16px}
+    .arch-note-title{font-weight:700;font-size:11px;color:#b45309;margin-bottom:8px;letter-spacing:.5px}
+    .arch-note-body{font-size:11.5px;color:#92400e;line-height:1.75}
+    .right-panel{padding:28px 32px;max-height:820px;overflow-y:auto}
+    .error-box{background:#fee2e2;border:1px solid #fecaca;color:#991b1b;border-radius:14px;padding:16px;margin-bottom:18px;font-size:.87rem;display:none}
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:20px}
+    .tab{background:transparent;border:none;padding:7px 15px;border-radius:40px;font-size:.8rem;font-weight:500;color:var(--text3);cursor:pointer;transition:background .15s,color .15s}
+    .tab:hover{background:var(--blue-lt);color:var(--blue)}
+    .tab.active{background:var(--blue);color:#fff}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    .soap-out{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:22px;font-family:var(--mono);font-size:.87rem;line-height:1.85;white-space:pre-wrap;color:var(--text)}
+    .acard{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;animation:fadeUp .25s ease both}
+    .acard-title{font-weight:600;color:var(--blue);margin-bottom:10px;font-size:.94rem}
+    .renal-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;animation:fadeUp .25s ease both}
+    .renal-rows{padding:14px 18px}
+    .renal-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eef2f7;font-size:12px}
+    .renal-row:last-child{border:none}
+    .rk{color:var(--text3);font-family:var(--mono)}
+    .rv{font-weight:600;font-family:var(--mono);color:var(--text)}
+    .renal-result{background:var(--navy);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .rcrcl-lbl{color:#64748b;font-size:11px;font-family:var(--mono);margin-bottom:4px}
+    .rcrcl-val{color:#f0f9ff;font-size:30px;font-weight:800;font-family:var(--mono);line-height:1}
+    .rcrcl-form{color:#334e70;font-size:10px;font-family:var(--mono);margin-top:5px}
+    .rcat{text-align:right;padding:8px 14px;border-radius:8px}
+    .rcat-lbl{font-weight:800;font-size:13px;font-family:var(--mono)}
+    .rcat-sub{font-size:10px;color:#64748b;margin-top:3px}
+    .missing-alert{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#92400e;font-family:var(--mono)}
+    .icard{border-radius:14px;padding:18px;margin-bottom:14px;border-left:4px solid;background:var(--surface);animation:fadeUp .25s ease both}
+    .icard.critical{border-left-color:var(--red)}
+    .icard.high{border-left-color:var(--amber)}
+    .icard.moderate{border-left-color:var(--sky)}
+    .icard.low,.icard.info{border-left-color:#94a3b8}
+    .icard-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .icard-drug{font-weight:700;font-size:.94rem}
+    .ibadge{padding:3px 11px;border-radius:40px;font-size:.72rem;font-weight:700}
+    .ibadge.critical{background:#fee2e2;color:#991b1b}
+    .ibadge.high{background:#fef3c7;color:#92400e}
+    .ibadge.moderate{background:#e0f2fe;color:#075985}
+    .ibadge.low,.ibadge.info{background:#f1f5f9;color:#475569}
+    .irec{font-weight:600;font-size:.87rem;margin-bottom:6px}
+    .irat{color:var(--text2);font-size:.84rem;margin-bottom:10px}
+    .ievid{background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:.8rem;border-left:3px solid var(--blue)}
+    .ievid strong{color:var(--blue)}
+    .ievid.no-evidence{border-left-color:var(--amber)}
+    .ievid.no-evidence strong{color:var(--amber)}
+    .proto-lock{background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);border-radius:8px;padding:7px 13px;margin-bottom:14px;font-size:11px;color:#065f46;display:flex;align-items:center;gap:6px}
+    .empty{text-align:center;padding:60px 30px;color:var(--text3)}
+    .empty-icon{font-size:44px;margin-bottom:14px}
+    .empty-title{font-weight:600;font-size:1rem;color:var(--text2);margin-bottom:8px}
+    .empty-sub{font-size:.84rem;line-height:1.7}
+    .copy-btn{float:right;background:transparent;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:border-color .2s,color .2s;font-family:var(--mono)}
+    .copy-btn:hover{border-color:var(--blue);color:var(--blue)}
+    .copy-btn.copied{border-color:var(--green);color:var(--green)}
+    .footer{text-align:center;margin-top:16px;padding:14px;color:var(--text3);font-size:.8rem;border-top:1px solid var(--border)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes blink{50%{opacity:0}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:900px){.main-grid{grid-template-columns:1fr}.right-panel{max-height:none}}
+  </style>
 </head>
 <body>
+<div class="container">
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🩺</div>
+      <div>
+        <div class="logo-name">Clinical Pharmacist AI Platform</div>
+        <span class="logo-sub">SOAP Structuring · Clinical Analysis · Protocol-Locked Interventions</span>
+        <div class="logo-credit">Design &amp; Concept: Clinical Pharmacist Mohammed Al-Ishaq</div>
+      </div>
+    </div>
+    <div class="header-badge">🔬 v3.0 · Anthropic AI · Protocol-Locked</div>
+  </header>
 
-    <header class="topbar">
-        <div class="top-logo">⚕</div>
-        <div class="top-brand">
-            <div class="top-name">PharmAI Platform</div>
-            <div class="top-sub">Clinical Pharmacist Intelligence</div>
+  <div class="status-bar">
+    <div class="spinner" id="spinner"></div>
+    <span id="statusText">Ready</span>
+    <div class="pipe-dots">
+      <div class="pdot" id="pd-extract"       title="A: Extract"></div>
+      <div class="pdot" id="pd-crcl"          title="B: CrCl (code)"></div>
+      <div class="pdot" id="pd-t1"            title="C1: Template-1"></div>
+      <div class="pdot" id="pd-analysis"      title="C2: Analysis"></div>
+      <div class="pdot" id="pd-pharma"        title="C3: Pharm Review"></div>
+      <div class="pdot" id="pd-interventions" title="C4: Interventions"></div>
+      <div class="pdot" id="pd-t2"            title="C5: Pharm SOAP"></div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="left-panel">
+      <div class="panel-title">📋 Enter Unstructured Clinical Case</div>
+      <textarea id="caseInput" placeholder="Paste patient history, vitals, labs, medications, imaging, notes…"></textarea>
+      <div class="action-bar">
+        <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">
+          <span id="btnContent">🔍 Analyze Case</span>
+        </button>
+        <button class="btn-secondary" onclick="clearAll()">🗑 Clear</button>
+      </div>
+      <button class="btn-sample" onclick="loadSample()">📋 Load sample case (cardiac tamponade)</button>
+      <div class="arch-note">
+        <div class="arch-note-title">⚡ PIPELINE ARCHITECTURE</div>
+        <div class="arch-note-body">
+          <b>A:</b> Anthropic AI extracts JSON — no assumptions<br>
+          <b>B:</b> CrCl computed in <b>pure code</b> (Cockcroft–Gault)<br>
+          <b>C1–C3:</b> General clinical reasoning (AI)<br>
+          <b>C4:</b> <b>Protocol-locked</b> — vector store citations required<br>
+          <b>Rule:</b> Missing data → N/A or —
         </div>
-        <div class="top-divider"></div>
-        <div class="top-badge">
-            <div class="top-badge-dot"></div>
-            AI-Powered · v5.0
-        </div>
-        <div class="top-spacer"></div>
-    </header>
-
-    <div class="workspace">
-        
-        <aside class="sidebar">
-            <div class="sb-section">
-                <div class="sb-head">
-                    <div class="sb-head-dot"></div>
-                    <div class="sb-head-label">Clinical Case Input</div>
-                </div>
-                <textarea id="caseInput" placeholder="Paste raw HIS data here...&#10;Any format: narrative, labs, vitals, medications&#10;&#10;Ctrl + Enter to run analysis"></textarea>
-                <button class="btn-primary" id="runBtn" onclick="runAnalysis()">
-                    <span id="runLabel">🔍 Analyze Case</span>
-                </button>
-                <button class="btn-secondary" onclick="clearAll()">✕ Clear</button>
-            </div>
-        </aside>
-
-        <main class="main">
-            <nav class="tabbar">
-                <div class="tab tab-active tab-locked" data-tab="soap" onclick="switchTab('soap')">
-                    <span class="tab-icon">📋</span> SOAP
-                </div>
-                <div class="tab tab-locked" data-tab="coverage" onclick="switchTab('coverage')">
-                    <span class="tab-icon">🎯</span> Coverage
-                </div>
-                <div class="tab tab-locked" data-tab="home" onclick="switchTab('home')">
-                    <span class="tab-icon">🏠</span> Home Meds
-                </div>
-                <div class="tab tab-locked" data-tab="prophy" onclick="switchTab('prophy')">
-                    <span class="tab-icon">🛡️</span> Prophylaxis
-                </div>
-                <div class="tab tab-locked" data-tab="meds" onclick="switchTab('meds')">
-                    <span class="tab-icon">💊</span> Medications
-                </div>
-                <div class="tab tab-locked" data-tab="note" onclick="switchTab('note')">
-                    <span class="tab-icon">📝</span> Final Note
-                </div>
-            </nav>
-
-            <div class="content-scroll" id="contentScroll">
-                <div class="err-box" id="errBox"></div>
-
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon-wrap">⚕</div>
-                    <h2>Ready to Analyze</h2>
-                    <p>Paste any clinical case — HIS export, narrative, or structured data — and run the full pharmacotherapy pipeline.</p>
-                    <div class="empty-steps">
-                        <div class="empty-step-chip">📥 Extract</div>
-                        <div class="empty-step-chip">🧮 CrCl</div>
-                        <div class="empty-step-chip">🎯 Coverage</div>
-                        <div class="empty-step-chip">💊 Verify</div>
-                        <div class="empty-step-chip">📝 Note</div>
-                    </div>
-                </div>
-
-                <div id="panel-soap" class="result-panel" style="display:none"></div>
-                <div id="panel-coverage" class="result-panel" style="display:none"></div>
-                <div id="panel-home" class="result-panel" style="display:none"></div>
-                <div id="panel-prophy" class="result-panel" style="display:none"></div>
-                <div id="panel-meds" class="result-panel" style="display:none"></div>
-                <div id="panel-note" class="result-panel" style="display:none"></div>
-            </div>
-        </main>
+      </div>
     </div>
 
+    <div class="right-panel" id="rightPanel">
+      <div class="error-box" id="errorBox"></div>
+      <div class="tabs" id="tabBar">
+        <button class="tab active" data-tab="t1">📄 Template-1 SOAP</button>
+        <button class="tab" data-tab="renal">🧮 Renal (CrCl)</button>
+        <button class="tab" data-tab="analysis">🔬 Clinical Analysis</button>
+        <button class="tab" data-tab="pharma">💊 Pharm Review</button>
+        <button class="tab" data-tab="interventions">⚠️ Interventions</button>
+        <button class="tab" data-tab="t2">📋 Pharmacist SOAP</button>
+      </div>
+      <div class="tab-panel active" id="tab-t1"><div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Template-1 SOAP</div><div class="empty-sub">Run analysis to generate structured SOAP note</div></div></div>
+      <div class="tab-panel" id="tab-renal"><div class="empty"><div class="empty-icon">🧮</div><div class="empty-title">Renal Function</div><div class="empty-sub">Cockcroft–Gault CrCl — calculated in pure code</div></div></div>
+      <div class="tab-panel" id="tab-analysis"><div class="empty"><div class="empty-icon">🔬</div><div class="empty-title">Clinical Analysis</div><div class="empty-sub">Run analysis to see clinical pharmacotherapy review</div></div></div>
+      <div class="tab-panel" id="tab-pharma"><div class="empty"><div class="empty-icon">💊</div><div class="empty-title">Pharmacotherapy Review</div><div class="empty-sub">Medication-by-medication evaluation</div></div></div>
+      <div class="tab-panel" id="tab-interventions"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Interventions</div><div class="empty-sub">Protocol-locked — each intervention requires evidence citation</div></div></div>
+      <div class="tab-panel" id="tab-t2"><div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Pharmacist SOAP Note</div><div class="empty-sub">Run analysis to generate Template-2 pharmacist note</div></div></div>
+    </div>
+  </div>
+
+  <div class="footer">© 2026 Clinical Pharmacist Mohammed Al-Ishaq · All rights reserved · Protocol-Locked Vector Database</div>
+</div>
+
+<script>
+// ══ CONFIG ════════════════════════════════════════════════════
+// Calls /functions/api/ask.js via Cloudflare Pages routing
+const API_ENDPOINT = "/api/ask";
+
+// ══ TABS ══════════════════════════════════════════════════════
+document.getElementById("tabBar").addEventListener("click", e => {
+  const btn = e.target.closest(".tab");
+  if (!btn) return;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+});
+
+// ══ PIPELINE DOTS ═════════════════════════════════════════════
+const PIPES = ["extract","crcl","t1","analysis","pharma","interventions","t2"];
+function dot(id, s) { const el = document.getElementById("pd-"+id); if(el) el.className = "pdot " + (s||""); }
+function allDone()  { PIPES.forEach(id => dot(id,"done")); }
+function allReset() { PIPES.forEach(id => dot(id,"")); }
+
+// ══ STATUS ════════════════════════════════════════════════════
+function setStatus(msg, spin) {
+  document.getElementById("statusText").textContent = msg;
+  document.getElementById("spinner").className = "spinner" + (spin ? " on" : "");
+}
+
+// ══ RUN ═══════════════════════════════════════════════════════
+async function runAnalysis() {
+  const caseText = document.getElementById("caseInput").value.trim();
+  if (!caseText) { alert("Please enter a clinical case."); return; }
+
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true;
+  document.getElementById("btnContent").innerHTML = '<span class="loader"></span> Analyzing…';
+  hideError(); allReset();
+  setStatus("Running pipeline…", true);
+  showProcessing();
+
+  // Animate dots while waiting
+  let di = 0;
+  const dt = setInterval(() => {
+    if (di > 0) dot(PIPES[di-1], "done");
+    if (di < PIPES.length) { dot(PIPES[di], "active"); di++; } else clearInterval(dt);
+  }, 1100);
+
+  try {
+    const res = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        case_text: caseText,   // ← ask.js reads this
+        question:  caseText,   // ← backward compat with old worker
+        mode: "case_analysis",
+        language: "en"
+      })
+    });
+    clearInterval(dt);
+    if (!res.ok) throw new Error("Server error " + res.status + ": " + await res.text());
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Unknown error");
+    allDone(); setStatus("✓ Complete", false);
+    renderAll(data); switchTab("t1");
+  } catch(err) {
+    clearInterval(dt);
+    PIPES.forEach(id => dot(id,"error"));
+    setStatus("Error", false);
+    showError(err.message);
+    clearProcessing();
+  } finally {
+    btn.disabled = false;
+    document.getElementById("btnContent").textContent = "🔍 Analyze Case";
+  }
+}
+
+// ══ RENDER ALL ════════════════════════════════════════════════
+function renderAll(d) {
+  renderT1(d.template1_soap);
+  renderRenal(d.renal);
+  renderAnalysis(d.clinical_analysis);
+  renderPharma(d.pharmacotherapy_review);
+  renderInterventions(d.interventions);
+  renderT2(d.template2_soap);
+}
+
+// ── Template-1 ───────────────────────────────────────────────
+function renderT1(text) {
+  set("tab-t1", `<button class="copy-btn" onclick="copyTab('tab-t1')">copy</button>
+    <div class="soap-out">${esc(text||"No output.")}</div>`);
+}
+
+// ── Renal ────────────────────────────────────────────────────
+function renderRenal(r) {
+  if (!r) { set("tab-renal", empty("🧮","No Renal Data","")); return; }
+  const cat = r.crcl==null ? null
+    : r.crcl>=90 ? {l:"Normal (G1)",c:"#10b981"}
+    : r.crcl>=60 ? {l:"Mildly Decreased (G2)",c:"#65a30d"}
+    : r.crcl>=30 ? {l:"Moderately Decreased (G3)",c:"#f59e0b"}
+    : r.crcl>=15 ? {l:"Severely Decreased (G4)",c:"#ef4444"}
+    :              {l:"Kidney Failure (G5)",c:"#dc2626"};
+  const miss = r.missing?.length ? `<div class="missing-alert">⚠ CrCl cannot be calculated — missing: ${r.missing.join(", ")}</div>` : "";
+  const rows = [
+    ["SCr input",   r.scr_umol    ? r.scr_umol+" µmol/L"    : "—"],
+    ["SCr mg/dL",   r.scr_mgdl    ? r.scr_mgdl+" mg/dL"     : "—"],
+    ["IBW",         r.ibw         ? r.ibw+" kg"              : "—"],
+    ["ABW adjusted",r.abw_adj     ? r.abw_adj+" kg"          : "—"],
+    ["Weight used", r.weight_used ? r.weight_used+" kg"      : "—"],
+    ["Rule",        r.weight_label|| "—"]
+  ].map(([k,v])=>`<div class="renal-row"><span class="rk">${k}</span><span class="rv">${v}</span></div>`).join("");
+  const catBlock = cat ? `<div class="rcat" style="background:${cat.c}1a;border:1.5px solid ${cat.c}44"><div class="rcat-lbl" style="color:${cat.c}">${cat.l}</div><div class="rcat-sub">Renal Category</div></div>` : "";
+  set("tab-renal", `${miss}<div class="renal-panel"><div class="renal-rows">${rows}</div><div class="renal-result"><div><div class="rcrcl-lbl">Cockcroft–Gault CrCl</div><div class="rcrcl-val">${r.crcl!=null?r.crcl+" mL/min":"—"}</div><div class="rcrcl-form">[(140−age)×weight×sex_factor]÷(72×SCr mg/dL)</div></div>${catBlock}</div></div>`);
+}
+
+// ── Analysis ─────────────────────────────────────────────────
+function renderAnalysis(text) {
+  if (!text) { set("tab-analysis", empty("🔬","No Analysis","")); return; }
+  const secs = parseSections(text, ["PRIMARY ACUTE CONDITION","MEDICATION REVIEW","CLINICAL FLAGS"]);
+  let html = `<button class="copy-btn" onclick="copyTab('tab-analysis')">copy</button>`;
+  for (const [t,b] of Object.entries(secs)) {
+    html += `<div class="acard"><div class="acard-title">${t}</div><div style="font-size:.87rem;color:var(--text2);white-space:pre-wrap;line-height:1.75">${esc(b.trim())}</div></div>`;
+  }
+  set("tab-analysis", html);
+}
+
+// ── Pharma ───────────────────────────────────────────────────
+function renderPharma(text) {
+  if (!text) { set("tab-pharma", empty("💊","No Review","")); return; }
+  set("tab-pharma", `<button class="copy-btn" onclick="copyTab('tab-pharma')">copy</button><div class="acard"><div style="font-size:.87rem;color:var(--text2);white-space:pre-wrap;line-height:1.75">${esc(text)}</div></div>`);
+}
+
+// ── Interventions ────────────────────────────────────────────
+function renderInterventions(text) {
+  if (!text) { set("tab-interventions", empty("⚠️","No Interventions","")); return; }
+  const blocks = parseInterventions(text);
+  let html = `<button class="copy-btn" onclick="copyTab('tab-interventions')">copy</button>
+    <div class="proto-lock">🔐 Protocol-lock enforced — every intervention requires Evidence citation</div>`;
+  if (!blocks.length) {
+    html += `<div class="acard"><div style="font-size:.87rem;white-space:pre-wrap;line-height:1.75">${esc(text)}</div></div>`;
+  } else {
+    for (const b of blocks) {
+      const sev = (b.priority||"moderate").toLowerCase();
+      const noEv = (b.evidence||"").toLowerCase().includes("not found");
+      html += `<div class="icard ${sev}">
+        <div class="icard-hdr"><span class="icard-drug">${esc(b.label)}</span><span class="ibadge ${sev}">${(b.priority||"MODERATE").toUpperCase()}</span></div>
+        <div class="irec">${esc(b.intervention)}</div>
+        <div class="irat">${esc(b.rationale)}</div>
+        <div class="ievid ${noEv?"no-evidence":""}"><strong>📚 Evidence:</strong> ${esc(b.evidence||"Evidence not found in local protocol.")}</div>
+      </div>`;
+    }
+  }
+  set("tab-interventions", html);
+}
+
+// ── Template-2 ───────────────────────────────────────────────
+function renderT2(text) {
+  set("tab-t2", `<button class="copy-btn" onclick="copyTab('tab-t2')">copy</button>
+    <div class="soap-out">${esc(text||"No output.")}</div>`);
+}
+
+// ══ HELPERS ═══════════════════════════════════════════════════
+function set(id, html) { const el=document.getElementById(id); if(el) el.innerHTML=html; }
+function switchTab(id) {
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  const b=document.querySelector(`.tab[data-tab="${id}"]`); if(b) b.classList.add("active");
+  const p=document.getElementById("tab-"+id); if(p) p.classList.add("active");
+}
+function copyTab(id) {
+  const el=document.getElementById(id); if(!el) return;
+  navigator.clipboard.writeText(el.innerText||el.textContent).then(()=>{
+    const btn=el.querySelector(".copy-btn");
+    if(btn){btn.textContent="✓ copied";btn.classList.add("copied");setTimeout(()=>{btn.textContent="copy";btn.classList.remove("copied")},2000);}
+  });
+}
+function showProcessing() {
+  const proc=`<div class="empty"><div style="font-size:30px;animation:spin 1s linear infinite;display:inline-block">⟳</div><div class="empty-sub" style="margin-top:10px">Generating…</div></div>`;
+  ["t1","renal","analysis","pharma","interventions","t2"].forEach(id=>set("tab-"+id, proc));
+}
+function clearProcessing() {
+  ["t1","renal","analysis","pharma","interventions","t2"].forEach(id=>{
+    const el=document.getElementById("tab-"+id);
+    if(el && el.querySelector(".empty-sub")?.textContent==="Generating…") el.innerHTML=empty("—","Interrupted","");
+  });
+}
+function showError(msg) { const b=document.getElementById("errorBox"); b.style.display="block"; b.innerHTML=`<strong>Error:</strong> ${esc(msg)}<br><small>Endpoint: <code>${API_ENDPOINT}</code> · Check ANTHROPIC_API_KEY · ask.js expects <code>case_text</code></small>`; }
+function hideError() { document.getElementById("errorBox").style.display="none"; }
+function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function empty(icon,title,sub) { return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></div>`; }
+
+function parseSections(text, headers) {
+  const res={};
+  const pat=new RegExp(headers.map(h=>h.replace(/\(/g,"\\(").replace(/\)/g,"\\)")).join("|"),"gi");
+  const parts=text.split(pat).filter(Boolean);
+  let cur="General"; res[cur]="";
+  for(const p of parts){
+    if(headers.some(h=>h.toLowerCase()===p.trim().toLowerCase())){cur=p.trim();res[cur]="";}
+    else res[cur]=(res[cur]||"")+p;
+  }
+  if(!Object.keys(res).filter(k=>k!=="General"||res[k].trim()).length) res["Analysis"]=text;
+  return res;
+}
+
+function parseInterventions(text) {
+  const blocks=[];
+  const re=/\[(\d+)\]\.\s*([\s\S]*?)(?=\[\d+\]\.|$)/gi;
+  let m;
+  while((m=re.exec(text))!==null){
+    const body=m[2];
+    const iL=body.match(/Intervention:\s*([^\n]+)/i);
+    const rL=body.match(/Rationale:\s*([^\n]+)/i);
+    const eL=body.match(/Evidence:\s*([\s\S]+?)(?=Priority:|$)/i);
+    const pL=body.match(/Priority:\s*(\w+)/i);
+    const intText=iL?iL[1].trim():body.split("\n")[0].trim();
+    blocks.push({
+      num:m[1], label:intText.split(" ").slice(0,6).join(" "),
+      intervention:intText, rationale:rL?rL[1].trim():"",
+      evidence:eL?eL[1].trim():"Evidence not found in local protocol.",
+      priority:pL?pL[1].trim():"MODERATE"
+    });
+  }
+  return blocks;
+}
+
+function clearAll() {
+  document.getElementById("caseInput").value="";
+  hideError(); allReset(); setStatus("Ready");
+  ["t1","renal","analysis","pharma","interventions","t2"].forEach(id=>{
+    const m={t1:["📄","Template-1 SOAP","Run analysis"],renal:["🧮","Renal Function","CrCl in pure code"],analysis:["🔬","Clinical Analysis","Run analysis"],pharma:["💊","Pharm Review","Medication evaluation"],interventions:["⚠️","Interventions","Protocol-locked"],t2:["📋","Pharmacist SOAP","Run analysis"]};
+    const[ic,ti,su]=m[id]||["—","—","—"];
+    set("tab-"+id,empty(ic,ti,su));
+  });
+  switchTab("t1");
+}
+
+function loadSample() {
+  document.getElementById("caseInput").value=`SEEN BY DR MOHD ALTAYIB:
+94-YEAR-OLD MALE BEDRIDDEN
+K/C OF: DM ON INSULIN AND OHA, HTN, CKD (Hx OF AKI AFTER CONTRAST, S/P TEMPORARY DIALYSIS), CHRONIC ANEMIA, PSYCHIATRIC ISSUE
+PREVIOUSLY ADMITTED AS ACS-NSTEMI.
+
+PATIENT ON:
+Acetylsalicylic Acid 81 MG PO OD
+Clopidogrel 75 MG PO OD
+Rosuvastatin 20 MG PO OD
+Bisoprolol 2.5 MG PO OD
+Furosemide 40 MG PO BID
+Esomeprazole 20 MG PO OD
+Nifedipine 60 MG PO OD
+Empagliflozin 10 MG PO OD
+
+CAME WITH DECREASE LEVEL OF CONSCIOUSNESS.
+
+VITALS: BP 125/63, HR 68, OSAT 99, Weight: 68 kg, Height: 165 cm
+
+LABS: WBC: 17.11, HB: 11.5, PLT: 474, CREAT: 343 umol, BUN: 24.7, NA: 123, K: 4.9, INR: 2.23, AST: 2303
+
+ECG: RBBB
+CXR: CONGESTION, CARDIOMEGALY
+BED-SIDED ECHO: SEVERE PERICARDIAL EFFUSION WITH CARDIAC TAMPONADE`;
+}
+
+document.addEventListener("keydown", e => { if((e.ctrlKey||e.metaKey)&&e.key==="Enter") runAnalysis(); });
+
+/* ✅✅✅ FIX (THE ONLY CHANGE):
+   Expose onclick functions to window so HTML onclick can find them reliably */
+window.runAnalysis = runAnalysis;
+window.clearAll = clearAll;
+window.loadSample = loadSample;
+window.copyTab = copyTab;
+
+</script>
 </body>
 </html>
+
