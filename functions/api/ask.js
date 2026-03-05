@@ -1,105 +1,81 @@
 // ============================================================
 // FILE: /functions/api/ask.js
-// CLINICAL PHARMACIST AI PLATFORM — Backend v4.0 (Enhanced)
+// CLINICAL PHARMACIST AI PLATFORM — Backend v5.0
 // Runtime: Cloudflare Pages Functions
-//
-// الميزات الجديدة:
-// 1. اكتشاف الأخطاء الدوائية بقواعد محلية (بدون AI)
-// 2. نظام هجين: قواعد محلية + AI للتحليل العميق
-// 3. تحسين البحث في الملفات المتاحة
-// 4. تنسيق SOAP محسن مع تدخلات دوائية دقيقة
 // ============================================================
 
 export async function onRequest(context) {
   const { request, env } = context;
 
   const CORS = {
-    "Access-Control-Allow-Origin":  "*",
+    "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
-  if (request.method !== "POST")    return json({ error: "Method not allowed" }, 405, CORS);
+  if (request.method !== "POST")    return jsonRes({ error: "Method not allowed" }, 405, CORS);
 
   try {
     const body = await request.json();
-    const { case_text, query_type = "full_case", specific_question } = body;
+    const { case_text } = body;
 
-    if (!case_text?.trim()) return json({ ok: false, error: "Missing case_text" }, 400, CORS);
+    if (!case_text?.trim()) return jsonRes({ ok: false, error: "Missing case_text" }, 400, CORS);
 
-    // ── STEP A: Extract & structure ──────────────────────────
-    console.log("🔍 A: Extracting structured data...");
-    const data = await stepA_extract(case_text, env);
+    // ── STEP A: Extract structured data ─────────────────────
+    const extracted = await stepA_extract(case_text, env);
 
-    // ── STEP B: CrCl — pure code, no AI ─────────────────────
-    console.log("🧮 B: Computing CrCl...");
-    const renal = stepB_computeCrCl(data);
-    data.renal = { scr_umol: data.scr_umol ?? null, ...renal };
+    // ── STEP B: CrCl — pure math, no AI ─────────────────────
+    const renal = computeCrCl(extracted);
+    extracted.renal = renal;
 
-    const scrDisp  = data.renal.scr_umol ?? "—";
-    const crclDisp = renal.crcl !== null ? renal.crcl : "—";
-    const renalLine = `SCr ${scrDisp} µmol/L → ${renal.scr_mgdl ?? "—"} mg/dL | CrCl ${crclDisp} mL/min (${renal.weight_label ?? "weight unknown"})`;
+    const renalLine = [
+      `SCr: ${renal.scr_umol ?? "—"} µmol/L (${renal.scr_mgdl ?? "—"} mg/dL)`,
+      `CrCl: ${renal.crcl ?? "—"} mL/min`,
+      `Weight used: ${renal.weight_used ?? "—"} kg (${renal.weight_label ?? "—"})`,
+    ].join(" | ");
 
-    // ── البحث في الملفات المتاحة ────────────────────────────
-    console.log("📚 Searching available protocols...");
-    const localProtocols = await searchVectorStore(
-      `pharmacotherapy guidelines protocols ${data.reason_admission || ""} ${data.pmh || ""}`,
+    // ── Local rule-based checks (no AI cost) ────────────────
+    const localMedCheck = runLocalMedCheck(extracted, renal);
+
+    // ── Vector store search ──────────────────────────────────
+    const protocols = await searchVectorStore(
+      `pharmacotherapy ${extracted.reason_admission ?? ""} ${extracted.pmh ?? ""}`,
+      env, 8
+    );
+
+    // ── STEP C1: SOAP organizer ──────────────────────────────
+    const template1_soap = await aiCall(env, buildSoapSystem(protocols), buildSoapUser(extracted, renalLine), 1400);
+
+    // ── STEP C2: Coverage check ──────────────────────────────
+    const coverage = await aiCall(env, buildCovSystem(protocols), buildCovUser(extracted, renal), 1200);
+
+    // ── STEP C3: Home meds review ────────────────────────────
+    const home_meds_review = await aiCall(env, buildHomeSystem(protocols), buildHomeUser(extracted, renal), 1000);
+
+    // ── STEP C4: DVT + SUP prophylaxis ───────────────────────
+    const prophylaxis = await aiCall(env, buildProphySystem(protocols), buildProphyUser(extracted, renal), 900);
+
+    // ── STEP C5: Medication deep verification ────────────────
+    const med_verification = await aiCall(
       env,
-      10
+      buildMedSystem(protocols, localMedCheck),
+      buildMedUser(extracted, renal),
+      1600
     );
 
-    // ── التحقق من الأخطاء الدوائية بالقواعد المحلية ──────────
-    console.log("🔍 Running local rule-based medication check...");
-    const localMedCheck = runLocalMedicationCheck(data, renal);
-
-    // ── إذا كان سؤال محدد ────────────────────────────────────
-    if (query_type === "specific" && specific_question) {
-      return handleSpecificQuestion(data, renal, specific_question, localProtocols, env);
-    }
-
-    // ── STEP C1: Organize case → Template-1 SOAP ────────────
-    console.log("📋 C1: Case organizer...");
-    const template1_soap = await stepC1_organize(data, renalLine, env);
-
-    // ── STEP C2: Problem coverage check ─────────────────────
-    console.log("🔬 C2: Problem coverage check...");
-    const coverage = await stepC2_problemCoverage(data, renal, localProtocols, env);
-
-    // ── STEP C3: Home meds at admission ─────────────────────
-    console.log("💊 C3: Home medications management...");
-    const homeMedsReview = await stepC3_homeMeds(data, renal, localProtocols, env);
-
-    // ── STEP C4: DVT + SUP prophylaxis ──────────────────────
-    console.log("🛡️ C4: DVT & SUP prophylaxis...");
-    const prophylaxis = await stepC4_prophylaxis(data, renal, localProtocols, env);
-
-    // ── STEP C5: Medication deep verification ───────────────
-    console.log("🔎 C5: Medication verification (hybrid approach)...");
-    
-    // دمج الفحص المحلي مع الفحص بالـ AI
-    const medVerification = await stepC5_medVerificationHybrid(
-      data, 
-      renal, 
-      localMedCheck, 
-      localProtocols, 
-      env
+    // ── STEP C6: Final pharmacist note ───────────────────────
+    const final_note = await aiCall(
+      env,
+      buildNoteSystem(),
+      buildNoteUser(extracted, renalLine, coverage, home_meds_review, prophylaxis, med_verification),
+      1400
     );
 
-    // ── STEP C6: Final pharmacist note ──────────────────────
-    console.log("📝 C6: Final pharmacist note...");
-    const finalNote = await stepC6_finalNote(
-      data, renalLine, coverage, homeMedsReview, prophylaxis, medVerification, env
-    );
-
-    // ── استخراج التدخلات الدوائية بشكل منظم ──────────────────
-    const interventions = extractInterventions(medVerification, localMedCheck);
-
-    // ── RESPONSE ─────────────────────────────────────────────
-    return json({
+    return jsonRes({
       ok: true,
       renal: {
-        scr_umol:     data.renal.scr_umol,
+        scr_umol:     renal.scr_umol,
         scr_mgdl:     renal.scr_mgdl,
         crcl:         renal.crcl,
         ibw:          renal.ibw,
@@ -109,589 +85,355 @@ export async function onRequest(context) {
         missing:      renal.missing,
         line:         renalLine,
       },
-      missing_data:      data.missing ?? [],
+      missing_data:      extracted.missing ?? [],
       local_med_check:   localMedCheck,
       template1_soap,
       coverage,
-      home_meds_review:  homeMedsReview,
+      home_meds_review,
       prophylaxis,
-      med_verification:  medVerification,
-      interventions:     interventions,
-      final_note:        finalNote,
-      protocols_found:   localProtocols ? "✅" : "❌",
+      med_verification,
+      final_note,
+      protocols_found:   protocols ? "✅" : "❌",
     }, 200, CORS);
 
   } catch (err) {
     console.error("Pipeline error:", err);
-    return json({ ok: false, error: err.message || "Internal server error" }, 500, CORS);
+    return jsonRes({ ok: false, error: err.message || "Internal server error" }, 500, CORS);
   }
 }
 
 // ============================================================
-// دالة جديدة: فحص الأدوية بقواعد محلية (بدون AI)
+// STEP A — Extract patient data via AI
 // ============================================================
-function runLocalMedicationCheck(data, renal) {
-  const issues = [];
-  const medications = [...(data.current_meds_list || [])];
-  
-  // قواعد محلية للأدوية الشائعة
-  const drugRules = {
-    // مضادات حيوية
-    "piperacillin/tazobactam": (med) => {
-      if (renal.crcl && renal.crcl < 40) {
-        return {
-          drug: med.name || "Piperacillin/Tazobactam",
-          problem: "الجرعة تحتاج تعديل في حالة القصور الكلوي",
-          recommendation: `ضبط الجرعة حسب CrCl = ${renal.crcl} mL/min`,
-          evidence: "بروتوكول المضادات الحيوية - تعديل كلوي",
-          severity: "high"
-        };
-      }
-      return null;
-    },
-    
-    "vancomycin": (med) => {
-      if (renal.crcl && renal.crcl < 50) {
-        return {
-          drug: med.name || "Vancomycin",
-          problem: "تحتاج مراقبة مستوى الدواء (TDM) وضبط الجرعة",
-          recommendation: `تمدید الفاصل الزمني حسب CrCl، ومراقبة trough level`,
-          evidence: "IDSA Guidelines for Vancomycin Dosing",
-          severity: "high"
-        };
-      }
-      return null;
-    },
-    
-    // مميعات الدم
-    "enoxaparin": (med) => {
-      if (renal.crcl && renal.crcl < 30) {
-        return {
-          drug: med.name || "Enoxaparin",
-          problem: "خطر تراكم الدواء وزيادة النزيف مع CrCl < 30",
-          recommendation: "تقليل الجرعة إلى 30mg مرة يومياً أو استخدام بديل (UFH)",
-          evidence: "CHEST Guidelines for Anticoagulation in Renal Impairment",
-          severity: "high"
-        };
-      }
-      // التحقق من الجرعة العلاجية
-      const dose = extractDose(med.dose);
-      if (dose && dose > 100 && renal.weight_used) {
-        const recommendedDose = 1.5 * renal.weight_used; // 1.5 mg/kg/day
-        if (Math.abs(dose - recommendedDose) > 20) {
-          return {
-            drug: med.name || "Enoxaparin",
-            problem: "جرعة غير مناسبة للوزن",
-            recommendation: `الجرعة الموصى بها: ${recommendedDose.toFixed(0)} mg/day`,
-            evidence: "Weight-based dosing protocol",
-            severity: "medium"
-          };
-        }
-      }
-      return null;
-    },
-    
-    "warfarin": (med) => {
-      // التحقق من INR
-      const inr = extractINR(data.labs_text);
-      if (inr && inr > 3.5) {
-        return {
-          drug: med.name || "Warfarin",
-          problem: `INR مرتفع (${inr}) - خطر نزيف`,
-          recommendation: "إيقاف الجرعة ومراجعة INR يومياً، إعطاء Vitamin K إذا كان INR > 4.5",
-          evidence: "ACCP Antithrombotic Guidelines",
-          severity: "high"
-        };
-      }
-      return null;
-    },
-    
-    // مدرات البول
-    "furosemide": (med) => {
-      // التحقق من البوتاسيوم
-      const k = extractPotassium(data.labs_text);
-      if (k && k < 3.5) {
-        return {
-          drug: med.name || "Furosemide",
-          problem: `نقص بوتاسيوم (K = ${k}) مع استخدام مدر عروي`,
-          recommendation: "مراقبة البوتاسيوم وتعويض النقص، النظر في إضافة مدر حافظ للبوتاسيوم",
-          evidence: "Heart Failure Guidelines",
-          severity: "medium"
-        };
-      }
-      return null;
-    },
-    
-    "spironolactone": (med) => {
-      const k = extractPotassium(data.labs_text);
-      if (k && k > 5.2) {
-        return {
-          drug: med.name || "Spironolactone",
-          problem: `فرط بوتاسيوم (K = ${k}) مع سبيرونولاكتون`,
-          recommendation: "إيقاف الدواء مؤقتاً أو تقليل الجرعة",
-          evidence: "KDIGO Guidelines",
-          severity: "high"
-        };
-      }
-      
-      // التحقق من وظائف الكلى
-      if (renal.crcl && renal.crcl < 30) {
-        return {
-          drug: med.name || "Spironolactone",
-          problem: "موانع استخدام سبيرونولاكتون مع CrCl < 30",
-          recommendation: "إيقاف الدواء، خطر فرط بوتاسيوم",
-          evidence: "KDIGO Guidelines",
-          severity: "high"
-        };
-      }
-      return null;
-    },
-    
-    // أدوية السكري
-    "metformin": (med) => {
-      if (renal.crcl && renal.crcl < 45) {
-        return {
-          drug: med.name || "Metformin",
-          problem: "خطر الحمض اللبني مع القصور الكلوي",
-          recommendation: renal.crcl < 30 ? "إيقاف الميتفورمين" : "تقليل الجرعة ومراقبة الوظائف",
-          evidence: "ADA Standards of Care",
-          severity: "high"
-        };
-      }
-      return null;
-    },
-    
-    "empagliflozin": (med) => {
-      if (renal.crcl && renal.crcl < 45) {
-        return {
-          drug: med.name || "Empagliflozin",
-          problem: "لا ينصح باستخدام SGLT2i إذا CrCl < 45",
-          recommendation: "إيقاف الدواء والنظر في بدائل أخرى",
-          evidence: "ADA/EASD Guidelines",
-          severity: "medium"
-        };
-      }
-      return null;
-    },
-    
-    // مثبطات الحمض
-    "omeprazole": (med) => {
-      // التحقق من التفاعل مع كلوبيدوجريل
-      const hasClopidogrel = medications.some(m => 
-        m.name?.toLowerCase().includes("clopidogrel")
-      );
-      if (hasClopidogrel) {
-        return {
-          drug: med.name || "Omeprazole",
-          problem: "تفاعل دوائي: أوميبرازول يقلل فعالية كلوبيدوجريل",
-          recommendation: "استخدام بانتوبرازول بدلاً من أوميبرازول",
-          evidence: "FDA Drug Interaction Warning",
-          severity: "medium"
-        };
-      }
-      return null;
+async function stepA_extract(caseText, env) {
+  const system = `You are a clinical data extraction engine.
+Extract patient data from the raw HIS/clinical text and return ONLY valid JSON.
+No markdown, no explanation, no backticks — pure JSON only.
+
+Schema:
+{
+  "mrn": string|null,
+  "age": number|null,
+  "sex": "male"|"female"|null,
+  "weight_kg": number|null,
+  "height_cm": number|null,
+  "ward": string|null,
+  "reason_admission": string|null,
+  "pmh": string|null,
+  "allergies": string|null,
+  "vitals_text": string|null,
+  "labs_text": string|null,
+  "imaging": string|null,
+  "home_meds_text": string|null,
+  "home_meds_list": [{"name":string,"dose":string,"route":string,"frequency":string}],
+  "current_meds_text": string|null,
+  "current_meds_list": [{"name":string,"dose":string,"route":string,"frequency":string,"status":string}],
+  "scr_umol": number|null,
+  "missing": [string]
+}
+
+For "missing": list critical absent items from: age, weight, height, SCr, sex, current medications.`;
+
+  const raw = await aiCall(env, system, `Extract from:\n\n${caseText}`, 1000);
+
+  try {
+    return JSON.parse(raw.replace(/```json|```/g, "").trim());
+  } catch {
+    // Fallback: return minimal object so pipeline continues
+    return {
+      mrn: null, age: null, sex: null, weight_kg: null, height_cm: null,
+      ward: null, reason_admission: null, pmh: null, allergies: "NKDA",
+      vitals_text: null, labs_text: null, imaging: null,
+      home_meds_text: null, home_meds_list: [],
+      current_meds_text: null, current_meds_list: [],
+      scr_umol: null,
+      missing: ["Could not parse — check raw input"],
+    };
+  }
+}
+
+// ============================================================
+// STEP B — CrCl (Cockcroft-Gault) — pure math
+// ============================================================
+function computeCrCl(d) {
+  const missing = [];
+  const age      = d.age       ?? null;
+  const weight   = d.weight_kg ?? null;
+  const height   = d.height_cm ?? null;
+  const sex      = (d.sex ?? "").toLowerCase();
+  const scr_umol = d.scr_umol  ?? null;
+
+  if (!age)      missing.push("age");
+  if (!weight)   missing.push("weight");
+  if (!height)   missing.push("height");
+  if (!sex)      missing.push("sex");
+  if (!scr_umol) missing.push("SCr");
+
+  const scr_mgdl = scr_umol ? round2(scr_umol / 88.42) : null;
+
+  // IBW
+  let ibw = null;
+  if (height) {
+    const inchOver5ft = (height / 2.54) - 60;
+    ibw = sex === "female"
+      ? round2(45.5 + 2.3 * inchOver5ft)
+      : round2(50   + 2.3 * inchOver5ft);
+  }
+
+  // Weight selection
+  let weight_used  = null;
+  let weight_label = null;
+  let abw_adj      = null;
+
+  if (weight && ibw) {
+    if (weight <= ibw * 1.2) {
+      weight_used  = weight;
+      weight_label = "ABW (≤ 120% IBW)";
+    } else {
+      abw_adj      = round2(ibw + 0.4 * (weight - ibw));
+      weight_used  = abw_adj;
+      weight_label = "Adjusted BW (obese)";
     }
+  } else if (weight) {
+    weight_used  = weight;
+    weight_label = "ABW (height unknown)";
+  }
+
+  // CrCl
+  let crcl = null;
+  if (age && weight_used && scr_mgdl && sex) {
+    const sexFactor = sex === "female" ? 0.85 : 1.0;
+    crcl = round2(((140 - age) * weight_used) / (72 * scr_mgdl) * sexFactor);
+    if (crcl < 0) crcl = 0;
+  }
+
+  return { scr_umol, scr_mgdl, crcl, ibw, abw_adj, weight_used, weight_label, missing };
+}
+
+// ============================================================
+// LOCAL RULE-BASED MEDICATION CHECKS
+// ============================================================
+function runLocalMedCheck(data, renal) {
+  const issues   = [];
+  const meds     = [...(data.current_meds_list || []), ...(data.home_meds_list || [])];
+  const medNames = meds.map(m => (m.name || "").toLowerCase());
+  const { crcl }  = renal;
+  const labs      = data.labs_text || "";
+
+  // ── Helper extractors ──────────────────────────────────────
+  const getLabVal = (regex) => {
+    const m = labs.match(regex);
+    return m ? parseFloat(m[1]) : null;
   };
-  
-  // تطبيق القواعد على كل دواء
-  medications.forEach(med => {
-    if (!med.name) return;
-    
-    const medNameLower = med.name.toLowerCase();
-    for (const [key, rule] of Object.entries(drugRules)) {
-      if (medNameLower.includes(key)) {
-        const issue = rule(med);
-        if (issue) issues.push(issue);
-      }
-    }
-  });
-  
-  // فحص التداخلات الدوائية
-  issues.push(...checkDrugInteractions(medications, renal));
-  
+  const k   = getLabVal(/potassium[:\s]+(\d+\.?\d*)/i) ?? getLabVal(/\bk\b[:\s]+(\d+\.?\d*)/i);
+  const inr = getLabVal(/INR[:\s]+(\d+\.?\d*)/i);
+
+  // ── Per-drug rules ─────────────────────────────────────────
+  const rules = [
+    {
+      match: ["piperacillin", "pip-tazo", "tazobactam"],
+      check: () => crcl !== null && crcl < 40,
+      issue: {
+        drug: "Piperacillin/Tazobactam",
+        severity: "high",
+        problem: `Renal dose adjustment required (CrCl = ${crcl} mL/min < 40)`,
+        recommendation: "Reduce to 3.375 g IV q8h or 2.25 g IV q6h extended infusion",
+        evidence: "Sanford Guide / Product labeling — CrCl-based dosing",
+      },
+    },
+    {
+      match: ["enoxaparin", "clexane"],
+      check: () => crcl !== null && crcl < 30,
+      issue: {
+        drug: "Enoxaparin",
+        severity: "high",
+        problem: `Enoxaparin accumulation risk (CrCl = ${crcl} mL/min < 30)`,
+        recommendation: "Switch to UFH (unfractionated heparin) or reduce to 30 mg SC daily with anti-Xa monitoring",
+        evidence: "CHEST 2021 Antithrombotic Guidelines",
+      },
+    },
+    {
+      match: ["metformin"],
+      check: () => crcl !== null && crcl < 45,
+      issue: {
+        drug: "Metformin",
+        severity: crcl < 30 ? "high" : "medium",
+        problem: `Lactic acidosis risk (CrCl = ${crcl} mL/min)`,
+        recommendation: crcl < 30 ? "STOP metformin immediately" : "Reduce dose; reassess if CrCl < 30",
+        evidence: "ADA Standards of Care 2024 / FDA label",
+      },
+    },
+    {
+      match: ["empagliflozin", "dapagliflozin", "canagliflozin"],
+      check: () => crcl !== null && crcl < 45,
+      issue: {
+        drug: "SGLT2 inhibitor",
+        severity: "medium",
+        problem: `Reduced glycaemic efficacy and safety concern (CrCl = ${crcl} mL/min < 45)`,
+        recommendation: "Discontinue SGLT2i; consider alternative antidiabetic",
+        evidence: "ADA/EASD 2024 Guidelines",
+      },
+    },
+    {
+      match: ["spironolactone"],
+      check: () => (crcl !== null && crcl < 30) || (k !== null && k > 5.2),
+      issue: {
+        drug: "Spironolactone",
+        severity: "high",
+        problem: crcl < 30
+          ? `Contraindicated (CrCl = ${crcl} mL/min < 30)`
+          : `Hyperkalaemia risk (K = ${k} mmol/L > 5.2)`,
+        recommendation: "Withhold; monitor K daily; consider dose reduction when K normalises",
+        evidence: "KDIGO AKI Guidelines / ESC HF Guidelines 2021",
+      },
+    },
+    {
+      match: ["warfarin"],
+      check: () => inr !== null && inr > 3.5,
+      issue: {
+        drug: "Warfarin",
+        severity: "high",
+        problem: `Supratherapeutic INR = ${inr} — bleeding risk`,
+        recommendation: inr > 4.5
+          ? "Hold warfarin; administer Vitamin K 2.5–5 mg PO; recheck INR in 24 h"
+          : "Hold one dose; recheck INR daily",
+        evidence: "ACCP Antithrombotic Guidelines 10th ed.",
+      },
+    },
+    {
+      match: ["furosemide"],
+      check: () => k !== null && k < 3.5,
+      issue: {
+        drug: "Furosemide",
+        severity: "medium",
+        problem: `Hypokalaemia (K = ${k} mmol/L) with loop diuretic`,
+        recommendation: "Replace potassium (oral or IV); consider adding potassium-sparing diuretic",
+        evidence: "ESC HF Guidelines 2021",
+      },
+    },
+    {
+      match: ["vancomycin"],
+      check: () => crcl !== null && crcl < 50,
+      issue: {
+        drug: "Vancomycin",
+        severity: "high",
+        problem: `Requires TDM and dose adjustment (CrCl = ${crcl} mL/min)`,
+        recommendation: "Calculate AUC-guided dosing; extend interval; monitor trough / AUC",
+        evidence: "ASHP/IDSA/SIDP Vancomycin Consensus Guidelines 2020",
+      },
+    },
+    {
+      match: ["omeprazole"],
+      check: () => medNames.some(n => n.includes("clopidogrel")),
+      issue: {
+        drug: "Omeprazole + Clopidogrel",
+        severity: "medium",
+        problem: "CYP2C19 interaction — omeprazole reduces clopidogrel antiplatelet effect",
+        recommendation: "Switch to pantoprazole (preferred PPI with clopidogrel)",
+        evidence: "FDA Drug Safety Communication 2010 / ACC/AHA",
+      },
+    },
+  ];
+
+  // ── Drug-drug interactions ─────────────────────────────────
+  const ddi = [
+    {
+      drugs: ["warfarin", "aspirin"],
+      issue: {
+        drug: "Warfarin + Aspirin",
+        severity: "high",
+        problem: "Concurrent anticoagulant + antiplatelet — major bleeding risk",
+        recommendation: "Assess indication; minimise concomitant use; monitor INR closely",
+        evidence: "ACCP Guidelines",
+      },
+    },
+    {
+      drugs: ["amiodarone", "ciprofloxacin"],
+      issue: {
+        drug: "Amiodarone + Fluoroquinolone",
+        severity: "high",
+        problem: "QTc prolongation risk",
+        recommendation: "Monitor ECG; consider alternative antibiotic",
+        evidence: "CredibleMeds CombinedRisk database",
+      },
+    },
+    {
+      drugs: ["amiodarone", "levofloxacin"],
+      issue: {
+        drug: "Amiodarone + Levofloxacin",
+        severity: "high",
+        problem: "QTc prolongation risk",
+        recommendation: "Monitor ECG; consider alternative antibiotic",
+        evidence: "CredibleMeds CombinedRisk database",
+      },
+    },
+    {
+      drugs: ["simvastatin", "clarithromycin"],
+      issue: {
+        drug: "Simvastatin + Clarithromycin",
+        severity: "high",
+        problem: "CYP3A4 inhibition → myopathy / rhabdomyolysis risk",
+        recommendation: "Hold simvastatin during clarithromycin course; switch to pravastatin",
+        evidence: "FDA label / Lexicomp interaction database",
+      },
+    },
+    {
+      drugs: ["atorvastatin", "clarithromycin"],
+      issue: {
+        drug: "Atorvastatin + Clarithromycin",
+        severity: "medium",
+        problem: "CYP3A4 inhibition → increased statin exposure",
+        recommendation: "Limit atorvastatin to 20 mg/day; monitor for myopathy",
+        evidence: "Lexicomp interaction database",
+      },
+    },
+    {
+      drugs: ["spironolactone", "lisinopril"],
+      issue: {
+        drug: "Spironolactone + ACEi",
+        severity: "high",
+        problem: "Hyperkalaemia risk — two potassium-sparing agents",
+        recommendation: "Monitor K daily; reduce doses if K > 5.0 mmol/L",
+        evidence: "ESC HF Guidelines 2021",
+      },
+    },
+    {
+      drugs: ["spironolactone", "enalapril"],
+      issue: {
+        drug: "Spironolactone + ACEi",
+        severity: "high",
+        problem: "Hyperkalaemia risk — two potassium-sparing agents",
+        recommendation: "Monitor K daily; reduce doses if K > 5.0 mmol/L",
+        evidence: "ESC HF Guidelines 2021",
+      },
+    },
+  ];
+
+  // ── Apply per-drug rules ───────────────────────────────────
+  for (const rule of rules) {
+    const hit = meds.find(m =>
+      rule.match.some(k => (m.name || "").toLowerCase().includes(k))
+    );
+    if (hit && rule.check()) issues.push(rule.issue);
+  }
+
+  // ── Apply DDI rules ────────────────────────────────────────
+  for (const d of ddi) {
+    const allPresent = d.drugs.every(drug =>
+      medNames.some(n => n.includes(drug))
+    );
+    if (allPresent) issues.push(d.issue);
+  }
+
   return issues;
 }
 
 // ============================================================
-// دالة جديدة: فحص التداخلات الدوائية
+// AI CALL HELPERS
 // ============================================================
-function checkDrugInteractions(medications, renal) {
-  const interactions = [];
-  const medNames = medications.map(m => m.name?.toLowerCase() || "");
-  
-  // تفاعلات خطيرة
-  const interactionRules = [
-    {
-      drugs: ["warfarin", "aspirin"],
-      problem: "خطر نزيف مرتفع مع وارفارين + أسبرين",
-      recommendation: "مراقبة INR يومياً، مراقبة علامات النزيف",
-      severity: "high"
-    },
-    {
-      drugs: ["warfarin", "enoxaparin"],
-      problem: "تخثر مزدوج - خطر نزيف",
-      recommendation: "تقييم ضرورة الاستخدام المشترك، مراقبة دقيقة",
-      severity: "high"
-    },
-    {
-      drugs: ["spironolactone", "lisinopril", "enalapril"],
-      problem: "خطر فرط بوتاسيوم مع ACEI + سبيرونولاكتون",
-      recommendation: "مراقبة البوتاسيوم يومياً، تقليل الجرعات إذا لزم",
-      severity: "high"
-    },
-    {
-      drugs: ["furosemide", "gentamicin", "tobramycin"],
-      problem: "خطر سمية كلوية مع أمينوغليكوزيد + فوروسيمايد",
-      recommendation: "مراقبة وظائف الكلى يومياً، تجنب الاستخدام المشترك إن أمكن",
-      severity: "high"
-    },
-    {
-      drugs: ["clarithromycin", "simvastatin", "atorvastatin"],
-      problem: "خطر اعتلال عضلي مع ماكرولايد + ستاتين",
-      recommendation: "إيقاف الستاتين مؤقتاً أو استخدام أزيثروميسين",
-      severity: "medium"
-    },
-    {
-      drugs: ["ciprofloxacin", "levofloxacin", "amiodarone"],
-      problem: "خطر تطاول QT مع فلوروكينولون + أميودارون",
-      recommendation: "مراقبة ECG، تجنب الاستخدام المشترك إن أمكن",
-      severity: "medium"
-    }
-  ];
-  
-  interactionRules.forEach(rule => {
-    const hasAllDrugs = rule.drugs.every(drug => 
-      medNames.some(name => name.includes(drug))
-    );
-    
-    if (hasAllDrugs) {
-      interactions.push({
-        drug: rule.drugs.join(" + "),
-        problem: rule.problem,
-        recommendation: rule.recommendation,
-        evidence: "قاعدة بيانات التداخلات الدوائية",
-        severity: rule.severity,
-        type: "interaction"
-      });
-    }
-  });
-  
-  return interactions;
-}
-
-// ============================================================
-// دالة جديدة: استخراج التدخلات الدوائية
-// ============================================================
-function extractInterventions(aiVerification, localCheck) {
-  const interventions = [];
-  
-  // إضافة التدخلات من الفحص المحلي
-  localCheck.forEach(issue => {
-    interventions.push({
-      drug: issue.drug,
-      problem: issue.problem,
-      recommendation: issue.recommendation,
-      evidence: issue.evidence,
-      severity: issue.severity || "medium",
-      source: "local_rules"
-    });
-  });
-  
-  // محاولة استخراج التدخلات من استجابة AI
-  if (aiVerification && typeof aiVerification === 'string') {
-    const lines = aiVerification.split('\n');
-    let currentIntervention = null;
-    
-    lines.forEach(line => {
-      if (line.includes('💊 DRUG:') || line.includes('DRUG:')) {
-        if (currentIntervention) interventions.push(currentIntervention);
-        currentIntervention = {
-          drug: line.replace(/.*DRUG:\s*/i, '').trim(),
-          problem: '',
-          recommendation: '',
-          evidence: '',
-          source: 'ai_analysis'
-        };
-      } else if (currentIntervention) {
-        if (line.includes('Problem:') || line.includes('Issue:')) {
-          currentIntervention.problem = line.replace(/.*(Problem|Issue):\s*/i, '').trim();
-        } else if (line.includes('Recommendation:') || line.includes('→')) {
-          currentIntervention.recommendation = line.replace(/.*(Recommendation:|→)\s*/i, '').trim();
-        } else if (line.includes('Evidence:')) {
-          currentIntervention.evidence = line.replace(/.*Evidence:\s*/i, '').trim();
-        }
-      }
-    });
-    
-    if (currentIntervention) interventions.push(currentIntervention);
-  }
-  
-  return interventions;
-}
-
-// ============================================================
-// دالة جديدة: معالجة الأسئلة المحددة
-// ============================================================
-async function handleSpecificQuestion(data, renal, question, protocols, env) {
-  const q = question.toLowerCase();
-  let answer = '';
-  
-  // قائمة بالأسئلة المحددة ومعالجتها
-  if (q.includes('وظائف الكلى') || q.includes('crcl') || q.includes('creatinine')) {
-    answer = `📊 **وظائف الكلى:**
-• Creatinine: ${data.scr_umol || '?'} µmol/L (${renal.scr_mgdl || '?'} mg/dL)
-• CrCl (Cockcroft-Gault): ${renal.crcl || '?'} mL/min
-• الوزن المستخدم: ${renal.weight_used || '?'} kg (${renal.weight_label || '?'})
-• IBW: ${renal.ibw || '?'} kg
-• ABW adjusted: ${renal.abw_adj || '?'} kg
-
-${
-  renal.crcl < 30 ? '⚠️ **قصور كلوي حاد** - جميع الأدوية تحتاج مراجعة' :
-  renal.crcl < 60 ? '⚠️ **قصور كلوي معتدل** - بعض الأدوية تحتاج تعديل' :
-  '✅ **وظائف الكلى طبيعية**'
-}`;
-  }
-  
-  else if (q.includes('الأخطاء') || q.includes('problems') || q.includes('مشاكل')) {
-    const localIssues = runLocalMedicationCheck(data, renal);
-    if (localIssues.length > 0) {
-      answer = '⚠️ **المشاكل الدوائية المكتشفة:**\n\n';
-      localIssues.forEach((issue, i) => {
-        answer += `**${i+1}. ${issue.drug}**\n`;
-        answer += `• المشكلة: ${issue.problem}\n`;
-        answer += `• التوصية: ${issue.recommendation}\n`;
-        answer += `• الدليل: ${issue.evidence}\n`;
-        answer += `• الخطورة: ${issue.severity === 'high' ? '🔴 عالية' : '🟡 متوسطة'}\n\n`;
-      });
-    } else {
-      answer = '✅ لم يتم اكتشاف مشاكل دوائية بالقواعد المحلية';
-    }
-  }
-  
-  else if (q.includes('الادوية') || q.includes('medications')) {
-    answer = '💊 **الأدوية الحالية:**\n';
-    (data.current_meds_list || []).forEach(med => {
-      answer += `• ${med.name || '?'} - ${med.dose || '?'} ${med.frequency || '?'}\n`;
-    });
-    
-    answer += '\n🏠 **الأدوية المنزلية:**\n';
-    (data.home_meds_list || []).forEach(med => {
-      answer += `• ${med.name || '?'} - ${med.dose || '?'} ${med.frequency || '?'}\n`;
-    });
-  }
-  
-  else if (q.includes('تحاليل') || q.includes('labs')) {
-    answer = '🔬 **نتائج المختبر:**\n';
-    const labs = extractAllLabs(data.labs_text || '');
-    Object.entries(labs).forEach(([key, value]) => {
-      answer += `• ${key}: ${value}\n`;
-    });
-  }
-  
-  else {
-    // استخدام AI للأسئلة المعقدة
-    const system = `You are a clinical pharmacist answering specific questions.
-Answer concisely in Arabic/English based on patient data.
-
-Available protocols: ${protocols ? '✅ found' : '❌ not found'}
-
-Patient: Age ${data.age || '?'}, CrCl ${renal.crcl || '?'} mL/min
-Admission: ${data.reason_admission || '?'}`;
-
-    answer = await OpenAICall(env, system, 
-      `Question: ${question}\n\nPatient data: ${buildContext(data, renal.crcl)}`, 
-      500
-    );
-  }
-  
-  return json({
-    ok: true,
-    question: question,
-    answer: answer,
-    renal: renal
-  }, 200, CORS);
-}
-
-// ============================================================
-// دالة جديدة: فحص هجين (قواعد محلية + AI)
-// ============================================================
-async function stepC5_medVerificationHybrid(data, renal, localIssues, protocols, env) {
-  if (!data.current_meds_list?.length) {
-    return "No current inpatient medications documented.";
-  }
-  
-  const medNames = data.current_meds_list.map(m => m.name).join(", ");
-  
-  // بناء سياق من المشاكل المحلية
-  const localContext = localIssues.length > 0 
-    ? `\nLOCAL RULES DETECTED ISSUES:\n${JSON.stringify(localIssues, null, 2)}\n`
-    : '';
-  
-  const system = `You are a clinical pharmacist performing medication review.
-  
-LOCAL RULES HAVE ALREADY FOUND THESE ISSUES (focus on other aspects):
-${localContext}
-
-For EACH medication, evaluate:
-1. Indication appropriateness
-2. Drug-drug interactions (not already caught)
-3. Monitoring requirements
-4. Duration of therapy
-5. Any issues missed by local rules
-
-Be specific and concise.`;
-
-  const userMsg = `Patient: Age ${data.age || '?'}, CrCl ${renal.crcl || '?'} mL/min
-Weight used: ${renal.weight_used || '?'} kg (${renal.weight_label || '?'})
-
-Medications:
-${JSON.stringify(data.current_meds_list, null, 2)}
-
-Provide additional clinical insights beyond local rules.`;
-
-  return OpenAICall(env, system, userMsg, 1500);
-}
-
-// ============================================================
-// دوال مساعدة لاستخراج القيم من النصوص
-// ============================================================
-
-function extractDose(doseText) {
-  if (!doseText) return null;
-  const match = String(doseText).match(/(\d+\.?\d*)/);
-  return match ? parseFloat(match[1]) : null;
-}
-
-function extractINR(labsText) {
-  if (!labsText) return null;
-  const match = labsText.match(/INR[:\s]+(\d+\.?\d*)/i);
-  return match ? parseFloat(match[1]) : null;
-}
-
-function extractPotassium(labsText) {
-  if (!labsText) return null;
-  const match = labsText.match(/K[:\s]+(\d+\.?\d*)/i) || 
-                labsText.match(/Potassium[:\s]+(\d+\.?\d*)/i);
-  return match ? parseFloat(match[1]) : null;
-}
-
-function extractAllLabs(labsText) {
-  const labs = {};
-  const patterns = {
-    'WBC': /WBC[:\s]+(\d+\.?\d*)/i,
-    'Hb': /Hb[:\s]+(\d+\.?\d*)/i,
-    'PLT': /(?:Platelets|PLT)[:\s]+(\d+)/i,
-    'Cr': /(?:Creatinine|Cr)[:\s]+(\d+\.?\d*)/i,
-    'Urea': /Urea[:\s]+(\d+\.?\d*)/i,
-    'K': /K[:\s]+(\d+\.?\d*)/i,
-    'Na': /Na[:\s]+(\d+)/i,
-    'INR': /INR[:\s]+(\d+\.?\d*)/i
-  };
-  
-  Object.entries(patterns).forEach(([key, pattern]) => {
-    const match = labsText.match(pattern);
-    if (match) labs[key] = match[1];
-  });
-  
-  return labs;
-}
-
-// ============================================================
-// تحسين دوال البحث في Vector Store
-// ============================================================
-async function searchVectorStore(query, env, maxResults = 8) {
-  if (!env.OPENAI_API_KEY) { console.warn("⚠️ VS: no API key"); return ""; }
-  if (!env.VECTOR_STORE_ID) { console.warn("⚠️ VS: no VECTOR_STORE_ID"); return ""; }
-
-  console.log(`🔎 VS search: "${query.substring(0, 80)}..."`);
-
-  try {
-    // تجربة البحث أولاً
-    const res = await fetch(
-      `https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
-          "Content-Type":  "application/json",
-          "OpenAI-Beta":   "assistants=v2",
-        },
-        body: JSON.stringify({ 
-          query, 
-          max_num_results: maxResults, 
-          include_metadata: true,
-          ranking_options: { score_threshold: 0.3 } // تجاهل النتائج الضعيفة
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      console.warn(`⚠️ VS search failed: ${res.status}`);
-      return "";
-    }
-
-    const result = await res.json();
-    const hits = result?.data?.length ?? 0;
-    
-    if (!hits) return "";
-    
-    // تنظيم النتائج بشكل أفضل
-    return result.data
-      .filter(item => item.score > 0.5) // فقط النتائج ذات الصلة العالية
-      .map((item, i) => {
-        const content = extractContent(item);
-        const filename = item.filename || item.file_id || `Protocol ${i + 1}`;
-        const page = item.metadata?.page || item.metadata?.section || "";
-        const score = item.score?.toFixed(3) || "?";
-        const pageInfo = page ? ` [صفحة ${page}]` : "";
-        
-        return `[المصدر ${i+1}: ${filename}${pageInfo} (الصلة: ${score})]\n${content.substring(0, 800)}`;
-      }).join("\n\n---\n\n");
-
-  } catch (err) {
-    console.error("❌ VS fetch error:", err.message);
-    return "";
-  }
-}
-
-// تحديث دوال stepC2, stepC3, stepC4, stepC5 لقبول protocols كمدخل
-// (سيتم تعديلها بنفس النمط - يمكنني إرسال التحديثات الكاملة إذا أردت)
-
-// ============================================================
-// HELPER: Build patient context block
-// ============================================================
-function buildContext(data, renalLine) {
-  return `MRN: ${data.mrn ?? "—"}
-Age: ${data.age ?? "—"} Y | Sex: ${data.sex ?? "—"} | Weight: ${data.weight_kg ?? "—"} kg | Height: ${data.height_raw ?? "—"}
-Ward: ${data.ward ?? "—"}
-Reason for Admission: ${data.reason_admission ?? "N/A"}
-PMH: ${data.pmh ?? "N/A"}
-Allergies: ${data.allergies ?? "N/A"}
-Home Medications: ${data.home_meds_text ?? "N/A"}
-Vitals: ${data.vitals_text ?? "N/A"}
-Labs: ${data.labs_text ?? "N/A"}
-Imaging: ${data.imaging ?? "N/A"}
-Current Inpatient Medications: ${data.current_meds_text ?? "N/A"}
-Renal: ${renalLine}`.trim();
-}
-
-// ============================================================
-// HELPER: Extract content from vector store item
-// ============================================================
-function extractContent(item) {
-  if (!item.content) return item.text || "";
-  if (Array.isArray(item.content)) return item.content.map(c => c.text || c.value || "").join("\n");
-  if (typeof item.content === "string") return item.content;
-  if (item.content.text) return item.content.text;
-  return item.text || "";
-}
-
-// ============================================================
-// HELPER: OpenAI chat completion
-// ============================================================
-async function OpenAICall(env, system, userMessage, maxTokens = 800) {
-  const model = env.MODEL || "gpt-4-turbo-preview";
-  console.log(`🤖 OpenAI call | model=${model} | maxTokens=${maxTokens}`);
+async function aiCall(env, system, userMsg, maxTokens = 900) {
+  if (!env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not set");
+  const model = env.MODEL || "gpt-4o";
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -702,33 +444,267 @@ async function OpenAICall(env, system, userMessage, maxTokens = 800) {
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
-      temperature: 0.2,
+      temperature: 0.15,
       messages: [
         { role: "system", content: system },
-        { role: "user",   content: userMessage },
+        { role: "user",   content: userMsg  },
       ],
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    console.error("❌ OpenAI error:", err);
-    throw new Error(`OpenAI API ${res.status}: ${err}`);
+    throw new Error(`OpenAI ${res.status}: ${err}`);
   }
 
   const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
+  return data.choices?.[0]?.message?.content?.trim() ?? "";
 }
 
 // ============================================================
-// HELPER: JSON HTTP response
+// VECTOR STORE SEARCH
 // ============================================================
-function json(body, status = 200, extraHeaders = {}) {
+async function searchVectorStore(query, env, maxResults = 8) {
+  if (!env.OPENAI_API_KEY || !env.VECTOR_STORE_ID) return "";
+
+  try {
+    const res = await fetch(
+      `https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+          "Content-Type":  "application/json",
+          "OpenAI-Beta":   "assistants=v2",
+        },
+        body: JSON.stringify({
+          query,
+          max_num_results: maxResults,
+          ranking_options: { score_threshold: 0.35 },
+        }),
+      }
+    );
+    if (!res.ok) return "";
+
+    const result = await res.json();
+    const hits   = result?.data ?? [];
+    if (!hits.length) return "";
+
+    return hits
+      .filter(item => (item.score ?? 0) >= 0.35)
+      .map((item, i) => {
+        const text = extractVSContent(item);
+        const src  = item.filename || item.file_id || `Protocol-${i + 1}`;
+        return `[SOURCE ${i + 1}: ${src} | score ${(item.score ?? 0).toFixed(3)}]\n${text.slice(0, 700)}`;
+      })
+      .join("\n\n---\n\n");
+  } catch {
+    return "";
+  }
+}
+
+function extractVSContent(item) {
+  if (!item.content) return item.text || "";
+  if (Array.isArray(item.content)) return item.content.map(c => c.text || c.value || "").join("\n");
+  if (typeof item.content === "string") return item.content;
+  return item.content?.text || item.text || "";
+}
+
+// ============================================================
+// SYSTEM / USER MESSAGE BUILDERS
+// ============================================================
+
+// ── C1 SOAP ───────────────────────────────────────────────
+function buildSoapSystem(protocols) {
+  return `You are a clinical pharmacist writing a structured SOAP case summary.
+Be concise, professional, and use standard clinical abbreviations.
+${protocols ? `\nReference protocols available:\n${protocols}` : ""}
+
+Format exactly as:
+SUBJECTIVE
+• Chief complaint & HPI (2-3 lines)
+• PMH: bullet list
+• Home medications: list
+
+OBJECTIVE
+• Vitals (most recent)
+• Relevant labs (abnormal flagged ↑/↓ with range)
+• Imaging / investigations
+• Renal function summary
+
+ASSESSMENT
+• Primary problem
+• Active issues list
+
+PLAN (Pharmacotherapy focus)
+• Current inpatient medications: table format
+  Drug | Dose | Route | Frequency | Status`;
+}
+
+function buildSoapUser(d, renalLine) {
+  return `Patient: ${d.age ?? "?"}Y ${d.sex ?? "?"} | MRN: ${d.mrn ?? "—"} | Ward: ${d.ward ?? "—"}
+Allergies: ${d.allergies ?? "NKDA"}
+Reason for admission: ${d.reason_admission ?? "—"}
+PMH: ${d.pmh ?? "—"}
+Vitals: ${d.vitals_text ?? "—"}
+Labs: ${d.labs_text ?? "—"}
+Imaging: ${d.imaging ?? "—"}
+Home meds: ${d.home_meds_text ?? "—"}
+Current inpatient meds: ${d.current_meds_text ?? "—"}
+Renal: ${renalLine}`;
+}
+
+// ── C2 Coverage ───────────────────────────────────────────
+function buildCovSystem(protocols) {
+  return `You are a clinical pharmacist performing problem-to-treatment coverage analysis.
+Guideline evidence level: ESC 2021 HF, ACC/AHA, KDIGO, IDSA, local ICU protocols.
+${protocols ? `\nAvailable protocols:\n${protocols}` : ""}
+
+For each active problem:
+1. State the problem
+2. List guideline-recommended pharmacotherapy
+3. Compare to what patient is receiving
+4. Flag: COVERED ✅ | PARTIALLY COVERED ⚠️ | NOT COVERED ❌ | CONTRAINDICATED 🚫
+
+Be direct. No preamble.`;
+}
+
+function buildCovUser(d, renal) {
+  return `Reason for admission: ${d.reason_admission ?? "—"}
+PMH: ${d.pmh ?? "—"}
+Current meds: ${d.current_meds_text ?? "—"}
+CrCl: ${renal.crcl ?? "—"} mL/min
+Labs: ${d.labs_text ?? "—"}`;
+}
+
+// ── C3 Home meds ──────────────────────────────────────────
+function buildHomeSystem(protocols) {
+  return `You are a clinical pharmacist reviewing home medications at hospital admission.
+${protocols ? `\nProtocols:\n${protocols}` : ""}
+
+For EACH home medication state:
+• Drug name + dose
+• Decision: CONTINUE / HOLD / SWITCH / DOSE-ADJUST
+• Reason (one sentence, guideline-cited if possible)
+• If HOLD: specify restart criteria
+
+Use consistent table-like formatting.`;
+}
+
+function buildHomeUser(d, renal) {
+  return `Home medications: ${d.home_meds_text ?? "None documented"}
+Reason for admission: ${d.reason_admission ?? "—"}
+CrCl: ${renal.crcl ?? "—"} mL/min
+Labs: ${d.labs_text ?? "—"}
+Current inpatient meds: ${d.current_meds_text ?? "—"}`;
+}
+
+// ── C4 Prophylaxis ────────────────────────────────────────
+function buildProphySystem(protocols) {
+  return `You are a clinical pharmacist assessing VTE and stress ulcer prophylaxis.
+${protocols ? `\nProtocols:\n${protocols}` : ""}
+
+Structure your response as two sections:
+
+1. VTE PROPHYLAXIS
+   • Assess risk (Padua / Caprini score if possible)
+   • Current VTE prophylaxis: state what is ordered
+   • Recommendation: APPROPRIATE ✅ / CHANGE REQUIRED ⚠️ / MISSING ❌
+   • Drug/dose/duration recommendation with rationale
+
+2. STRESS ULCER PROPHYLAXIS (SUP)
+   • Assess indication (mechanical ventilation, coagulopathy, ICU risk)
+   • Current SUP: state what is ordered
+   • Recommendation: APPROPRIATE ✅ / CHANGE REQUIRED ⚠️ / MISSING ❌
+   • Drug/dose recommendation`;
+}
+
+function buildProphyUser(d, renal) {
+  return `Patient: ${d.age ?? "?"}Y ${d.sex ?? "?"} | Ward: ${d.ward ?? "—"}
+Reason for admission: ${d.reason_admission ?? "—"}
+PMH: ${d.pmh ?? "—"}
+Labs: ${d.labs_text ?? "—"}
+CrCl: ${renal.crcl ?? "—"} mL/min
+Current meds: ${d.current_meds_text ?? "—"}`;
+}
+
+// ── C5 Medication verification ────────────────────────────
+function buildMedSystem(protocols, localIssues) {
+  const localStr = localIssues.length
+    ? `\nLOCAL RULES ALREADY DETECTED:\n${localIssues.map(i =>
+        `• ${i.drug}: ${i.problem} → ${i.recommendation}`
+      ).join("\n")}\n(Do NOT repeat these; focus on additional issues.)`
+    : "";
+
+  return `You are a senior clinical pharmacist performing deep medication verification.
+${localStr}
+${protocols ? `\nProtocols:\n${protocols}` : ""}
+
+For each current inpatient medication, verify:
+1. Indication — is it appropriate for this patient?
+2. Dose — correct for weight / renal / hepatic function?
+3. Frequency — correct?
+4. Route — appropriate?
+5. Drug-drug interactions (not already listed above)
+6. Contraindications
+7. Required monitoring (labs, levels, ECG, etc.)
+
+Format each as:
+💊 [DRUG NAME] [dose] [route] [frequency]
+   Indication: ✅/⚠️/❌ …
+   Dose: ✅/⚠️/❌ …
+   DDI: ✅/⚠️ …
+   Monitoring: …
+   → PHARMACIST ACTION: [if any]`;
+}
+
+function buildMedUser(d, renal) {
+  return `Patient: ${d.age ?? "?"}Y ${d.sex ?? "?"} | Weight: ${d.weight_kg ?? "?"}kg | CrCl: ${renal.crcl ?? "?"} mL/min
+Labs: ${d.labs_text ?? "—"}
+Current inpatient medications:
+${JSON.stringify(d.current_meds_list, null, 2)}`;
+}
+
+// ── C6 Final note ─────────────────────────────────────────
+function buildNoteSystem() {
+  return `You are writing a formal clinical pharmacist consultation note for a hospital medical record.
+Style: concise, professional, referenced. Use SOAP format. 
+Start with: "CLINICAL PHARMACIST CONSULTATION NOTE"
+End with: "Pharmacist: __________________ Date: __________"`;
+}
+
+function buildNoteUser(d, renalLine, coverage, homeMeds, prophylaxis, medVerification) {
+  return `Patient: ${d.age ?? "?"}Y ${d.sex ?? "?"}
+Ward: ${d.ward ?? "—"}
+Admission: ${d.reason_admission ?? "—"}
+PMH: ${d.pmh ?? "—"}
+Renal: ${renalLine}
+
+COVERAGE ANALYSIS:
+${coverage ?? "—"}
+
+HOME MEDS REVIEW:
+${homeMeds ?? "—"}
+
+PROPHYLAXIS:
+${prophylaxis ?? "—"}
+
+MEDICATION VERIFICATION:
+${medVerification ?? "—"}
+
+Write the complete pharmacist note. Be concise. Highlight any active interventions clearly.`;
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+function jsonRes(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body, null, 2), {
     status,
     headers: { "Content-Type": "application/json", ...extraHeaders },
   });
 }
-
-// ملاحظة: دوال stepC2, stepC3, stepC4, stepC5, stepC6 تحتاج تحديث
-// لقبول protocols parameter - يمكنني إضافتها إذا أردت
