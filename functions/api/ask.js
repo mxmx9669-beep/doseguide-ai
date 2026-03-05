@@ -1,85 +1,16 @@
-// ============================================================
-// FILE: /functions/api/ask.js
-// THERA GUARD AI — Backend v8.5 (FIXED) — Protocol-Locked RAG with Flexible Validation
-// ============================================================
-
-export async function onRequest(context) {
-  const { request, env } = context;
-
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-
-  if (request.method === "OPTIONS") {
-    return new Response(null, { 
-      status: 204,
-      headers: corsHeaders 
-    });
-  }
-
-  if (request.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
-    });
-  }
-
+// ========== CASE MODE HANDLER (COMPLETE FIX) ==========
+async function handleCaseMode(body, env, corsHeaders) {
   try {
-    const body = await request.json();
-    const language = body.language || "en";
+    const case_text = body.case_text;
+    const question = body.question || "";
     
-    // ========== EXTRACT OUTPUT CONFIGURATION ==========
-    const output_mode = (body.output_mode || "hybrid").toLowerCase();
-    const source_mode = (body.source_mode || "off").toLowerCase();
-    const answer_style = body.answer_style || "recommended";
+    // 1. استخراج المعلومات الأساسية من الحالة
+    const extracted = extractBasics(case_text);
+    const computed = computeCrCl(extracted);
     
-    // Validate output_mode
-    if (!["hybrid", "short", "verbatim"].includes(output_mode)) {
-      return new Response(JSON.stringify({ 
-        error: "Invalid output_mode. Must be hybrid, short, or verbatim." 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
+    // 2. البحث في Vector Store عن بروتوكولات ذات صلة
+    const searchQuery = buildCaseQuery(case_text, extracted, computed);
     
-    // Validate source_mode
-    if (!["required", "off"].includes(source_mode)) {
-      return new Response(JSON.stringify({ 
-        error: "Invalid source_mode. Must be required or off." 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    // ========== CASE ANALYSIS MODE (preserved) ==========
-    if (body.mode === "case_analysis" && body.case_text) {
-      return handleCaseMode(body, env, corsHeaders);
-    }
-    
-    // ========== STANDARD Q&A MODE ==========
-    const question = body.question || body.q || "";
-    
-    if (!question) {
-      return new Response(JSON.stringify({ error: "Question is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    if (!env.OPENAI_API_KEY || !env.VECTOR_STORE_ID) {
-      return new Response(JSON.stringify({ 
-        error: "OPENAI_API_KEY or VECTOR_STORE_ID is not set" 
-      }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    // Perform vector search
     const searchResponse = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
       method: 'POST',
       headers: {
@@ -88,258 +19,53 @@ export async function onRequest(context) {
         'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
-        query: question,
-        max_num_results: 10
+        query: searchQuery,
+        max_num_results: 8
       })
     });
 
     if (!searchResponse.ok) {
-      const errorText = await searchResponse.text();
-      return new Response(JSON.stringify({ 
-        error: "Vector search failed",
-        details: errorText
-      }), {
-        status: 502,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
+      throw new Error("Vector search failed");
     }
 
     const searchData = await searchResponse.json();
     
-    // Extract evidence with metadata
-    const evidence = [];
-    if (searchData.data && Array.isArray(searchData.data)) {
-      searchData.data.forEach((item, index) => {
-        let content = '';
-        let filename = item.file_id || item.filename || `source_${index + 1}`;
-        let page = null;
-        let section = '';
-        
-        // Extract content
-        if (item.content) {
-          if (Array.isArray(item.content)) {
-            content = item.content
-              .map(c => c.text || c.value || '')
-              .filter(t => t)
-              .join('\n');
-          } else if (typeof item.content === 'string') {
-            content = item.content;
-          } else if (item.content.text) {
-            content = item.content.text;
-          }
-        }
-        if (item.text) content = item.text;
-        
-        // Extract page number if present (optional)
-        const pageMatch = content.match(/(?:Page|PAGE|page)\s*(\d+)/i) || 
-                         content.match(/p\.\s*(\d+)/i) ||
-                         content.match(/\[p\.\s*(\d+)\]/i);
-        if (pageMatch) page = parseInt(pageMatch[1]);
-        
-        // Extract section if present (optional)
-        const sectionMatch = content.match(/(?:Section|SECTION|section)\s+(\d+(?:\.\d+)*)\s*[–—-]?\s*([^\n]+)/i) ||
-                            content.match(/##+\s*([^\n]+)/) ||
-                            content.match(/^\d+\.\d+\s+([^\n]+)/m);
-        if (sectionMatch) {
-          section = (sectionMatch[2] || sectionMatch[1]).trim();
-        }
-        
-        if (content && content.trim()) {
-          evidence.push({
-            id: `E${index + 1}`,
-            filename: filename,
-            page: page,  // قد يكون null
-            section: section || "General",  // قيمة افتراضية
-            excerpt: content.substring(0, 2000),
-            full_content: content
-          });
-        }
-      });
-    }
-
-    // ========== SOURCE_MODE = "required" ENFORCEMENT (FIXED) ==========
-    if (source_mode === "required") {
-      // ✅ FIXED: Only check for filename and meaningful content
-      // No longer requiring page > 0 or section existence
-      const hasValidEvidence = evidence.some(e => 
-        e.filename && 
-        e.filename.length > 0 && 
-        e.excerpt && 
-        e.excerpt.trim().length > 20
-      );
-      
-      if (evidence.length === 0 || !hasValidEvidence) {
-        return new Response(JSON.stringify({
-          ok: true,
-          verdict: "NOT_FOUND",
-          answer: language === 'ar' 
-            ? "لم يتم العثور على المعلومات في البروتوكولات المتاحة"
-            : "Not found in available protocols",
-          citations: [],
-          applied_output: {
-            output_mode,
-            source_mode,
-            answer_style
-          }
-        }), {
-          headers: { "Content-Type": "application/json", ...corsHeaders }
-        });
-      }
-    }
-
-    // ========== OUTPUT_MODE ENFORCEMENT ==========
-    let answer = "";
-    let citations = [];
+    // 3. استخراج الأدلة من نتائج البحث
+    const evidence = extractEvidenceFromSearch(searchData);
     
-    switch(output_mode) {
-      case "verbatim":
-        if (evidence.length === 0) {
-          answer = language === 'ar' 
-            ? "لم يتم العثور على نصوص حرفية في المصادر."
-            : "No verbatim text found in sources.";
-        } else {
-          const quotes = evidence.map(e => {
-            const sentences = e.excerpt.split(/[.!?]+/).filter(s => s.trim().length > 20);
-            const quote = sentences.length > 0 ? sentences[0].trim() + '.' : e.excerpt.substring(0, 150);
-            return `"${quote}" — ${e.filename} (Page: ${e.page || 'N/A'})`;
-          }).slice(0, 3);
-          
-          answer = quotes.join('\n\n');
-          
-          citations = evidence.map(e => ({
-            evidence_ids: [e.id],
-            filename: e.filename,
-            section: e.section || 'General',
-            page: e.page || 'N/A',
-            excerpt: e.excerpt.substring(0, 250)
-          }));
-        }
-        break;
-        
-      case "short":
-        if (evidence.length === 0) {
-          answer = language === 'ar' 
-            ? "لم يتم العثور على معلومات."
-            : "No information found.";
-        } else {
-          const evidenceText = evidence.map(e => 
-            `[SOURCE] ${e.filename}\nContent: ${e.excerpt}`
-          ).join('\n\n---\n\n');
-          
-          const bulletPrompt = `Generate 3-6 bullet points answering the question. Each bullet must be one line, start with •, and be concise. Use ONLY the provided sources.`;
-          
-          const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: "gpt-3.5-turbo",
-              messages: [
-                { role: 'system', content: bulletPrompt },
-                { role: 'user', content: `Question: ${question}\n\nSources:\n${evidenceText}` }
-              ],
-              temperature: 0.3,
-              max_tokens: 300
-            })
-          });
-          
-          const gptData = await gptResponse.json();
-          answer = gptData.choices?.[0]?.message?.content || "• No concise answer available";
-          
-          if (source_mode === "required") {
-            citations = evidence.map(e => ({
-              evidence_ids: [e.id],
-              filename: e.filename,
-              section: e.section || 'General',
-              page: e.page || 'N/A',
-              excerpt: e.excerpt.substring(0, 150)
-            }));
-          }
-        }
-        break;
-        
-      case "hybrid":
-      default:
-        if (evidence.length === 0) {
-          answer = language === 'ar' 
-            ? "لم يتم العثور على معلومات في المصادر المتاحة."
-            : "No information found in available sources.";
-        } else {
-          const evidenceText = evidence.map(e => 
-            `[SOURCE ${e.id}] File: ${e.filename}\nContent: ${e.excerpt}`
-          ).join('\n\n---\n\n');
-          
-          const hybridPrompt = `Provide a brief synthesized answer to the question, then below it include 2-3 relevant direct quotes from the sources. Format: ANSWER: ... then QUOTES: ...`;
-          
-          const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: "gpt-3.5-turbo",
-              messages: [
-                { role: 'system', content: hybridPrompt },
-                { role: 'user', content: `Question: ${question}\n\nSources:\n${evidenceText}` }
-              ],
-              temperature: 0.3,
-              max_tokens: 600
-            })
-          });
-          
-          const gptData = await gptResponse.json();
-          answer = gptData.choices?.[0]?.message?.content || "No answer generated";
-          
-          citations = evidence.map(e => ({
-            evidence_ids: [e.id],
-            filename: e.filename,
-            section: e.section || 'General',
-            page: e.page || 'N/A',
-            excerpt: e.excerpt.substring(0, 250)
-          }));
-        }
-        break;
-    }
+    // 4. بناء التحليل باستخدام GPT
+    const analysis = await generateCaseAnalysis(env, {
+      case_text,
+      question,
+      extracted,
+      computed,
+      evidence
+    });
+    
+    // 5. تجهيز المصادر للـ Frontend
+    const sources = evidence.map((e, idx) => ({
+      id: `S${idx + 1}`,
+      filename: e.filename || "Unknown",
+      page: e.page || "N/A",
+      excerpt: e.excerpt?.substring(0, 220) || "",
+      score: e.score || null
+    }));
 
-    // ========== SOURCE_MODE = "off" HANDLING ==========
-    if (source_mode === "off") {
-      return new Response(JSON.stringify({
-        ok: true,
-        verdict: "OK",
-        answer: answer,
-        applied_output: {
-          output_mode,
-          source_mode,
-          answer_style
-        }
-      }), {
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    // ========== FINAL RESPONSE WITH CITATIONS ==========
     return new Response(JSON.stringify({
       ok: true,
-      verdict: "OK",
-      answer: answer,
-      citations: citations,
-      applied_output: {
-        output_mode,
-        source_mode,
-        answer_style
-      }
+      final_note: analysis,  // ✅ التحليل الكامل
+      sources: sources        // ✅ المصادر
     }), {
       headers: { "Content-Type": "application/json", ...corsHeaders }
     });
-
+    
   } catch (error) {
-    console.error("Function error:", error);
+    console.error("Case mode error:", error);
     return new Response(JSON.stringify({ 
       ok: false,
-      error: error.message || "Internal server error"
+      error: error.message,
+      final_note: "Error analyzing case",
+      sources: []
     }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders }
@@ -347,27 +73,164 @@ export async function onRequest(context) {
   }
 }
 
-// ========== CASE MODE HANDLER (preserved from original) ==========
-async function handleCaseMode(body, env, corsHeaders) {
-  try {
-    // Your existing case analysis logic here
-    // This is preserved from your original code
-    
-    return new Response(JSON.stringify({
-      ok: true,
-      final_note: "Case analysis completed",
-      sources: []
-    }), {
-      headers: { "Content-Type": "application/json", ...corsHeaders }
-    });
-    
-  } catch (error) {
-    return new Response(JSON.stringify({ 
-      ok: false,
-      error: error.message 
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
+// ========== HELPER FUNCTIONS FOR CASE MODE ==========
+
+function extractBasics(text) {
+  const t = text || "";
+  
+  // استخراج العمر
+  const ageMatch = t.match(/\b(\d{1,3})\s*(?:y|yr|year)/i);
+  const age = ageMatch ? parseInt(ageMatch[1]) : null;
+  
+  // استخراج الوزن
+  const weightMatch = t.match(/\b(\d{2,3})\s*kg/i);
+  const weightKg = weightMatch ? parseFloat(weightMatch[1]) : null;
+  
+  // استخراج الكرياتينين
+  const scrMatch = t.match(/\b(?:s\.?cr|scr|creatinine)\s*:?\s*(\d{2,3})/i);
+  const scrUmol = scrMatch ? parseFloat(scrMatch[1]) : null;
+  
+  // استخراج Hb
+  const hbMatch = t.match(/\b(?:hb|hemoglobin|هيموجلوبين)\s*:?\s*(\d{1,2}\.?\d?)/i);
+  const hb = hbMatch ? parseFloat(hbMatch[1]) : null;
+  
+  // استخراج الـ pH
+  const phMatch = t.match(/\bph\s*:?\s*(\d{1,2}\.\d{2})/i);
+  const ph = phMatch ? parseFloat(phMatch[1]) : null;
+  
+  // استخراج الـ Lactate
+  const lactateMatch = t.match(/\b(lactate|لاكتات)\s*:?\s*(\d{1,2}\.?\d?)/i);
+  const lactate = lactateMatch ? parseFloat(lactateMatch[2]) : null;
+  
+  return { age, weightKg, scrUmol, hb, ph, lactate };
+}
+
+function computeCrCl({ age, weightKg, scrUmol }) {
+  if (!age || !weightKg || !scrUmol) return null;
+  
+  const scrMgDl = scrUmol / 88.4;
+  if (!scrMgDl || scrMgDl <= 0) return null;
+  
+  let crcl = ((140 - age) * weightKg) / (72 * scrMgDl);
+  return Math.round(crcl);
+}
+
+function buildCaseQuery(case_text, extracted, computed) {
+  const parts = [
+    "clinical case",
+    "medication dosing",
+    "renal adjustment",
+    "protocol guidelines"
+  ];
+  
+  if (computed) parts.push(`CrCl ${computed} mL/min`);
+  if (extracted.hb) parts.push(`hemoglobin ${extracted.hb}`);
+  if (extracted.ph) parts.push(`pH ${extracted.ph}`);
+  
+  return parts.join(" ");
+}
+
+function extractEvidenceFromSearch(searchData) {
+  const evidence = [];
+  
+  if (searchData.data && Array.isArray(searchData.data)) {
+    searchData.data.forEach((item, index) => {
+      let content = '';
+      let filename = item.file_id || item.filename || `source_${index + 1}`;
+      let page = null;
+      let score = item.score || null;
+      
+      if (item.content) {
+        if (Array.isArray(item.content)) {
+          content = item.content.map(c => c.text || c.value || '').join('\n');
+        } else if (typeof item.content === 'string') {
+          content = item.content;
+        } else if (item.content.text) {
+          content = item.content.text;
+        }
+      }
+      
+      if (content && content.trim()) {
+        const pageMatch = content.match(/(?:Page|page|p\.)\s*(\d+)/i);
+        if (pageMatch) page = parseInt(pageMatch[1]);
+        
+        evidence.push({
+          id: `E${index + 1}`,
+          filename: filename,
+          page: page,
+          excerpt: content.substring(0, 500),
+          score: score
+        });
+      }
     });
   }
+  
+  return evidence;
+}
+
+async function generateCaseAnalysis(env, { case_text, question, extracted, computed, evidence }) {
+  
+  const evidenceText = evidence.map(e => 
+    `[SOURCE] ${e.filename} (Page: ${e.page || 'N/A'})\n${e.excerpt}`
+  ).join('\n\n---\n\n');
+  
+  const systemPrompt = `You are a clinical pharmacist specialist. Analyze this case and provide:
+1. SOAP format (Subjective, Objective, Assessment, Plan)
+2. Medication dose checks with recommendations
+3. Cite specific sources from the provided evidence
+
+Format your response exactly like this:
+
+SUBJECTIVE:
+[summary]
+
+OBJECTIVE:
+Vitals: [vitals]
+Labs: [key labs]
+Imaging: [findings]
+
+ASSESSMENT:
+[problem list]
+
+PLAN:
+[recommendations]
+
+DOSE CHECKS:
+- [Drug]: Current = [dose]; Recommended = [protocol dose]; Source: [filename]
+
+SOURCES:
+[list sources used]`;
+
+  const userMessage = `
+CASE: ${case_text}
+${question ? `\nQUESTION: ${question}` : ''}
+${computed ? `\nCalculated CrCl: ${computed} mL/min` : ''}
+
+EVIDENCE FROM PROTOCOLS:
+${evidenceText || "No specific protocols found. Use general clinical knowledge."}
+`;
+
+  const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ],
+      temperature: 0.3,
+      max_tokens: 1500
+    })
+  });
+
+  if (!gptResponse.ok) {
+    throw new Error("GPT analysis failed");
+  }
+
+  const gptData = await gptResponse.json();
+  return gptData.choices?.[0]?.message?.content || "Analysis completed";
 }
