@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
+    /* نفس الـ CSS بالكامل - بدون أي تغيير */
     :root {
       --primary: #0f172a;
       --accent: #2563eb;
@@ -360,7 +361,7 @@
 </div>
 
 <script>
-// 1) FILE → PUBLIC URL mapping (replace with your actual public links)
+// 1) FILE → PUBLIC URL mapping (استبدل YOURDOMAIN برابطك الفعلي)
 const FILE_URL_MAP = {
   "Adalimumab (including biosimilars)_ Drug information - UpToDate.pdf": "https://YOURDOMAIN/pdfs/Adalimumab.pdf",
   "GINA-2024-Strategy-Report-24_05_22_WMS.pdf": "https://YOURDOMAIN/pdfs/GINA-2024.pdf",
@@ -392,19 +393,17 @@ const FILE_URL_MAP = {
   "Warfarin.pdf": "https://YOURDOMAIN/pdfs/Warfarin.pdf"
 };
 
-// Helper: create a "page-aware" PDF URL (works in many browsers/viewers)
+// Helper: create a "page-aware" PDF URL
 function withPdfPage(url, page) {
   if (!url) return url;
   
   const p = Number(page);
   if (!Number.isFinite(p) || p <= 0) return url;
   
-  // If url already has #page, replace it or append
   if (url.includes("#page=")) {
     return url.replace(/#page=\d+/, `#page=${p}`);
   }
   
-  // Add page anchor
   return `${url}#page=${p}`;
 }
 
@@ -414,12 +413,6 @@ const API_ENDPOINT = (() => {
   }
   return '/api/ask';
 })();
-
-function decideMode(caseText, questionText) {
-  // If any case data exists -> CASE
-  if (caseText && caseText.trim().length > 0) return "CASE";
-  return "QUESTION";
-}
 
 async function runAnalysis() {
   const question = document.getElementById("questionInput").value.trim();
@@ -443,57 +436,102 @@ async function runAnalysis() {
     return;
   }
 
-  const mode = decideMode(caseText, question);
+  // تحديد الـ mode
+  const mode = caseText ? "case_analysis" : "standard";
 
   btn.disabled = true;
   loader.style.display = "flex";
   dot.style.background = "#2563eb";
   output.style.opacity = "0.55";
-  output.textContent = mode === "QUESTION"
-    ? "⏳ Retrieving evidence and answering your question..."
-    : "⏳ Analyzing case and checking doses against protocols...";
+  output.textContent = caseText 
+    ? "⏳ Analyzing case and checking doses against protocols..."
+    : "⏳ Retrieving evidence and answering your question...";
 
   try {
+    // تجهيز الـ request body حسب الـ mode
+    const requestBody = caseText ? {
+      mode: "case_analysis",
+      case_text: caseText,
+      question: question || undefined,
+      output_mode: "hybrid",
+      source_mode: "required",
+      answer_style: "recommended"
+    } : {
+      question: question,
+      output_mode: "hybrid",
+      source_mode: "required",
+      answer_style: "recommended"
+    };
+
     const res = await fetch(API_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify({
-        mode,
-        question_text: question || "",
-        case_text: caseText || ""
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const data = await res.json();
 
-    // Backend may return ok:false with helpful error but status 200
     if (!res.ok) {
       throw new Error(data.error || `Server error: ${res.status}`);
     }
 
-    if (!data.ok) {
-      // Show protocol-locked / no evidence message cleanly
-      showError(data.error || "Analysis failed");
-      output.textContent = "❌ Unable to generate output (see error above).";
-      dot.style.background = "#ef4444";
-      output.style.opacity = "1";
-      return;
+    // معالجة متوافقة مع التنسيقين
+    if (caseText) {
+      // CASE mode - التنسيق القديم
+      output.textContent = data.final_note || JSON.stringify(data, null, 2);
+      
+      if (Array.isArray(data.sources) && data.sources.length > 0) {
+        renderSources(data.sources);
+      } else {
+        renderSources([]);
+      }
+    } else {
+      // QUESTION mode - التنسيق الجديد
+      
+      // التحقق من Protocol-Locked
+      if (data.verdict === "NOT_FOUND") {
+        showError("No evidence found in vector store for this question (Protocol-Locked). Try rephrasing or ensure the relevant PDF is in the vector store.");
+        output.textContent = "❌ No evidence found in protocols.";
+        dot.style.background = "#ef4444";
+        output.style.opacity = "1";
+        return;
+      }
+      
+      // عرض الإجابة
+      output.textContent = data.answer || "No answer generated";
+      
+      // تحويل citations إلى sources format
+      if (data.citations && data.citations.length > 0) {
+        const sources = data.citations.map((c, idx) => {
+          // البحث عن URL من الملف
+          let url = null;
+          const filename = c.filename || "Unknown";
+          
+          // محاولة الحصول على URL من mapping
+          if (FILE_URL_MAP[filename]) {
+            url = FILE_URL_MAP[filename];
+          }
+          
+          return {
+            id: `S${idx + 1}`,
+            filename: filename,
+            page: c.page || "N/A",
+            score: c.score || "N/A",
+            excerpt: c.excerpt || "",
+            url: url
+          };
+        });
+        renderSources(sources);
+      } else {
+        renderSources([]);
+      }
     }
 
-    output.textContent = data.final_note || JSON.stringify(data, null, 2);
     output.style.opacity = "1";
     dot.style.background = "#10b981";
-
-    // Render sources if present
-    if (Array.isArray(data.sources) && data.sources.length > 0) {
-      renderSources(data.sources);
-    } else {
-      // still show box, but indicate none
-      renderSources([]);
-    }
 
   } catch (err) {
     console.error("Analysis error:", err);
@@ -579,7 +617,6 @@ async function copySources() {
   try {
     await navigator.clipboard.writeText(lines.join("\n"));
   } catch {
-    // fallback
     const ta = document.createElement("textarea");
     ta.value = lines.join("\n");
     document.body.appendChild(ta);
