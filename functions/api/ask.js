@@ -1,991 +1,605 @@
-// File: /functions/api/ask.js
-// TheraGuard AI — General Clinical Audit Engine
-// Visible output only: SOAP + Interventions + Adjustments + Citations
+/**
+ * /functions/api/ask.js
+ * Clinical Medication Audit Engine — Backend
+ * Protocol-aware, general-purpose clinical decision support
+ */
 
-export async function onRequest(context) {
-  const { request, env } = context;
+const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-opus-4-5";
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
+// ─────────────────────────────────────────────────────────────
+// CORS + Request Handling
+// ─────────────────────────────────────────────────────────────
+export async function onRequestOptions() {
+  return corsResponse(new Response(null, { status: 204 }));
+}
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-
-  if (request.method !== "POST") {
-    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, corsHeaders);
-  }
-
+export async function onRequestPost(context) {
   try {
+    const { request, env } = context;
     const body = await request.json();
-    const mode = (body.mode || "ask").toLowerCase();
-    const language = (body.language || "en").toLowerCase();
+    const mode = body.mode || "case_analysis";
 
+    let result;
     switch (mode) {
       case "case_analysis":
-      case "case":
-        return await handleCaseAnalysis(body, env, corsHeaders, language);
-
-      case "monograph":
-        return await handleMonograph(body, env, corsHeaders, language);
-
-      case "antibiogram":
-        return await handleAntibiogram(body, env, corsHeaders, language);
-
+        result = await handleCaseAnalysis(body, env);
+        break;
       case "ask":
+        result = await handleAsk(body, env);
+        break;
+      case "monograph":
+        result = await handleMonograph(body, env);
+        break;
+      case "antibiogram":
+        result = await handleAntibiogram(body, env);
+        break;
       default:
-        return await handleAsk(body, env, corsHeaders, language);
+        result = await handleCaseAnalysis(body, env);
     }
-  } catch (error) {
-    console.error("Function error:", error);
-    return jsonResponse(
-      {
-        ok: false,
-        error: error?.message || "Internal server error",
-      },
-      500,
-      corsHeaders
+
+    return corsResponse(
+      new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  } catch (err) {
+    console.error("Engine error:", err);
+    return corsResponse(
+      new Response(
+        JSON.stringify({ error: "Clinical engine error", details: err.message }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      )
     );
   }
 }
 
-/* =========================================================
-   CONFIG
-========================================================= */
-
-const LAB_RANGES = {
-  // CBC
-  hb:         { label: "Hb", unit: "g/dL", low: 12, high: 17.5, section: "cbc", drugRelated: ["anticoagulants", "iron", "ESA"] },
-  wbc:        { label: "WBC", unit: "×10⁹/L", low: 4, high: 11, section: "cbc", drugRelated: ["antibiotics", "immunosuppressants"] },
-  plt:        { label: "Platelets", unit: "×10⁹/L", low: 150, high: 400, section: "cbc", drugRelated: ["anticoagulants", "heparin", "antiplatelet"] },
-  neutrophil: { label: "Neutrophils", unit: "×10⁹/L", low: 1.8, high: 7.5, section: "cbc", drugRelated: ["G-CSF", "immunosuppressants"] },
-
-  // Renal
-  scr_umol:   { label: "SCr", unit: "µmol/L", low: null, high: 106, section: "renal", drugRelated: ["renal dosing", "nephrotoxins"] },
-  scr_mgdl:   { label: "SCr", unit: "mg/dL", low: null, high: 1.2, section: "renal", drugRelated: ["renal dosing", "nephrotoxins"] },
-  urea:       { label: "Urea", unit: "mmol/L", low: null, high: 7.1, section: "renal", drugRelated: [] },
-  bun:        { label: "BUN", unit: "mmol/L", low: null, high: 7.1, section: "renal", drugRelated: [] },
-
-  // Electrolytes
-  na:         { label: "Na", unit: "mmol/L", low: 136, high: 145, section: "electrolytes", drugRelated: ["IV fluids", "diuretics"] },
-  k:          { label: "K", unit: "mmol/L", low: 3.5, high: 5.0, section: "electrolytes", drugRelated: ["diuretics", "ACEi/ARB", "insulin", "antiarrhythmics"] },
-  cl:         { label: "Cl", unit: "mmol/L", low: 98, high: 107, section: "electrolytes", drugRelated: [] },
-  bicarb:     { label: "HCO3", unit: "mmol/L", low: 22, high: 29, section: "electrolytes", drugRelated: ["diuretics"] },
-  ca:         { label: "Ca", unit: "mmol/L", low: 2.12, high: 2.62, section: "electrolytes", drugRelated: ["calcium therapy", "digoxin"] },
-  mg:         { label: "Mg", unit: "mmol/L", low: 0.74, high: 1.03, section: "electrolytes", drugRelated: ["aminoglycosides", "diuretics", "PPIs"] },
-  phos:       { label: "Phos", unit: "mmol/L", low: 0.81, high: 1.45, section: "electrolytes", drugRelated: ["phosphate binders"] },
-
-  // Liver
-  alt:        { label: "ALT", unit: "U/L", low: null, high: 56, section: "liver", drugRelated: ["hepatotoxic drugs", "paracetamol", "statins"] },
-  ast:        { label: "AST", unit: "U/L", low: null, high: 40, section: "liver", drugRelated: ["hepatotoxic drugs", "statins"] },
-  alp:        { label: "ALP", unit: "U/L", low: null, high: 120, section: "liver", drugRelated: [] },
-  bili_t:     { label: "Total Bilirubin", unit: "µmol/L", low: null, high: 21, section: "liver", drugRelated: ["hepatotoxic drugs"] },
-  albumin:    { label: "Albumin", unit: "g/L", low: 35, high: 50, section: "liver", drugRelated: ["warfarin", "phenytoin", "protein binding"] },
-
-  // Coagulation
-  inr:        { label: "INR", unit: "", low: null, high: 1.2, section: "coagulation", drugRelated: ["warfarin", "bleeding risk"] },
-  pt:         { label: "PT", unit: "sec", low: null, high: 13.5, section: "coagulation", drugRelated: ["warfarin"] },
-  aptt:       { label: "aPTT", unit: "sec", low: null, high: 35, section: "coagulation", drugRelated: ["heparin"] },
-  fibrinogen: { label: "Fibrinogen", unit: "g/L", low: 2, high: 4, section: "coagulation", drugRelated: [] },
-
-  // Infection / Sepsis
-  crp:        { label: "CRP", unit: "mg/L", low: null, high: 10, section: "infection", drugRelated: ["antibiotics"] },
-  procalc:    { label: "PCT", unit: "µg/L", low: null, high: 0.5, section: "infection", drugRelated: ["antibiotics"] },
-  lactate:    { label: "Lactate", unit: "mmol/L", low: null, high: 2.0, section: "infection", drugRelated: ["sepsis", "metformin"] },
-
-  // Glucose / metabolic
-  glucose:    { label: "Glucose", unit: "mmol/L", low: 3.9, high: 7.8, section: "metabolic", drugRelated: ["insulin", "steroids"] },
-
-  // TDM
-  vanc_trough:{ label: "Vancomycin Trough", unit: "mg/L", low: 10, high: 20, section: "tdm", drugRelated: ["vancomycin"] },
-  vanc_auc:   { label: "Vancomycin AUC", unit: "mg·h/L", low: 400, high: 600, section: "tdm", drugRelated: ["vancomycin"] },
-  genta_trough:{ label: "Gentamicin Trough", unit: "mg/L", low: null, high: 2, section: "tdm", drugRelated: ["gentamicin"] },
-  tobra_trough:{ label: "Tobramycin Trough", unit: "mg/L", low: null, high: 2, section: "tdm", drugRelated: ["tobramycin"] },
-  digoxin:    { label: "Digoxin", unit: "µg/L", low: 0.5, high: 2, section: "tdm", drugRelated: ["digoxin"] },
-  phenytoin:  { label: "Phenytoin", unit: "mg/L", low: 10, high: 20, section: "tdm", drugRelated: ["phenytoin"] },
-  valproate:  { label: "Valproate", unit: "mg/L", low: 50, high: 100, section: "tdm", drugRelated: ["valproate"] },
-  tacro:      { label: "Tacrolimus", unit: "µg/L", low: 5, high: 15, section: "tdm", drugRelated: ["tacrolimus"] },
-  cyclo:      { label: "Cyclosporine", unit: "µg/L", low: 100, high: 400, section: "tdm", drugRelated: ["cyclosporine"] },
-};
-
-const BORDERLINE_MARGIN = 0.15;
-
-const LAB_SECTION_ORDER = [
-  "renal",
-  "cbc",
-  "electrolytes",
-  "liver",
-  "coagulation",
-  "infection",
-  "metabolic",
-  "tdm",
-];
-
-const SECTION_TITLES = {
-  renal: "Renal",
-  cbc: "CBC",
-  electrolytes: "Electrolytes",
-  liver: "Liver Function",
-  coagulation: "Coagulation",
-  infection: "Infection / Sepsis Profile",
-  metabolic: "Glucose / Metabolic",
-  tdm: "Drug Monitoring / TDM",
-};
-
-/* =========================================================
-   MAIN MODES
-========================================================= */
-
-async function handleAsk(body, env, corsHeaders, language) {
-  const question = body.question || body.q || "";
-  const output_mode = (body.output_mode || "hybrid").toLowerCase();
-  const source_mode = (body.source_mode || "off").toLowerCase();
-
-  if (!question) {
-    return jsonResponse({ ok: false, error: "Question is required" }, 400, corsHeaders);
-  }
-
-  requireApiCredentials(env);
-
-  const evidence = await vectorSearch(env, question, 10);
-
-  if (source_mode === "required" && evidence.length === 0) {
-    return jsonResponse(
-      {
-        ok: true,
-        verdict: "NOT_FOUND",
-        answer: language === "ar" ? "لم يتم العثور على إجابة في البروتوكول." : "Not found in protocol.",
-        citations: [],
-        applied_output: { output_mode, source_mode },
-      },
-      200,
-      corsHeaders
-    );
-  }
-
-  if (evidence.length === 0) {
-    return jsonResponse(
-      {
-        ok: true,
-        verdict: "NOT_FOUND",
-        answer: language === "ar" ? "لا توجد معلومات في المصادر المتاحة." : "No information found in available sources.",
-        citations: source_mode === "off" ? undefined : [],
-        applied_output: { output_mode, source_mode },
-      },
-      200,
-      corsHeaders
-    );
-  }
-
-  const evidenceText = formatEvidenceText(evidence);
-
-  let answer = "";
-  if (output_mode === "verbatim") {
-    answer = buildVerbatimAnswer(evidence);
-  } else if (output_mode === "short") {
-    answer =
-      (await callGPT(env.OPENAI_API_KEY, {
-        system:
-          "You are a clinical pharmacist AI. Answer using ONLY the provided sources. Return 3-6 concise bullet points, each beginning with • . No preamble.",
-        user: `Question: ${question}\n\nSources:\n${evidenceText}`,
-        max_tokens: 350,
-      })) || "• No concise answer available";
-  } else {
-    answer =
-      (await callGPT(env.OPENAI_API_KEY, {
-        system:
-          "You are a clinical pharmacist AI. Use ONLY the provided sources.\nFormat:\nANSWER: [2-4 sentence answer]\n\nKEY EVIDENCE:\n• ... — [filename, page if available]\nDo not add unsupported information.",
-        user: `Question: ${question}\n\nSources:\n${evidenceText}`,
-        max_tokens: 700,
-      })) || "No answer generated.";
-  }
-
-  const response = {
-    ok: true,
-    verdict: "OK",
-    answer,
-    applied_output: { output_mode, source_mode },
-  };
-
-  if (source_mode !== "off") {
-    response.citations = buildCitations(evidence, 250);
-  }
-
-  return jsonResponse(response, 200, corsHeaders);
+function corsResponse(response) {
+  const r = new Response(response.body, response);
+  r.headers.set("Access-Control-Allow-Origin", "*");
+  r.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  r.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return r;
 }
 
-async function handleMonograph(body, env, corsHeaders, language) {
-  const drug_name = body.drug_name || body.drug || "";
-  const patient_context = body.patient_context || "";
+// ─────────────────────────────────────────────────────────────
+// SYSTEM PROMPT — INTERNAL REASONING ENGINE
+// The model reasons fully here; output is structured JSON only
+// ─────────────────────────────────────────────────────────────
+function buildCaseAnalysisSystemPrompt() {
+  return `You are a senior clinical pharmacist reviewer embedded in a hospital-grade clinical decision support engine.
 
-  if (!drug_name) {
-    return jsonResponse({ ok: false, error: "drug_name is required" }, 400, corsHeaders);
-  }
+Your task is to perform a complete, expert-level pharmaceutical and clinical review of the patient case provided. You must reason deeply and comprehensively INTERNALLY, then produce ONLY structured JSON output.
 
-  requireApiCredentials(env);
+════════════════════════════════════════════════════════
+INTERNAL REASONING LAYERS (hidden — not exposed to user)
+════════════════════════════════════════════════════════
 
-  const evidence = await vectorSearch(env, `${drug_name} dosing indications renal warnings contraindications`, 8);
-  const evidenceText = evidence.length ? formatEvidenceText(evidence) : "No protocol sources found.";
+Layer 1 — Patient Data Extraction & Normalization
+- Extract: age, sex, weight, height, MRN, care setting (ICU/ward/outpatient), reason for admission
+- Extract all labs, vitals, cultures, allergies, PMH, home meds, current orders
+- Normalize units (convert mg/dL ↔ µmol/L, mmHg, etc.)
+- Calculate CrCl using Cockcroft-Gault (use ideal body weight if obese, adjusted BW if needed)
+- Classify renal function: Normal (>90), Mild (60–89), Moderate (30–59), Severe (15–29), ESRD (<15), RRT
+- Classify hepatic function using available data (Child-Pugh if possible)
+- Classify labs into: CBC, Renal, Electrolytes, LFT, Coagulation, Infection/Sepsis, Glucose/Metabolic, TDM
 
-  const monograph =
-    (await callGPT(env.OPENAI_API_KEY, {
-      system: "You are a clinical pharmacist generating a concise protocol-based monograph.",
-      user: `Generate a concise clinical monograph for ${drug_name}.
-${patient_context ? `Patient context: ${patient_context}\n` : ""}
-Use ONLY the provided sources.
-Structure:
-## Drug
-## Key Indications
-## Standard Dosing
-## Renal Adjustment
-## Major Warnings / Contraindications
-## Monitoring
-## Important Notes
+Layer 2 — Problem / Disease Identification
+- Identify all active problems and diagnoses from text
+- Determine severity and acuity of each problem
+- Map expected guideline-based pharmacotherapy for each problem
+- Flag problems that are untreated or undertreated
+- Flag problems needing prophylaxis (DVT, GI, etc.)
 
-Sources:
-${evidenceText}`,
-      max_tokens: 900,
-    })) || "Could not generate monograph.";
+Layer 3 — Medication Audit (per drug)
+For EACH medication order, internally assess:
+- Drug name and class
+- Indication (matched or unmatched)
+- Ordered dose vs standard dose range
+- Dose appropriateness for indication
+- Renal dose adjustment needed?
+- Hepatic dose adjustment needed?
+- Weight-based appropriateness
+- Route appropriateness
+- Frequency appropriateness
+- Duration appropriateness
+- Contraindications present?
+- Drug-drug interactions (clinically significant only)
+- Allergy conflicts
+- Duplication of therapy
+- Monitoring requirements (levels, labs, ECG, etc.)
+- Prophylaxis vs treatment mismatch
 
-  return jsonResponse(
-    {
-      ok: true,
-      drug_name,
-      monograph,
-      citations: buildCitations(evidence, 220),
-    },
-    200,
-    corsHeaders
-  );
-}
+Layer 4 — Disease–Drug Gap Analysis
+- Compare ordered medications against expected therapy for each problem
+- Detect: missing therapy, wrong drug, wrong dose, wrong route, wrong frequency, wrong duration
+- Flag overtreatment and undertreatment
+- Flag prophylaxis written as treatment and vice versa
 
-async function handleAntibiogram(body, env, corsHeaders, language) {
-  const organism = body.organism || "";
-  const antibiotic = body.antibiotic || "";
-  const site_of_infection = body.site_of_infection || "";
-  const patient_context = body.patient_context || "";
+Layer 5 — Safety & Risk Assessment
+- QT prolongation risk (list QT drugs, cumulative risk)
+- Bleeding/anticoagulation risk
+- Nephrotoxicity combinations
+- Hepatotoxicity combinations
+- Hypotension risk combinations
+- Electrolyte depletion risks
+- CNS/sedation risk combinations
+- Serotonin syndrome risk
+- Dangerous dose combinations
 
-  if (!organism && !antibiotic) {
-    return jsonResponse({ ok: false, error: "organism or antibiotic is required" }, 400, corsHeaders);
-  }
+Layer 6 — Evidence Matching
+- For each intervention and recommendation, match to guideline, protocol, or monograph evidence
+- Cite source name, guideline body, year, and recommendation level when known
+- Prefer: IDSA, AHA, ESC, ASHP, BNF, Micromedex, WHO, local antibiogram/formulary references
 
-  requireApiCredentials(env);
+════════════════════════════════════════════════════════
+OUTPUT FORMAT — STRICT JSON ONLY
+════════════════════════════════════════════════════════
 
-  const query = [organism, antibiotic, site_of_infection, "susceptibility resistance empiric therapy"].filter(Boolean).join(" ");
-  const evidence = await vectorSearch(env, query, 8);
-  const evidenceText = evidence.length ? formatEvidenceText(evidence) : "No protocol sources found.";
+Return ONLY valid JSON. No prose, no markdown, no explanations outside the JSON.
 
-  const analysis =
-    (await callGPT(env.OPENAI_API_KEY, {
-      system: "You are an infectious disease pharmacist. Use only provided sources.",
-      user: `Provide a concise susceptibility-style interpretation.
+The JSON must have this exact structure:
 
-Organism: ${organism || "N/A"}
-Antibiotic: ${antibiotic || "N/A"}
-Site: ${site_of_infection || "N/A"}
-Patient context: ${patient_context || "N/A"}
-
-Format:
-## Interpretation
-## Empiric / Targeted Considerations
-## Key Risks / Notes
-
-Sources:
-${evidenceText}`,
-      max_tokens: 900,
-    })) || "Could not generate antibiogram analysis.";
-
-  return jsonResponse(
-    {
-      ok: true,
-      organism: organism || null,
-      antibiotic: antibiotic || null,
-      site_of_infection: site_of_infection || null,
-      analysis,
-      citations: buildCitations(evidence, 220),
-    },
-    200,
-    corsHeaders
-  );
-}
-
-async function handleCaseAnalysis(body, env, corsHeaders, language) {
-  const case_text = body.case_text || "";
-  const question = body.question || "";
-
-  if (!case_text) {
-    return jsonResponse({ ok: false, error: "case_text is required" }, 400, corsHeaders);
-  }
-
-  requireApiCredentials(env);
-
-  // 1) Structured extraction
-  const extracted = await extractCaseJson(env, case_text);
-
-  // 2) Normalize + metrics
-  const normalized = normalizeExtractedCase(extracted);
-  const classifiedLabs = classifyLabs(normalized.labs || {});
-  const crcl = calcCrCl(
-    normalized.age,
-    normalized.weight_kg,
-    normalized.labs?.scr_umol || (normalized.labs?.scr_mgdl ? normalized.labs.scr_mgdl * 88.42 : null),
-    normalized.sex
-  );
-
-  // 3) Search evidence with patient context
-  const searchSeed = buildCaseSearchSeed(normalized, case_text, question);
-  const evidence = await vectorSearch(env, searchSeed, 10);
-
-  // 4) Hidden clinical reasoning
-  const hiddenReasoning = await runHiddenClinicalReasoning({
-    env,
-    normalized,
-    classifiedLabs,
-    crcl,
-    evidence,
-    question,
-    language,
-  });
-
-  // 5) Visible outputs only
-  const soapNote = buildSoapNote({
-    patient: normalized,
-    classifiedLabs,
-    crcl,
-    assessment: hiddenReasoning.assessment,
-    interventionsSummary: hiddenReasoning.interventions_summary,
-    followupPlan: hiddenReasoning.followup_plan,
-  });
-
-  const response = {
-    ok: true,
-    soap_note: soapNote,
-    pharmacist_interventions: hiddenReasoning.interventions || [],
-    medication_adjustments: hiddenReasoning.medication_adjustments || [],
-    citations: buildCitations(evidence, 250),
-  };
-
-  return jsonResponse(response, 200, corsHeaders);
-}
-
-/* =========================================================
-   CASE ANALYSIS CORE
-========================================================= */
-
-async function extractCaseJson(env, caseText) {
-  const prompt = `Extract structured patient data from the case below.
-Return ONLY valid JSON with no markdown and no extra commentary.
-
-Case:
-${caseText}
-
-Return exactly this schema:
 {
-  "mrn": null,
-  "patient_name": null,
-  "age": null,
-  "sex": null,
-  "weight_kg": null,
-  "height_cm": null,
-  "care_setting": null,
-  "reason_admission": null,
-  "pmh": null,
-  "home_medications": null,
-  "diagnosis": null,
-  "allergies": [],
-  "vitals": {
-    "bp": null,
-    "hr": null,
-    "rr": null,
-    "temp": null,
-    "spo2": null,
-    "gcs": null
-  },
-  "labs": {
-    "hb": null,
-    "wbc": null,
-    "plt": null,
-    "neutrophil": null,
-    "scr_umol": null,
-    "scr_mgdl": null,
-    "urea": null,
-    "bun": null,
-    "na": null,
-    "k": null,
-    "cl": null,
-    "bicarb": null,
-    "ca": null,
-    "mg": null,
-    "phos": null,
-    "alt": null,
-    "ast": null,
-    "alp": null,
-    "bili_t": null,
-    "albumin": null,
-    "inr": null,
-    "pt": null,
-    "aptt": null,
-    "fibrinogen": null,
-    "glucose": null,
-    "crp": null,
-    "procalc": null,
-    "lactate": null,
-    "vanc_trough": null,
-    "vanc_auc": null,
-    "genta_trough": null,
-    "tobra_trough": null,
-    "digoxin": null,
-    "phenytoin": null,
-    "valproate": null,
-    "tacro": null,
-    "cyclo": null
-  },
-  "medications": [
-    {
-      "name": "",
-      "dose": "",
-      "route": "",
-      "frequency": "",
-      "indication": null
+  "soap_note": {
+    "subjective": {
+      "patient_summary": "string — concise patient identifier line",
+      "reason_for_admission": "string",
+      "pmh": ["string"],
+      "home_medications": ["string"],
+      "allergies": ["string"],
+      "social_history": "string or null"
+    },
+    "objective": {
+      "vitals": {
+        "bp": "string or null",
+        "hr": "string or null",
+        "rr": "string or null",
+        "temp": "string or null",
+        "spo2": "string or null",
+        "weight": "string or null",
+        "height": "string or null",
+        "bmi": "string or null"
+      },
+      "labs": {
+        "renal": {
+          "scr": "value + unit + status (H/L/N) or null",
+          "bun_urea": "string or null",
+          "crcl_calculated": "string or null",
+          "crcl_method": "string or null",
+          "renal_classification": "string or null"
+        },
+        "cbc": {
+          "hb": "string or null",
+          "wbc": "string or null",
+          "platelets": "string or null",
+          "neutrophils": "string or null",
+          "lymphocytes": "string or null",
+          "hematocrit": "string or null"
+        },
+        "electrolytes": {
+          "sodium": "string or null",
+          "potassium": "string or null",
+          "chloride": "string or null",
+          "bicarbonate": "string or null",
+          "calcium": "string or null",
+          "magnesium": "string or null",
+          "phosphate": "string or null"
+        },
+        "liver_function": {
+          "alt": "string or null",
+          "ast": "string or null",
+          "alp": "string or null",
+          "ggt": "string or null",
+          "total_bilirubin": "string or null",
+          "direct_bilirubin": "string or null",
+          "albumin": "string or null",
+          "total_protein": "string or null"
+        },
+        "coagulation": {
+          "inr": "string or null",
+          "pt": "string or null",
+          "aptt": "string or null",
+          "fibrinogen": "string or null",
+          "d_dimer": "string or null"
+        },
+        "infection_sepsis": {
+          "crp": "string or null",
+          "procalcitonin": "string or null",
+          "lactate": "string or null",
+          "esr": "string or null",
+          "blood_cultures": "string or null",
+          "wound_cultures": "string or null",
+          "urine_cultures": "string or null",
+          "other_cultures": "string or null"
+        },
+        "glucose_metabolic": {
+          "glucose": "string or null",
+          "hba1c": "string or null",
+          "tsh": "string or null",
+          "lipids": "string or null",
+          "uric_acid": "string or null",
+          "ammonia": "string or null"
+        },
+        "tdm_drug_monitoring": {
+          "vancomycin": "string or null",
+          "gentamicin_amikacin": "string or null",
+          "digoxin": "string or null",
+          "phenytoin": "string or null",
+          "valproate": "string or null",
+          "tacrolimus": "string or null",
+          "cyclosporine": "string or null",
+          "lithium": "string or null",
+          "methotrexate": "string or null",
+          "other": "string or null"
+        },
+        "summary_flag": "string — 'abnormalities_present' or 'no_significant_abnormalities'"
+      },
+      "microbiology_summary": "string or null",
+      "imaging_summary": "string or null"
+    },
+    "assessment": {
+      "primary_problems": ["string"],
+      "active_diagnoses": ["string"],
+      "clinical_context": "string",
+      "renal_hepatic_summary": "string",
+      "medication_related_assessment": "string"
+    },
+    "plan": {
+      "current_medications_reviewed": ["string"],
+      "pharmacist_intervention_summary": "string",
+      "followup_plan": ["string"]
     }
-  ]
-}`;
-
-  try {
-    const raw = await callGPT(env.OPENAI_API_KEY, {
-      system: "You extract clinical case data. Return only valid JSON.",
-      user: prompt,
-      max_tokens: 1200,
-    });
-
-    if (!raw) return emptyExtractedCase();
-    return JSON.parse(stripCodeFences(raw));
-  } catch (e) {
-    console.error("extractCaseJson error:", e);
-    return emptyExtractedCase();
-  }
-}
-
-function normalizeExtractedCase(extracted) {
-  const base = emptyExtractedCase();
-  const merged = {
-    ...base,
-    ...extracted,
-    vitals: { ...base.vitals, ...(extracted?.vitals || {}) },
-    labs: { ...base.labs, ...(extracted?.labs || {}) },
-    medications: Array.isArray(extracted?.medications) ? extracted.medications : [],
-    allergies: Array.isArray(extracted?.allergies) ? extracted.allergies : [],
-  };
-
-  merged.age = toNumberOrNull(merged.age);
-  merged.weight_kg = toNumberOrNull(merged.weight_kg);
-  merged.height_cm = toNumberOrNull(merged.height_cm);
-
-  for (const key of Object.keys(merged.labs)) {
-    merged.labs[key] = toNumberOrNull(merged.labs[key]);
-  }
-
-  return merged;
-}
-
-function classifyLabs(labs) {
-  const out = [];
-  for (const [key, value] of Object.entries(labs || {})) {
-    if (value === null || value === undefined || value === "") continue;
-    const ref = LAB_RANGES[key];
-    if (!ref) continue;
-    const num = Number(value);
-    if (Number.isNaN(num)) continue;
-
-    let status = "normal";
-    let arrow = "";
-
-    if (ref.high !== null && num > ref.high) {
-      const pct = (num - ref.high) / ref.high;
-      status = pct > BORDERLINE_MARGIN ? "high" : "borderline-high";
-      arrow = "↑";
-    } else if (ref.low !== null && num < ref.low) {
-      const pct = (ref.low - num) / ref.low;
-      status = pct > BORDERLINE_MARGIN ? "low" : "borderline-low";
-      arrow = "↓";
-    }
-
-    out.push({
-      key,
-      label: ref.label,
-      value: num,
-      unit: ref.unit,
-      section: ref.section,
-      status,
-      arrow,
-      isAbnormal: status === "high" || status === "low",
-      isBorderline: status === "borderline-high" || status === "borderline-low",
-      drugRelated: ref.drugRelated || [],
-      isDrugRelevant: Array.isArray(ref.drugRelated) && ref.drugRelated.length > 0,
-    });
-  }
-
-  return out.sort((a, b) => {
-    const severityRank = (x) => (x.isAbnormal ? 0 : x.isBorderline ? 1 : 2);
-    const sectionRank = LAB_SECTION_ORDER.indexOf(xSafe(a.section));
-    const sectionRankB = LAB_SECTION_ORDER.indexOf(xSafe(b.section));
-    if (severityRank(a) !== severityRank(b)) return severityRank(a) - severityRank(b);
-    if (sectionRank !== sectionRankB) return sectionRank - sectionRankB;
-    return a.label.localeCompare(b.label);
-  });
-}
-
-async function runHiddenClinicalReasoning({ env, normalized, classifiedLabs, crcl, evidence, question, language }) {
-  const medsText =
-    (normalized.medications || []).map(m => `${m.name || ""} ${m.dose || ""} ${m.route || ""} ${m.frequency || ""}`.trim()).join(" | ") || "None documented";
-
-  const labSummary =
-    classifiedLabs.map(l => `${l.label} ${l.value}${l.unit ? ` ${l.unit}` : ""} ${l.arrow}`.trim()).join(", ") || "No significant labs available";
-
-  const evidenceText = evidence.length ? formatEvidenceText(evidence) : "No protocol sources found.";
-
-  const prompt = `You are a senior clinical pharmacist performing a hidden internal medication audit.
-DO NOT reveal chain-of-thought.
-Return ONLY valid JSON.
-
-Patient summary:
-- Name: ${normalized.patient_name || "N/A"}
-- Age: ${normalized.age || "N/A"}
-- Sex: ${normalized.sex || "N/A"}
-- Weight: ${normalized.weight_kg || "N/A"} kg
-- Care setting: ${normalized.care_setting || "N/A"}
-- Diagnosis: ${normalized.diagnosis || "N/A"}
-- Reason for admission: ${normalized.reason_admission || "N/A"}
-- Allergies: ${(normalized.allergies || []).join(", ") || "None documented"}
-- PMH: ${normalized.pmh || "N/A"}
-- Home meds: ${normalized.home_medications || "N/A"}
-- Current medications: ${medsText}
-- CrCl: ${crcl ? `${crcl.value} mL/min (${crcl.category})` : "Unable to calculate"}
-- Relevant labs: ${labSummary}
-${question ? `- Clinician question: ${question}` : ""}
-
-Use ONLY the provided sources for protocol-supported recommendations when available.
-If direct protocol support is not found, say "Not clearly specified in available protocol" in the reference/reason field rather than inventing evidence.
-
-Sources:
-${evidenceText}
-
-Return exactly this JSON:
-{
-  "assessment": "2-4 sentence concise clinical pharmacist assessment",
-  "interventions_summary": "1-2 sentence concise summary",
-  "followup_plan": "short follow-up plan",
-  "interventions": [
+  },
+  "pharmacist_interventions": [
     {
-      "severity": "Critical|Major|Moderate|Minor",
-      "problem": "short problem statement",
-      "recommendation": "clear action",
-      "reference": "filename and page if available, or Not clearly specified in available protocol"
+      "intervention_id": "number",
+      "priority": "CRITICAL | HIGH | MODERATE | LOW",
+      "category": "string (e.g. Dose Adjustment, Missing Therapy, Allergy Conflict, Contraindication, Monitoring, Duplication, Route, Frequency, Duration, Safety Alert)",
+      "drug_involved": "string",
+      "problem_identified": "string",
+      "recommendation": "string",
+      "rationale": "string",
+      "supporting_citation": "string"
     }
   ],
   "medication_adjustments": [
     {
-      "drug": "name",
-      "ordered": "current order",
-      "recommended": "recommended action or corrected order",
-      "verdict": "CORRECT|ADJUST|STOP|MONITOR|NOT_IN_PROTOCOL",
-      "reason": "brief explanation",
-      "reference": "filename and page if available, or Not clearly specified in available protocol"
+      "drug_name": "string",
+      "ordered_as": "string",
+      "recommended_as": "string",
+      "reason": "string",
+      "adjustment_type": "string (Dose Change / Route Change / Frequency Change / Discontinue / Add New / Substitute / Monitor)",
+      "urgency": "Immediate | Within 24h | Routine",
+      "citation": "string"
     }
-  ]
-}`;
-
-  try {
-    const raw = await callGPT(env.OPENAI_API_KEY, {
-      system: "You are a clinical pharmacist. Return only valid JSON with no markdown.",
-      user: prompt,
-      max_tokens: 1600,
-    });
-
-    const parsed = JSON.parse(stripCodeFences(raw || "{}"));
-
-    return {
-      assessment: parsed.assessment || "Clinical pharmacist review performed.",
-      interventions_summary: parsed.interventions_summary || "Medication review completed.",
-      followup_plan: parsed.followup_plan || "Follow-up as clinically indicated.",
-      interventions: Array.isArray(parsed.interventions) ? parsed.interventions : [],
-      medication_adjustments: Array.isArray(parsed.medication_adjustments) ? parsed.medication_adjustments : [],
-    };
-  } catch (e) {
-    console.error("runHiddenClinicalReasoning error:", e);
-    return {
-      assessment: "Clinical pharmacist review performed based on available patient data and sources.",
-      interventions_summary: "Please review medication appropriateness, dosing, and monitoring based on the available case details.",
-      followup_plan: "Reassess medications, renal function, and clinical response.",
-      interventions: [],
-      medication_adjustments: [],
-    };
-  }
-}
-
-function buildSoapNote({ patient, classifiedLabs, crcl, assessment, interventionsSummary, followupPlan }) {
-  const carePlace = patient.care_setting || "ICU";
-  const weightStr = patient.weight_kg != null ? `${patient.weight_kg} kg` : "— kg";
-  const ageStr = patient.age != null ? `${patient.age}Y` : "Y";
-  const mrnStr = patient.mrn || "";
-  const reason = patient.reason_admission || "N/A";
-  const pmh = patient.pmh || "N/A";
-  const homeMeds = patient.home_medications || "N/A";
-
-  const vitalsLines = buildVitalsLines(patient.vitals || {});
-  const labsBlock = buildClassifiedLabsBlock(classifiedLabs, crcl);
-
-  const currentMeds = Array.isArray(patient.medications) && patient.medications.length
-    ? patient.medications.map(m => {
-        const parts = [m.name, m.dose, m.route, m.frequency].filter(Boolean);
-        return `- ${parts.join(" ").replace(/\s+/g, " ").trim()}`;
-      }).join("\n")
-    : "- No medications started";
-
-  return [
-    `S:`,
-    `Patient (MRN: ${mrnStr}), ${ageStr}, ${weightStr} admitted to ${carePlace}.`,
-    `Reason for Admission: ${reason}`,
-    `PMH: ${pmh}`,
-    `Home Meds: ${homeMeds}`,
-    ``,
-    `O:`,
-    `Vitals:`,
-    vitalsLines || `- Within normal limits`,
-    ``,
-    `Labs:`,
-    labsBlock,
-    ``,
-    `A:`,
-    assessment || `Primary admission for acute issues. Clinical review performed.`,
-    ``,
-    `P:`,
-    `Current Medications:`,
-    currentMeds,
-    ``,
-    `Pharmacist Intervention:`,
-    interventionsSummary || `Patient reviewed; no interventions at this time.`,
-    ``,
-    `Follow-up Plan:`,
-    `- Follow-up: ${followupPlan || "OK."}`,
-  ].join("\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-
-function buildVitalsLines(vitals) {
-  const out = [];
-  if (vitals.bp) out.push(`- BP: ${vitals.bp}`);
-  if (vitals.hr != null) out.push(`- HR: ${vitals.hr}`);
-  if (vitals.rr != null) out.push(`- RR: ${vitals.rr}`);
-  if (vitals.temp != null) out.push(`- Temp: ${vitals.temp}`);
-  if (vitals.spo2 != null) out.push(`- SpO2: ${vitals.spo2}`);
-  if (vitals.gcs != null) out.push(`- GCS: ${vitals.gcs}`);
-  return out.join("\n");
-}
-
-function buildClassifiedLabsBlock(classifiedLabs, crcl) {
-  if (!classifiedLabs.length && !crcl) {
-    return `- No clinically significant abnormalities detected.`;
-  }
-
-  const bySection = {};
-  for (const sec of LAB_SECTION_ORDER) bySection[sec] = [];
-
-  for (const lab of classifiedLabs) {
-    const include =
-      lab.isAbnormal ||
-      lab.isBorderline ||
-      lab.isDrugRelevant ||
-      lab.section === "renal";
-
-    if (!include) continue;
-    if (!bySection[lab.section]) bySection[lab.section] = [];
-    bySection[lab.section].push(lab);
-  }
-
-  const blocks = [];
-
-  // Force renal block if CrCl exists
-  if (crcl || (bySection.renal && bySection.renal.length)) {
-    const renalLines = [];
-    const scr = (bySection.renal || []).find(x => x.key === "scr_umol" || x.key === "scr_mgdl");
-    if (scr) renalLines.push(`- ${scr.label}: ${scr.value} ${scr.unit}${scr.arrow ? ` ${scr.arrow}` : ""}`);
-    const urea = (bySection.renal || []).find(x => x.key === "urea" || x.key === "bun");
-    if (urea) renalLines.push(`- ${urea.label}: ${urea.value} ${urea.unit}${urea.arrow ? ` ${urea.arrow}` : ""}`);
-    if (crcl) renalLines.push(`- Calculated CrCl: ${crcl.value} mL/min (${crcl.category})`);
-    if (!renalLines.length) renalLines.push(`- Calculated CrCl: ${crcl ? `${crcl.value} mL/min (${crcl.category})` : "—"}`);
-    blocks.push(`Renal:\n${renalLines.join("\n")}`);
-  }
-
-  for (const section of LAB_SECTION_ORDER.filter(s => s !== "renal")) {
-    const lines = (bySection[section] || []).map(l => {
-      const monitorNote = l.isDrugRelevant ? ` [drug-relevant]` : "";
-      return `- ${l.label}: ${l.value} ${l.unit}${l.arrow ? ` ${l.arrow}` : ""}${monitorNote}`;
-    });
-    if (lines.length) {
-      blocks.push(`${SECTION_TITLES[section]}:\n${lines.join("\n")}`);
+  ],
+  "citations": [
+    {
+      "citation_id": "number",
+      "source": "string",
+      "guideline_body": "string or null",
+      "year": "string or null",
+      "recommendation_class": "string or null",
+      "relevance": "string"
     }
+  ],
+  "case_metadata": {
+    "review_timestamp": "ISO string",
+    "engine_version": "2.0",
+    "care_setting": "string",
+    "total_interventions": "number",
+    "critical_alerts": "number",
+    "renal_adjusted_drugs": "number"
+  }
+}
+
+════════════════════════════════════════════════════════
+SOAP FORMATTING RULES
+════════════════════════════════════════════════════════
+
+1. Labs must be grouped by category as shown above — never as a flat mixed list
+2. Abnormal labs: mark with ↑ or ↓ and note clinical significance
+3. Only include lab categories where data is present or clinically relevant
+4. If no abnormalities: set summary_flag to "no_significant_abnormalities"
+5. CrCl must always be calculated and displayed if SCr is available
+6. Renal classification must always be stated
+7. The assessment must be clinically meaningful, not just a list
+8. The plan must reflect pharmacist actions, not physician decisions
+9. Keep the SOAP elegant — not a data dump
+
+════════════════════════════════════════════════════════
+INTERVENTION FORMATTING RULES
+════════════════════════════════════════════════════════
+
+- CRITICAL: Allergy conflicts, life-threatening doses, severe contraindications
+- HIGH: Significant dose errors, renal/hepatic adjustments needed, missing essential therapy
+- MODERATE: Monitoring gaps, potential interactions, suboptimal therapy
+- LOW: Documentation issues, minor optimizations, prophylaxis considerations
+
+Each intervention must include: problem, recommendation, rationale, citation.
+
+════════════════════════════════════════════════════════
+EVIDENCE CITATION RULES
+════════════════════════════════════════════════════════
+
+Prefer evidence from: IDSA, AHA/ACC, ESC, ASHP, BNF, WHO, Micromedex, UpToDate, local formulary.
+Always include guideline year if known.
+For antimicrobials: cite susceptibility data, local antibiogram, or IDSA/SCCM when relevant.
+For anticoagulation: cite ACCP/ASH guidelines.
+For renal dosing: cite Lexicomp, Micromedex, or renal drug handbook.
+
+════════════════════════════════════════════════════════
+GENERAL CLINICAL COVERAGE REQUIREMENT
+════════════════════════════════════════════════════════
+
+You must handle ALL clinical domains:
+- Infectious diseases (bacterial, fungal, viral, parasitic)
+- Anticoagulation and thrombosis
+- Cardiovascular (ACS, HF, arrhythmia, hypertension)
+- Diabetes and metabolic
+- Renal impairment and electrolytes
+- ICU (sepsis, ARDS, hemodynamic support, sedation/analgesia)
+- Neurology (seizures, stroke, pain)
+- Hematology (anemia, coagulopathy)
+- Hepatic disease and cirrhosis
+- Transplant and immunosuppression
+- Oncology supportive care
+- Palliative and pain management
+- General ward/internal medicine
+
+Apply clinical reasoning appropriate to the case presented.
+Do not limit analysis to one disease module.
+
+Return ONLY the JSON object. No other text.`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// CASE ANALYSIS HANDLER
+// ─────────────────────────────────────────────────────────────
+async function handleCaseAnalysis(body, env) {
+  const apiKey = env?.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("API key not configured");
+
+  const caseText = body.case_text || body.query || body.message || "";
+  if (!caseText.trim()) {
+    return buildEmptyResponse("No case input provided.");
   }
 
-  return blocks.length ? blocks.join("\n\n") : `- No clinically significant abnormalities detected.`;
-}
+  const userPrompt = `Please perform a complete clinical pharmacist review of the following patient case. Apply all internal reasoning layers. Return only the structured JSON response.
 
-/* =========================================================
-   VECTOR SEARCH + CITATIONS
-========================================================= */
+PATIENT CASE:
+${caseText}
 
-async function vectorSearch(env, query, maxResults = 10) {
-  const res = await fetch(`https://api.openai.com/v1/vector_stores/${env.VECTOR_STORE_ID}/search`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-      "OpenAI-Beta": "assistants=v2",
-    },
-    body: JSON.stringify({
-      query,
-      max_num_results: maxResults,
-    }),
-  });
+${body.additional_context ? `ADDITIONAL CONTEXT:\n${body.additional_context}` : ""}
 
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error("vectorSearch failed:", txt);
-    return [];
+${body.focus_area ? `FOCUS AREA:\n${body.focus_area}` : ""}
+
+Return the complete JSON response as specified.`;
+
+  const response = await callAnthropicAPI(
+    apiKey,
+    buildCaseAnalysisSystemPrompt(),
+    userPrompt,
+    8000
+  );
+
+  const parsed = parseJSON(response);
+  if (!parsed) {
+    return buildFallbackResponse(response);
   }
 
-  const data = await res.json();
-  const evidence = [];
-
-  for (let i = 0; i < (data.data || []).length; i++) {
-    const item = data.data[i];
-    let content = "";
-
-    const filename =
-      item.attributes?.filename ||
-      item.attributes?.file_name ||
-      item.filename ||
-      item.file_name ||
-      item.file_id ||
-      `source_${i + 1}`;
-
-    if (item.content) {
-      if (Array.isArray(item.content)) {
-        content = item.content.map(c => c.text || c.value || "").join("\n");
-      } else if (typeof item.content === "string") {
-        content = item.content;
-      } else if (item.content?.text) {
-        content = item.content.text;
-      }
-    }
-    if (!content && item.text) content = item.text;
-    if (!content && Array.isArray(item.chunks)) content = item.chunks.map(c => c.text || "").join("\n");
-    if (!content || !content.trim()) continue;
-
-    let page = 0;
-    const pm =
-      content.match(/(?:Page|PAGE|page)\s*[:\-]?\s*(\d+)/i) ||
-      content.match(/\bp\.?\s*(\d+)\b/i) ||
-      content.match(/\[p\.\s*(\d+)\]/i);
-    if (pm) page = parseInt(pm[1], 10);
-    if (!page && item.attributes?.page) page = parseInt(item.attributes.page, 10) || 0;
-    if (!page && item.metadata?.page) page = parseInt(item.metadata.page, 10) || 0;
-
-    let section = "";
-    const sm =
-      content.match(/(?:Section|SECTION)\s+(\d+(?:\.\d+)*)\s*[–—\-]?\s*([^\n]+)/i) ||
-      content.match(/^#{1,3}\s+([^\n]+)/m) ||
-      content.match(/^\d+\.\d+\s+([^\n]+)/m);
-    if (sm) section = (sm[2] || sm[1] || "").trim().substring(0, 80);
-
-    evidence.push({
-      id: `E${i + 1}`,
-      filename,
-      page,
-      section,
-      score: item.score ?? item.similarity ?? null,
-      excerpt: content.substring(0, 2000),
-    });
+  // Inject metadata
+  if (parsed.case_metadata) {
+    parsed.case_metadata.review_timestamp = new Date().toISOString();
+    parsed.case_metadata.total_interventions =
+      parsed.pharmacist_interventions?.length || 0;
+    parsed.case_metadata.critical_alerts =
+      parsed.pharmacist_interventions?.filter(
+        (i) => i.priority === "CRITICAL"
+      ).length || 0;
+    parsed.case_metadata.renal_adjusted_drugs =
+      parsed.medication_adjustments?.filter((m) =>
+        m.reason?.toLowerCase().includes("renal")
+      ).length || 0;
   }
 
-  return evidence;
+  return { success: true, mode: "case_analysis", data: parsed };
 }
 
-function formatEvidenceText(evidence) {
-  return evidence
-    .map(
-      e =>
-        `[SOURCE ${e.id}] File: ${e.filename}${e.page ? ` | Page: ${e.page}` : ""}${e.section ? ` | Section: ${e.section}` : ""}\nContent: ${e.excerpt}`
-    )
-    .join("\n\n---\n\n");
-}
+// ─────────────────────────────────────────────────────────────
+// ASK MODE — General Clinical Q&A
+// ─────────────────────────────────────────────────────────────
+async function handleAsk(body, env) {
+  const apiKey = env?.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("API key not configured");
 
-function buildCitations(evidence, excerptLen = 250) {
-  return evidence.map(e => ({
-    evidence_ids: [e.id],
-    filename: e.filename,
-    section: e.section || "",
-    page: e.page || 0,
-    score: e.score,
-    excerpt: e.excerpt.substring(0, excerptLen),
-  }));
-}
+  const question = body.query || body.message || body.question || "";
+  if (!question.trim()) return { success: false, error: "No question provided" };
 
-function buildVerbatimAnswer(evidence) {
-  return evidence.slice(0, 3).map(e => {
-    const sentences = e.excerpt.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
-    const first = sentences.find(s => s.length > 20) || e.excerpt.substring(0, 150);
-    return `"${first.endsWith(".") ? first : `${first}.`}"\n— ${e.filename}${e.page ? ` (p. ${e.page})` : ""}`;
-  }).join("\n\n");
-}
+  const systemPrompt = `You are a senior clinical pharmacist with expertise across all therapeutic areas. 
+Answer clinical questions with precision, citing evidence where appropriate. 
+Be concise but clinically complete. Use medical terminology appropriate for healthcare professionals.
+Format your answer clearly with any relevant dosing, monitoring, or safety information.`;
 
-/* =========================================================
-   GPT HELPER
-========================================================= */
+  const response = await callAnthropicAPI(apiKey, systemPrompt, question, 2000);
 
-async function callGPT(apiKey, { system, user, max_tokens = 600 }) {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      temperature: 0.2,
-      max_tokens,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
-  });
-
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content || null;
-}
-
-/* =========================================================
-   CALCULATORS + UTILS
-========================================================= */
-
-function calcCrCl(age, weightKg, scrUmol, sex) {
-  if (!age || !weightKg || !scrUmol || !sex) return null;
-  const scrMgDl = scrUmol / 88.42;
-  const sexFactor = String(sex).toLowerCase().startsWith("f") ? 0.85 : 1;
-  const value = ((140 - age) * weightKg * sexFactor) / (72 * scrMgDl);
-  const rounded = Math.round(value * 10) / 10;
-
-  let category = "Unknown";
-  if (rounded >= 90) category = "Normal (≥90)";
-  else if (rounded >= 60) category = "Mild impairment (60–89)";
-  else if (rounded >= 30) category = "Moderate impairment (30–59)";
-  else if (rounded >= 15) category = "Severe impairment (15–29)";
-  else category = "Kidney failure (<15)";
-
-  return { value: rounded, category };
-}
-
-function buildCaseSearchSeed(normalized, caseText, question) {
-  const meds = (normalized.medications || []).map(m => m.name).filter(Boolean).join(" ");
-  const diagnosis = normalized.diagnosis || "";
-  const allergies = (normalized.allergies || []).join(" ");
-  return [diagnosis, meds, allergies, question, caseText.substring(0, 300)].filter(Boolean).join(" ");
-}
-
-function emptyExtractedCase() {
   return {
-    mrn: null,
-    patient_name: null,
-    age: null,
-    sex: null,
-    weight_kg: null,
-    height_cm: null,
-    care_setting: null,
-    reason_admission: null,
-    pmh: null,
-    home_medications: null,
-    diagnosis: null,
-    allergies: [],
-    vitals: {
-      bp: null,
-      hr: null,
-      rr: null,
-      temp: null,
-      spo2: null,
-      gcs: null,
+    success: true,
+    mode: "ask",
+    data: {
+      answer: response,
+      disclaimer:
+        "Clinical information for professional use. Always verify against current guidelines and patient-specific factors.",
     },
-    labs: {
-      hb: null,
-      wbc: null,
-      plt: null,
-      neutrophil: null,
-      scr_umol: null,
-      scr_mgdl: null,
-      urea: null,
-      bun: null,
-      na: null,
-      k: null,
-      cl: null,
-      bicarb: null,
-      ca: null,
-      mg: null,
-      phos: null,
-      alt: null,
-      ast: null,
-      alp: null,
-      bili_t: null,
-      albumin: null,
-      inr: null,
-      pt: null,
-      aptt: null,
-      fibrinogen: null,
-      glucose: null,
-      crp: null,
-      procalc: null,
-      lactate: null,
-      vanc_trough: null,
-      vanc_auc: null,
-      genta_trough: null,
-      tobra_trough: null,
-      digoxin: null,
-      phenytoin: null,
-      valproate: null,
-      tacro: null,
-      cyclo: null,
-    },
-    medications: [],
   };
 }
 
-function requireApiCredentials(env) {
-  if (!env.OPENAI_API_KEY || !env.VECTOR_STORE_ID) {
-    throw new Error("OPENAI_API_KEY or VECTOR_STORE_ID is not set");
+// ─────────────────────────────────────────────────────────────
+// MONOGRAPH MODE
+// ─────────────────────────────────────────────────────────────
+async function handleMonograph(body, env) {
+  const apiKey = env?.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("API key not configured");
+
+  const drug = body.drug || body.query || "";
+  if (!drug.trim()) return { success: false, error: "No drug name provided" };
+
+  const systemPrompt = `You are a clinical pharmacist generating a structured drug monograph.
+Return a comprehensive but focused monograph in this JSON format:
+{
+  "drug_name": "string",
+  "class": "string",
+  "mechanism": "string",
+  "indications": ["string"],
+  "standard_dosing": [{"indication": "string", "dose": "string", "route": "string", "frequency": "string"}],
+  "renal_adjustment": [{"crcl_range": "string", "adjustment": "string"}],
+  "hepatic_adjustment": "string",
+  "contraindications": ["string"],
+  "major_interactions": [{"drug": "string", "severity": "string", "management": "string"}],
+  "monitoring": ["string"],
+  "adverse_effects": {"common": ["string"], "serious": ["string"]},
+  "special_populations": {"pregnancy": "string", "lactation": "string", "pediatric": "string", "elderly": "string"},
+  "key_clinical_pearls": ["string"],
+  "references": ["string"]
+}
+Return ONLY the JSON.`;
+
+  const response = await callAnthropicAPI(
+    apiKey,
+    systemPrompt,
+    `Generate a clinical monograph for: ${drug}`,
+    3000
+  );
+
+  const parsed = parseJSON(response);
+  return {
+    success: true,
+    mode: "monograph",
+    data: parsed || { raw: response },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// ANTIBIOGRAM MODE
+// ─────────────────────────────────────────────────────────────
+async function handleAntibiogram(body, env) {
+  const apiKey = env?.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("API key not configured");
+
+  const organism = body.organism || body.query || "";
+  const site = body.site || "";
+  const patientContext = body.patient_context || "";
+
+  const systemPrompt = `You are a clinical pharmacist and infectious disease specialist.
+Provide antibiotic susceptibility guidance and treatment recommendations based on organism, infection site, and patient context.
+Return structured JSON with treatment options, dosing, and evidence citations.
+Format:
+{
+  "organism": "string",
+  "infection_site": "string",
+  "first_line_therapy": [{"drug": "string", "dose": "string", "route": "string", "duration": "string", "notes": "string"}],
+  "alternative_therapy": [{"drug": "string", "dose": "string", "route": "string", "duration": "string", "notes": "string"}],
+  "drugs_to_avoid": [{"drug": "string", "reason": "string"}],
+  "de_escalation_opportunities": "string",
+  "monitoring": ["string"],
+  "references": ["string"]
+}
+Return ONLY the JSON.`;
+
+  const query = `Organism: ${organism}\nInfection site: ${site}\nPatient context: ${patientContext}`;
+  const response = await callAnthropicAPI(apiKey, systemPrompt, query, 2500);
+  const parsed = parseJSON(response);
+
+  return {
+    success: true,
+    mode: "antibiogram",
+    data: parsed || { raw: response },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// ANTHROPIC API CALLER
+// ─────────────────────────────────────────────────────────────
+async function callAnthropicAPI(apiKey, systemPrompt, userMessage, maxTokens = 4000) {
+  const response = await fetch(ANTHROPIC_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Anthropic API error ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.content?.[0]?.text || "";
+}
+
+// ─────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────
+function parseJSON(text) {
+  try {
+    // Strip markdown code fences
+    const cleaned = text
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
+    return JSON.parse(cleaned);
+  } catch {
+    // Try extracting JSON object from response
+    try {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+    return null;
   }
 }
 
-function jsonResponse(body, status, corsHeaders) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      ...corsHeaders,
+function buildEmptyResponse(reason) {
+  return {
+    success: false,
+    mode: "case_analysis",
+    error: reason,
+    data: null,
+  };
+}
+
+function buildFallbackResponse(rawText) {
+  return {
+    success: true,
+    mode: "case_analysis",
+    parse_error: true,
+    data: {
+      soap_note: {
+        subjective: { patient_summary: "Unable to parse structured response" },
+        objective: { labs: { summary_flag: "no_significant_abnormalities" } },
+        assessment: { clinical_context: rawText },
+        plan: { pharmacist_intervention_summary: "Manual review required." },
+      },
+      pharmacist_interventions: [],
+      medication_adjustments: [],
+      citations: [],
+      case_metadata: {
+        review_timestamp: new Date().toISOString(),
+        engine_version: "2.0",
+        parse_error: true,
+      },
     },
-  });
-}
-
-function stripCodeFences(text) {
-  return String(text || "").replace(/```json|```/gi, "").trim();
-}
-
-function toNumberOrNull(v) {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(v);
-  return Number.isNaN(n) ? null : n;
-}
-
-function xSafe(v) {
-  return v || "";
+  };
 }
