@@ -614,7 +614,7 @@ async function handleCaseAnalysis(body, env, corsHeaders, language) {
     const dedupeKey = `${e.filename}::${e.excerpt.substring(0, 80)}`;
     if (!evidenceMap.has(dedupeKey)) evidenceMap.set(dedupeKey, e);
   }
-  const dedupedEvidence = Array.from(evidenceMap.values()).slice(0, 15);
+  const dedupedEvidence = Array.from(evidenceMap.values()).slice(0, 20);
 
   // Re-index IDs after dedup
   dedupedEvidence.forEach((e, i) => { e.id = `E${i + 1}`; });
@@ -711,48 +711,113 @@ function runSafetyRules(clinicalState) {
    Produces a flat, deduplicated list of specific queries.
 ========================================================= */
 
+// DRUG → PROTOCOL FILE MAPPING
+// Maps common drug/topic names to the most likely filename keywords in the vector store.
+// This improves retrieval specificity so queries match the correct protocol files.
+const DRUG_FILE_HINTS = {
+  "vancomycin":          ["vancomycin TDM protocol", "vancomycin AUC monitoring trough", "MOH vancomycin TDM"],
+  "warfarin":            ["warfarin protocol INR target", "MOH warfarin anticoagulation", "warfarin dose adjustment bleeding"],
+  "metformin":           ["metformin renal contraindication lactic acidosis", "diabetes medication renal impairment", "endocrine metabolic CKD"],
+  "gentamicin":          ["gentamicin aminoglycoside trough monitoring", "aminoglycoside extended interval renal"],
+  "tobramycin":          ["tobramycin aminoglycoside trough monitoring"],
+  "amikacin":            ["amikacin aminoglycoside renal dosing"],
+  "spironolactone":      ["spironolactone hyperkalemia renal failure", "potassium sparing diuretic CKD"],
+  "lisinopril":          ["ACE inhibitor renal impairment potassium", "nephrology ACEi ARB monitoring"],
+  "furosemide":          ["loop diuretic hypokalemia electrolyte", "furosemide heart failure dosing"],
+  "norepinephrine":      ["vasopressor septic shock management", "sepsis norepinephrine protocol"],
+  "dexamethasone":       ["steroid hyperglycemia corticosteroid glucose", "dexamethasone septic shock"],
+  "piperacillin":        ["piperacillin tazobactam penicillin allergy", "beta-lactam allergy antimicrobial"],
+  "piperacillin-tazobactam": ["piperacillin tazobactam penicillin allergy HAP", "adult antimicrobial guidelines HAP"],
+  "paracetamol":         ["paracetamol hepatotoxicity liver enzymes ALT", "acetaminophen dose liver disease"],
+  "omeprazole":          ["proton pump inhibitor stress ulcer prophylaxis ICU"],
+  "heparin":             ["heparin anticoagulation protocol thrombocytopenia HIT"],
+  "enoxaparin":          ["enoxaparin renal dose adjustment anticoagulation", "low molecular weight heparin CrCl"],
+};
+
 function buildTargetedQueries(normalized, clinicalState, ruleFindings, question) {
   const queries = new Set();
+  const labs = normalized.labs || {};
 
-  // Per-drug queries
+  // ── Per-drug queries (protocol-file-aware) ──────────────────────────────
   for (const med of (normalized.medications || [])) {
-    const name = (med.name || "").trim();
-    if (!name) continue;
-    queries.add(`${name} dosing`);
-    queries.add(`${name} renal dose adjustment`);
-    queries.add(`${name} contraindications`);
-    queries.add(`${name} monitoring parameters`);
-    if (clinicalState.renalFlag) queries.add(`${name} CrCl ${Math.round(clinicalState.crcl?.value || 0)} dosing`);
-    if (clinicalState.hepaticFlag) queries.add(`${name} hepatic impairment dose`);
+    const rawName = (med.name || "").trim();
+    if (!rawName) continue;
+    const nameLower = rawName.toLowerCase();
+
+    // Check for file-specific hint queries first
+    let foundHint = false;
+    for (const [keyword, hintQueries] of Object.entries(DRUG_FILE_HINTS)) {
+      if (nameLower.includes(keyword)) {
+        hintQueries.forEach(q => queries.add(q));
+        foundHint = true;
+        break;
+      }
+    }
+
+    // Always add generic drug queries too
+    queries.add(`${rawName} dosing adult`);
+    queries.add(`${rawName} contraindications warnings`);
+    if (clinicalState.renalFlag) queries.add(`${rawName} renal impairment CrCl dose`);
+    if (clinicalState.hepaticFlag) queries.add(`${rawName} hepatic impairment`);
+    if (clinicalState.septicFlag) queries.add(`${rawName} sepsis critical illness`);
   }
 
-  // Per-rule targeted queries
+  // ── Per-rule targeted queries ───────────────────────────────────────────
   for (const finding of ruleFindings) {
     for (const q of (finding.queries || [])) queries.add(q);
   }
 
-  // Lab-specific queries
-  const labs = normalized.labs || {};
-  if (labs.k && labs.k > 5.5) queries.add("hyperkalaemia management drug-induced");
-  if (labs.k && labs.k < 3.5) queries.add("hypokalaemia replacement protocol");
-  if (labs.mg && labs.mg < 0.74) queries.add("hypomagnesaemia management");
-  if (labs.plt && labs.plt < 100) queries.add("thrombocytopenia anticoagulation threshold");
-  if (labs.lactate && labs.lactate > 2) queries.add("lactic acidosis drug causes management");
+  // ── Lab-driven protocol queries ─────────────────────────────────────────
+  if (labs.k && labs.k > 5.5)     queries.add("hyperkalemia management protocol treatment");
+  if (labs.k && labs.k < 3.5)     queries.add("hypokalemia potassium replacement protocol");
+  if (labs.mg && labs.mg < 0.74)  queries.add("hypomagnesemia magnesium replacement");
+  if (labs.plt && labs.plt < 100) queries.add("thrombocytopenia anticoagulation threshold bleeding risk");
+  if (labs.plt && labs.plt < 50)  queries.add("severe thrombocytopenia anticoagulation hold");
+  if (labs.lactate && labs.lactate > 2) queries.add("lactic acidosis sepsis management metformin");
+  if (labs.inr && labs.inr > 3)   queries.add("supratherapeutic INR warfarin vitamin K reversal");
+  if (labs.glucose && labs.glucose > 10) queries.add("hyperglycemia ICU steroid insulin protocol");
+  if (labs.alt && labs.alt > 120) queries.add("elevated liver enzymes drug hepatotoxicity management");
 
-  // Diagnosis-level queries
-  const dx = normalized.diagnosis || "";
-  if (dx) queries.add(`${dx} treatment protocol`);
-  if (dx) queries.add(`${dx} empiric antimicrobial therapy`);
-
-  // Allergies
-  for (const allergy of (normalized.allergies || [])) {
-    queries.add(`${allergy} allergy cross-reactivity management`);
+  // ── Diagnosis-level queries ─────────────────────────────────────────────
+  const dx = String(normalized.diagnosis || "").trim();
+  if (dx) {
+    queries.add(`${dx} treatment protocol`);
+    queries.add(`${dx} empiric antimicrobial therapy`);
+    queries.add(`${dx} antibiotic selection guidelines`);
+  }
+  if (clinicalState.septicFlag) {
+    queries.add("septic shock antibiotic protocol adult guidelines");
+    queries.add("hospital acquired pneumonia HAP empiric treatment");
+    queries.add("sepsis bundle management ICU");
   }
 
-  // User question
+  // ── Allergy queries ─────────────────────────────────────────────────────
+  for (const allergy of (normalized.allergies || [])) {
+    const a = String(allergy).toLowerCase();
+    queries.add(`${allergy} allergy cross-reactivity alternative`);
+    if (a.includes("penicillin") || a.includes("amoxicillin")) {
+      queries.add("penicillin allergy beta-lactam cross-reactivity cephalosporin");
+      queries.add("penicillin allergy antimicrobial alternative HAP");
+    }
+  }
+
+  // ── Renal-specific protocol queries ─────────────────────────────────────
+  if (clinicalState.renalFlag && clinicalState.crcl) {
+    queries.add(`renal dose adjustment CrCl ${Math.round(clinicalState.crcl.value)} nephrology`);
+    queries.add("CKD drug dosing nephrology protocol");
+    queries.add("nephrotoxic drug avoidance renal impairment");
+  }
+
+  // ── Anticoagulation context ──────────────────────────────────────────────
+  if (clinicalState.hasDrug(["warfarin","heparin","enoxaparin","rivaroxaban","apixaban"])) {
+    queries.add("anticoagulation protocol bleeding risk monitoring");
+    queries.add("anticoagulation thrombocytopenia platelet threshold");
+  }
+
+  // ── User question ────────────────────────────────────────────────────────
   if (question) queries.add(question);
 
-  return Array.from(queries).filter(Boolean).slice(0, 20); // cap to 20 queries
+  return Array.from(queries).filter(Boolean).slice(0, 25);
 }
 
 /* =========================================================
@@ -761,7 +826,7 @@ function buildTargetedQueries(normalized, clinicalState, ruleFindings, question)
 ========================================================= */
 
 async function retrieveTargetedEvidence(env, queries) {
-  const resultsPerQuery = 4;
+  const resultsPerQuery = 3; // 3 per query × up to 25 queries = 75 raw chunks
   const fetches = queries.map(q => vectorSearch(env, q, resultsPerQuery));
   const results = await Promise.allSettled(fetches);
   const all = [];
@@ -986,10 +1051,22 @@ function normalizeExtractedCase(extracted) {
   for (const key of Object.keys(merged.labs)) merged.labs[key] = toNumberOrNull(merged.labs[key]);
 
   // Coerce all text fields to string — GPT may return arrays/objects
-  for (const field of ["patient_name","mrn","care_setting","reason_admission","pmh","home_medications","diagnosis","sex"]) {
+  for (const field of ["patient_name","mrn","care_setting","reason_admission","pmh","diagnosis","sex"]) {
     const v = merged[field];
     if (v !== null && v !== undefined) {
       merged[field] = Array.isArray(v) ? v.join(", ") : String(v);
+    }
+  }
+  // home_medications: if array of objects, convert to readable string
+  if (merged.home_medications !== null && merged.home_medications !== undefined) {
+    if (Array.isArray(merged.home_medications)) {
+      merged.home_medications = merged.home_medications.map(m => {
+        if (typeof m === "string") return m;
+        const parts = [m.name, m.dose, m.route, m.frequency].filter(Boolean);
+        return parts.join(" ").trim() || String(m);
+      }).join(", ");
+    } else {
+      merged.home_medications = String(merged.home_medications);
     }
   }
   // Ensure allergies is always array of plain strings
@@ -1054,7 +1131,19 @@ function buildSoapNote({ patient, classifiedLabs, crcl, assessment, intervention
   const mrnStr     = patient.mrn || "";
   const reason     = patient.reason_admission || "N/A";
   const pmh        = patient.pmh || "N/A";
-  const homeMeds   = patient.home_medications || "N/A";
+  // home_medications may come as array of objects or plain string
+  let homeMeds = "N/A";
+  if (patient.home_medications) {
+    if (Array.isArray(patient.home_medications)) {
+      homeMeds = patient.home_medications.map(m => {
+        if (typeof m === "string") return m;
+        const parts = [m.name, m.dose, m.route, m.frequency].filter(Boolean);
+        return parts.join(" ").trim() || JSON.stringify(m);
+      }).join(", ");
+    } else {
+      homeMeds = String(patient.home_medications);
+    }
+  }
   const vitalsLines = buildVitalsLines(patient.vitals || {});
   const labsBlock   = buildClassifiedLabsBlock(classifiedLabs, crcl);
 
@@ -1208,10 +1297,25 @@ function formatEvidenceText(evidence) {
 }
 
 function buildCitations(evidence, excerptLen = 250) {
-  return evidence.map(e => ({
-    evidence_ids: [e.id], filename: e.filename, section: e.section || "",
-    page: e.page || 0, score: e.score, excerpt: e.excerpt.substring(0, excerptLen),
-  }));
+  // Group by filename; show max 2 excerpts per file to avoid flooding UI with one source
+  const fileCount = {};
+  const uniqueFiles = new Set(evidence.map(e => e.filename));
+  const hasMultipleFiles = uniqueFiles.size > 1;
+
+  return evidence
+    .filter(e => {
+      // If we have multiple sources, suppress very low relevance chunks
+      if (hasMultipleFiles && e.score !== null && e.score < 0.68) return false;
+      return true;
+    })
+    .filter(e => {
+      fileCount[e.filename] = (fileCount[e.filename] || 0) + 1;
+      return fileCount[e.filename] <= 2; // max 2 excerpts per file
+    })
+    .map(e => ({
+      evidence_ids: [e.id], filename: e.filename, section: e.section || "",
+      page: e.page || 0, score: e.score, excerpt: e.excerpt.substring(0, excerptLen),
+    }));
 }
 
 function buildVerbatimAnswer(evidence) {
