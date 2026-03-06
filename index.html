@@ -3,1288 +3,1338 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TheraGuard AI — ICU Clinical Decision Support</title>
+<title>ClinicalAudit — Pharmacist Decision Support</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
 <style>
-:root {
-  /* 5D Medical Color Palette */
-  --bg-main: #f0f4f8; /* خلفية رمادية ثلجية مريحة */
-  --surface: #ffffff;
-  --panel-glass: rgba(255, 255, 255, 0.7);
-  --accent: #0ea5e9;
-  --accent-soft: rgba(14, 165, 233, 0.1);
-  --text-main: #1e293b;
-  --text-dim: #64748b;
-  --border: rgba(14, 165, 233, 0.15);
-  
-  /* 5D Shadow Effects */
-  --shadow-5d: 20px 20px 60px #d1d9e6, -20px -20px 60px #ffffff;
-  --shadow-sm: 5px 5px 15px #d1d9e6;
-  --shadow-inset: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff;
-  
-  --radius: 20px;
-  --rs: 8px;
-  --r: 20px;
-  
-  /* Keep original color variables for components */
-  --blue: #0ea5e9;
-  --teal: #10b981;
-  --amber: #f59e0b;
-  --red: #f43f5e;
-  --s1: var(--surface);
-  --s2: #f8fafc;
-  --s3: #e2e8f0;
-  --muted: var(--text-dim);
-  --dim: var(--text-dim);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg-main);
-  color: var(--text-main);
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── HEADER (5D Floating) ── */
-header {
-  height: 70px;
-  background: var(--panel-glass);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 35px;
-  z-index: 100;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 24px;
-  color: var(--accent);
-  font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-.logo-icon {
-  width: 42px;
-  height: 42px;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.dev-credit {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-dim);
-  background: var(--surface);
-  padding: 8px 18px;
-  border-radius: 100px;
-  box-shadow: var(--shadow-inset);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ── APP LAYOUT ── */
-.app-viewport {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  padding: 25px;
-  gap: 25px;
-}
-
-/* ── SIDEBAR (Elevated) ── */
-.sb {
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
-}
-
-.sidebar-panel {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 25px;
-  box-shadow: var(--shadow-5d);
-  margin-bottom: 0;
-}
-
-/* Navigation items */
-.nav-item {
-  width: 100%;
-  padding: 16px;
-  margin-bottom: 12px;
-  border: none;
-  background: var(--bg-main);
-  box-shadow: var(--shadow-sm);
-  border-radius: 15px;
-  color: var(--text-dim);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-}
-
-.nav-item.active {
-  background: var(--surface);
-  color: var(--accent);
-  box-shadow: var(--shadow-inset);
-}
-
-.nav-item svg {
-  width: 18px;
-  height: 18px;
-  opacity: 0.9;
-}
-
-/* ── MAIN CONTENT (Depth) ── */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-/* ── SNAPSHOT DASHBOARD ── (kept for compatibility) */
-.snap-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.snap-card {
-  background: var(--surface);
-  padding: 22px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-5d);
-  border-top: 4px solid var(--accent);
-}
-
-.snap-label { font-size: 11px; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
-.snap-val { font-size: 20px; font-weight: 800; color: var(--text-main); }
-
-/* ── CORE INPUTS ── */
-.content-box, .ask-box, .rcard {
-  background: var(--surface);
-  padding: 35px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-5d);
-  position: relative;
-  border: 1px solid var(--border);
-}
-
-.ask-box {
-  padding: 18px;
-}
-
-textarea, input, select {
-  width: 100%;
-  background: var(--bg-main);
-  border: none;
-  border-radius: 15px;
-  padding: 15px 20px;
-  box-shadow: var(--shadow-inset);
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 15px;
-  color: var(--text-main);
-  resize: none;
-  outline: none;
-}
-
-textarea:focus, input:focus, select:focus {
-  background: var(--surface);
-  box-shadow: var(--shadow-inset), 0 0 0 2px var(--accent-soft);
-}
-
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-  background-position: right 15px center;
-  background-repeat: no-repeat;
-  background-size: 20px;
-  padding-right: 45px;
-}
-
-/* Button styles */
-.btn, .btn-p, .btn-main {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
-  transition: all 0.3s;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-}
-
-.btn:hover, .btn-p:hover, .btn-main:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(14, 165, 233, 0.4);
-}
-
-.btn-s {
-  background: var(--s3);
-  color: var(--text-dim);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-s:hover {
-  background: var(--s2);
-  color: var(--text-main);
-}
-
-/* Ask footer - button moved under input */
-.ask-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.ask-ctrl {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.ask-ctrl select {
-  width: auto;
-  flex: 1;
-  min-width: 120px;
-}
-
-/* ── SOAP NOTE AREA ── */
-.soap-box {
-  background: #1e293b;
-  border-radius: var(--radius);
-  padding: 25px;
-  margin-top: 25px;
-  position: relative;
-}
-
-.soap-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.btn-copy {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff;
-  padding: 6px 15px;
-  border-radius: 8px;
-  font-size: 11px;
-  cursor: pointer;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-.soap-content, .soap-wrap {
-  font-family: 'JetBrains Mono', monospace;
-  color: #38bdf8;
-  white-space: pre-wrap;
-  line-height: 1.7;
-  font-size: 13.5px;
-}
-
-/* ── LOADER ── */
-.loader {
-  position: fixed;
-  inset: 0;
-  background: rgba(240, 244, 248, 0.8);
-  backdrop-filter: blur(10px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 20px;
-  z-index: 1000;
-}
-
-.loader.on {
-  display: flex;
-}
-
-.spin {
-  width: 60px;
-  height: 60px;
-  border: 5px solid var(--accent-soft);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s infinite linear;
-}
-
-.ldtxt {
-  font-weight: 800;
-  color: var(--accent);
-  font-size: 14px;
-  letter-spacing: 1px;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── PANEL TRANSITIONS ── */
-.page { display: none; }
-.page.active { display: block; animation: slideUp 0.5s ease-out; }
-
-@keyframes slideUp { 
-  from { opacity: 0; transform: translateY(20px); } 
-  to { opacity: 1; transform: translateY(0); } 
-}
-
-/* ── LABELS ── */
-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.fg {
-  margin-bottom: 15px;
-}
-
-.frow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-/* ── METRICS GRID ── */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
-}
-
-.mc {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-}
-
-.mc-lbl {
-  font-size: 11px;
-  color: var(--text-dim);
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.mc-val {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--accent);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.mc-sub {
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-top: 5px;
-}
-
-.mc.good .mc-val { color: var(--teal); }
-.mc.warn .mc-val { color: var(--amber); }
-.mc.bad .mc-val { color: var(--red); }
-
-/* ── LAB PANELS ── */
-.lab-section {
-  background: var(--surface);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-}
-
-.lab-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 20px;
-  background: var(--s2);
-  border-bottom: 1px solid var(--border);
-}
-
-.lab-hd-title {
-  font-weight: 800;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.lab-hd-title.red { color: var(--red); }
-.lab-hd-title.amber { color: var(--amber); }
-.lab-hd-title.purple { color: #8b5cf6; }
-
-.lab-list { padding: 10px 0; }
-.lab-row {
-  display: grid;
-  grid-template-columns: 140px 90px 30px 110px 1fr;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  transition: background 0.1s;
-}
-.lab-row:hover { background: var(--accent-soft); }
-.lab-name { font-weight: 600; font-size: 14px; }
-.lab-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; text-align: right; }
-.lab-value.high { color: var(--red); }
-.lab-value.low { color: var(--accent); }
-.lab-value.bh { color: var(--amber); }
-.lab-arrow { text-align: center; }
-.lab-arrow.up { color: var(--red); }
-.lab-arrow.dn { color: var(--accent); }
-.lab-unit { font-size: 11px; color: var(--text-dim); }
-.lab-drugs { font-size: 11px; color: #8b5cf6; }
-
-/* ── DOSE TABLE ── */
-.dose-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.dose-table th {
-  background: var(--s3);
-  color: var(--text-dim);
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  padding: 12px 15px;
-  text-align: left;
-  border: 1px solid var(--border);
-}
-.dose-table td {
-  padding: 12px 15px;
-  border: 1px solid var(--border);
-  vertical-align: top;
-}
-.verdict-correct { color: var(--teal); font-weight: 700; }
-.verdict-adjust { color: var(--amber); font-weight: 700; }
-.verdict-wrong { color: var(--red); font-weight: 700; }
-
-/* ── CITATIONS ── */
-.cit-list { display: flex; flex-direction: column; gap: 12px; }
-.cit-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 15px;
-  display: flex;
-  gap: 15px;
-  box-shadow: var(--shadow-sm);
-}
-.cit-id {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border: 1px solid var(--border);
-  padding: 3px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-.cit-fn { font-weight: 700; margin-bottom: 4px; }
-.cit-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
-.cit-ex { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-
-/* ── PARAM TAGS ── */
-.ptag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 30px;
-  padding: 4px 12px;
-  font-size: 12px;
-  color: var(--text-dim);
-  margin: 2px;
-  box-shadow: var(--shadow-sm);
-}
-.ptag b { color: var(--text-main); }
-.ptag.allergy { border-color: var(--red); color: var(--red); }
-
-/* ── ALERTS ── */
-.alert-list { display: flex; flex-direction: column; gap: 10px; }
-.alert-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 15px;
-  background: rgba(244, 63, 94, 0.05);
-  border: 1px solid rgba(244, 63, 94, 0.2);
-  border-radius: var(--rs);
-  color: var(--text-main);
-}
-.alert-item .ai { color: var(--red); font-size: 16px; }
-
-/* ── CTABS ── */
-.ctabs {
-  display: flex;
-  background: var(--s2);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  padding: 0 10px;
-}
-.ctab {
-  padding: 12px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
-  cursor: pointer;
-  white-space: nowrap;
-  border: none;
-  border-bottom: 3px solid transparent;
-  background: none;
-  transition: all 0.15s;
-}
-.ctab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-.ctp { display: none; padding: 20px; }
-.ctp.active { display: block; }
-
-/* ── EMPTY STATE ── */
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 50px 20px;
-  text-align: center;
-  gap: 15px;
-  color: var(--text-dim);
-}
-.empty-icon { font-size: 48px; opacity: 0.3; }
-.empty-title { font-size: 18px; font-weight: 700; color: var(--text-dim); }
-
-/* ── MD RENDER ── */
-.md h2 {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-main);
-  margin: 25px 0 15px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--border);
-}
-.md h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--accent);
-  margin: 20px 0 10px;
-}
-.md p { margin-bottom: 15px; line-height: 1.7; }
-.md ul, .md ol { padding-left: 25px; margin-bottom: 15px; }
-.md li { margin-bottom: 5px; }
-.md table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-.md th { background: var(--s3); padding: 10px; text-align: left; }
-.md td { padding: 10px; border: 1px solid var(--border); }
-
-/* ── SIDEBAR SECTIONS ── */
-.sbs { margin-bottom: 0; }
-.sbl {
-  font-weight: 800;
-  font-size: 11px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 15px;
-  letter-spacing: 1px;
-}
-
-/* Quick access buttons */
-#sb-monograph .btn-s,
-#sb-abx .btn-s {
-  width: 100%;
-  text-align: left;
-  justify-content: flex-start;
-  padding: 12px 15px;
-  margin-bottom: 5px;
-}
-
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-  .app-viewport { flex-direction: column; }
-  .sb { width: 100%; max-height: 300px; }
-  .frow { grid-template-columns: 1fr; }
-  .lab-row { grid-template-columns: 100px 70px 20px 90px; }
-  .lab-drugs { display: none; }
-}
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* ── DESIGN TOKENS ── */
+  :root {
+    --bg:          #f4f6f8;
+    --surface:     #ffffff;
+    --surface-2:   #f0f3f7;
+    --border:      #dde3ec;
+    --border-2:    #c8d2e0;
+
+    --ink-1:       #0e1d2f;
+    --ink-2:       #2c3e52;
+    --ink-3:       #5a6a7e;
+    --ink-4:       #8898aa;
+
+    --accent:      #1a6fb5;
+    --accent-soft: #e8f1fb;
+    --accent-mid:  #2c84d0;
+
+    --teal:        #0d8a8a;
+    --teal-soft:   #e6f5f5;
+
+    --red:         #c0392b;
+    --red-soft:    #fdecea;
+    --orange:      #c0601a;
+    --orange-soft: #fdf2e9;
+    --yellow:      #9a7d00;
+    --yellow-soft: #fef9e7;
+    --green:       #1a7a45;
+    --green-soft:  #eaf7f0;
+
+    --radius:      10px;
+    --radius-lg:   16px;
+    --shadow-sm:   0 1px 4px rgba(14,29,47,.06), 0 1px 2px rgba(14,29,47,.04);
+    --shadow-md:   0 4px 16px rgba(14,29,47,.08), 0 1px 4px rgba(14,29,47,.04);
+    --shadow-lg:   0 8px 32px rgba(14,29,47,.10), 0 2px 8px rgba(14,29,47,.04);
+
+    --font-body:   'DM Sans', system-ui, sans-serif;
+    --font-mono:   'DM Mono', monospace;
+    --font-display: 'Playfair Display', Georgia, serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 15px; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--ink-2);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--ink-1);
+    border-bottom: 1px solid #1e3148;
+    padding: 0 40px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-icon svg { width: 18px; height: 18px; }
+
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: #fff;
+    letter-spacing: .01em;
+  }
+
+  .brand-tag {
+    font-size: .7rem;
+    color: #6b8ca8;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-weight: 500;
+    margin-top: -2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mode-pill {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    letter-spacing: .02em;
+    transition: all .18s;
+    color: #8ca8c0;
+    background: transparent;
+  }
+
+  .mode-pill:hover { color: #fff; }
+
+  .mode-pill.active {
+    background: #1a3d5c;
+    color: #7ec8ff;
+    border-color: #2a5a80;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* ── INPUT PANEL ── */
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .input-header {
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface-2);
+  }
+
+  .input-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .input-header-label {
+    font-size: .8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-3);
+  }
+
+  .dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .input-meta {
+    font-size: .72rem;
+    color: var(--ink-4);
+  }
+
+  .case-textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 20px 24px;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    line-height: 1.7;
+    color: var(--ink-1);
+    border: none;
+    outline: none;
+    resize: vertical;
+    background: var(--surface);
+    letter-spacing: .01em;
+  }
+
+  .case-textarea::placeholder {
+    color: var(--ink-4);
+    font-family: var(--font-body);
+    font-size: .85rem;
+  }
+
+  .input-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface-2);
+  }
+
+  .focus-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    margin-right: 20px;
+  }
+
+  .focus-label {
+    font-size: .75rem;
+    color: var(--ink-3);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .focus-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: .8rem;
+    color: var(--ink-2);
+    background: var(--surface);
+    outline: none;
+    transition: border .18s;
+    font-family: var(--font-body);
+  }
+
+  .focus-input:focus { border-color: var(--accent); }
+
+  .analyze-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: .01em;
+    transition: all .18s;
+    white-space: nowrap;
+  }
+
+  .analyze-btn:hover { background: var(--accent-mid); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,111,181,.3); }
+  .analyze-btn:active { transform: none; }
+  .analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .analyze-btn svg { width: 16px; height: 16px; }
+
+  /* ── LOADING STATE ── */
+  .loading-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 48px 40px;
+    text-align: center;
+    display: none;
+  }
+
+  .loading-panel.visible { display: block; }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-title { font-size: 1rem; font-weight: 600; color: var(--ink-1); margin-bottom: 6px; }
+  .loading-sub { font-size: .82rem; color: var(--ink-4); }
+
+  .loading-steps {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .loading-step {
+    font-size: .72rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--surface-2);
+    color: var(--ink-4);
+    border: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeStep .5s forwards;
+  }
+
+  @keyframes fadeStep { to { opacity: 1; } }
+
+  /* ── ERROR STATE ── */
+  .error-panel {
+    background: var(--red-soft);
+    border: 1px solid #f5c6c1;
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    display: none;
+    margin-bottom: 20px;
+  }
+
+  .error-panel.visible { display: block; }
+  .error-title { font-size: .85rem; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+  .error-msg { font-size: .8rem; color: #8b2a20; }
+
+  /* ── RESULTS AREA ── */
+  .results-area { display: none; animation: fadeUp .4s ease; }
+  .results-area.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── REVIEW HEADER ── */
+  .review-header {
+    background: var(--ink-1);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .review-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+
+  .review-sub { font-size: .75rem; color: #6b8ca8; letter-spacing: .04em; }
+
+  .review-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .badge-red    { background: var(--red-soft);    color: var(--red); }
+  .badge-orange { background: var(--orange-soft); color: var(--orange); }
+  .badge-teal   { background: var(--teal-soft);   color: var(--teal); }
+  .badge-blue   { background: var(--accent-soft);  color: var(--accent); }
+  .badge-dark   { background: #1e3148; color: #7ec8ff; }
+
+  /* ── RESULTS GRID ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .card-full { grid-column: 1 / -1; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-2);
+  }
+
+  .card-header-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .icon-blue  { background: var(--accent-soft); }
+  .icon-teal  { background: var(--teal-soft); }
+  .icon-red   { background: var(--red-soft); }
+  .icon-green { background: var(--green-soft); }
+
+  .card-header-icon svg { width: 14px; height: 14px; }
+
+  .card-title {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-2);
+  }
+
+  .card-count {
+    margin-left: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--ink-3);
+  }
+
+  .card-body { padding: 20px; }
+
+  /* ── SOAP NOTE ── */
+  .soap-section { margin-bottom: 18px; }
+  .soap-section:last-child { margin-bottom: 0; }
+
+  .soap-label {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--accent-soft);
+  }
+
+  .soap-content { font-size: .84rem; color: var(--ink-2); line-height: 1.65; }
+  .soap-content p { margin-bottom: 5px; }
+  .soap-content p:last-child { margin-bottom: 0; }
+  .soap-content strong { color: var(--ink-1); font-weight: 600; }
+
+  /* ── LAB GROUPS ── */
+  .labs-container { display: flex; flex-direction: column; gap: 10px; }
+
+  .lab-group { }
+
+  .lab-group-title {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-3);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lab-group-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .lab-rows { display: flex; flex-direction: column; gap: 3px; }
+
+  .lab-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: .8rem;
+  }
+
+  .lab-row.abnormal { background: var(--red-soft); }
+  .lab-row.borderline { background: var(--yellow-soft); }
+  .lab-row.normal { background: transparent; }
+
+  .lab-name { color: var(--ink-3); }
+  .lab-val { font-weight: 600; font-family: var(--font-mono); font-size: .78rem; }
+  .lab-val.high { color: var(--red); }
+  .lab-val.low { color: var(--accent); }
+  .lab-val.normal-val { color: var(--ink-2); }
+
+  .lab-flag { font-size: .65rem; font-weight: 700; margin-left: 4px; }
+  .lab-flag.H { color: var(--red); }
+  .lab-flag.L { color: var(--accent); }
+
+  /* ── INTERVENTIONS ── */
+  .intervention-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .intervention-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .intervention-card.CRITICAL { border-left: 4px solid var(--red); }
+  .intervention-card.HIGH     { border-left: 4px solid var(--orange); }
+  .intervention-card.MODERATE { border-left: 4px solid var(--yellow); }
+  .intervention-card.LOW      { border-left: 4px solid var(--teal); }
+
+  .intervention-top {
+    padding: 10px 14px 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .priority-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .priority-tag.CRITICAL { background: var(--red-soft);    color: var(--red); }
+  .priority-tag.HIGH     { background: var(--orange-soft); color: var(--orange); }
+  .priority-tag.MODERATE { background: var(--yellow-soft); color: var(--yellow); }
+  .priority-tag.LOW      { background: var(--teal-soft);   color: var(--teal); }
+
+  .intervention-drug {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--ink-1);
+  }
+
+  .intervention-category {
+    font-size: .72rem;
+    color: var(--ink-4);
+    margin-top: 1px;
+  }
+
+  .intervention-body { padding: 0 14px 12px; font-size: .8rem; }
+
+  .int-row { margin-bottom: 5px; }
+  .int-label { font-weight: 600; color: var(--ink-3); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
+  .int-text { color: var(--ink-2); line-height: 1.55; }
+
+  .int-citation {
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    border-radius: 5px;
+    font-size: .72rem;
+    color: var(--ink-4);
+    border-left: 3px solid var(--border-2);
+    font-style: italic;
+  }
+
+  /* ── MEDICATION ADJUSTMENTS ── */
+  .adjustment-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .adjustment-row {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: start;
+  }
+
+  .adj-drug { font-size: .85rem; font-weight: 600; color: var(--ink-1); margin-bottom: 4px; }
+
+  .adj-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+
+  .adj-from {
+    font-size: .78rem;
+    font-family: var(--font-mono);
+    color: var(--red);
+    text-decoration: line-through;
+    background: var(--red-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  .adj-arrow { color: var(--ink-4); font-size: .7rem; }
+
+  .adj-to {
+    font-size: .78rem;
+    font-family: var(--font-mono);
+    color: var(--green);
+    background: var(--green-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .adj-reason { font-size: .76rem; color: var(--ink-3); }
+
+  .urgency-tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .68rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .urgency-Immediate    { background: var(--red-soft);    color: var(--red); }
+  .urgency-Within\ 24h  { background: var(--orange-soft); color: var(--orange); }
+  .urgency-Routine      { background: var(--teal-soft);   color: var(--teal); }
+
+  /* ── CITATIONS ── */
+  .citation-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .citation-row {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .citation-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: .7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .citation-source { font-size: .82rem; font-weight: 600; color: var(--ink-1); }
+  .citation-detail { font-size: .75rem; color: var(--ink-4); margin-top: 2px; }
+  .citation-relevance { font-size: .76rem; color: var(--ink-3); margin-top: 3px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--ink-4);
+    font-size: .82rem;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: .72rem;
+    color: var(--ink-4);
+    letter-spacing: .04em;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .header { padding: 0 16px; }
+    .main { padding: 16px 12px 60px; }
+    .results-grid { grid-template-columns: 1fr; }
+    .card-full { grid-column: 1; }
+    .review-header { flex-direction: column; gap: 14px; align-items: flex-start; }
+    .input-footer { flex-direction: column; gap: 10px; align-items: stretch; }
+    .focus-field { margin-right: 0; }
+  }
+
+  /* ── SUBTLE SEPARATOR ── */
+  .sep {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  /* ── VITALS GRID ── */
+  .vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+
+  .vital-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+
+  .vital-label { font-size: .65rem; color: var(--ink-4); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
+  .vital-value { font-size: .9rem; font-weight: 600; color: var(--ink-1); font-family: var(--font-mono); }
 </style>
 </head>
 <body>
 
-<div class="loader" id="ld">
-  <div class="spin"></div>
-  <div class="ldtxt" id="ldtxt">ANALYZING...</div>
-</div>
-
-<header>
-  <div class="logo">
-    <div class="logo-icon">⚕</div>
-    TheraGuard AI
+<!-- ══════════════════════════════════════════════ HEADER ══ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">ClinicalAudit</div>
+      <div class="brand-tag">Pharmacist Decision Support Engine</div>
+    </div>
   </div>
-  <div class="dev-credit">Designed & Innovated by Mohammed Al-Ishaq</div>
+
+  <div class="header-right">
+    <button class="mode-pill active" data-mode="case_analysis">Case Review</button>
+    <button class="mode-pill" data-mode="ask">Ask Pharmacist</button>
+    <button class="mode-pill" data-mode="monograph">Monograph</button>
+    <button class="mode-pill" data-mode="antibiogram">Antibiogram</button>
+  </div>
 </header>
 
-<div class="app-viewport">
-  <!-- SIDEBAR -->
-  <aside class="sb">
-    <div class="sidebar-panel">
-      <button class="nav-item active" data-mode="ask" onclick="go('ask')">
-        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
-        Clinical Inquiry
-      </button>
-      <button class="nav-item" data-mode="case" onclick="go('case')">
-        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-        Full Case Analysis
-      </button>
-      <button class="nav-item" data-mode="monograph" onclick="go('monograph')">
-        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
-        Drug Monograph
-      </button>
-      <button class="nav-item" data-mode="antibiogram" onclick="go('antibiogram')">
-        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-        Antibiogram
-      </button>
+<!-- ══════════════════════════════════════════════ MAIN ══ -->
+<main class="main">
+
+  <!-- INPUT PANEL -->
+  <div class="input-panel" id="inputPanel">
+    <div class="input-header">
+      <div class="input-header-left">
+        <div class="dot-indicator"></div>
+        <span class="input-header-label" id="modeLabel">Case Input</span>
+      </div>
+      <span class="input-meta">Accepts free-text clinical notes, medication orders, labs &amp; vitals</span>
     </div>
 
-    <!-- API Config Panel -->
-    <div class="sidebar-panel">
-      <div class="sbl">API Config</div>
-      <div class="fg"><label>Endpoint</label><input id="apiEP" value="/api/ask" placeholder="https://your-worker.workers.dev/api/ask" /></div>
-      <div class="fg"><label>Language</label>
-        <select id="lang"><option value="en">English</option><option value="ar">Arabic</option></select>
-      </div>
-    </div>
-
-    <!-- ASK settings -->
-    <div class="sidebar-panel" id="sb-ask">
-      <div class="sbl">Output Settings</div>
-      <div class="fg"><label>Output Mode</label>
-        <select id="outMode">
-          <option value="hybrid">Hybrid (Recommended)</option>
-          <option value="short">Short (Bullets)</option>
-          <option value="verbatim">Verbatim</option>
-        </select>
-      </div>
-      <div class="fg"><label>Source Mode</label>
-        <select id="srcMode">
-          <option value="off">No Citations</option>
-          <option value="required">Show Citations</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- CASE patient params -->
-    <div class="sidebar-panel" id="sb-case" style="display:none">
-      <div class="sbl">Patient Parameters</div>
-      <div class="frow">
-        <div class="fg"><label>Age (y)</label><input type="number" id="pt-age" placeholder="65" /></div>
-        <div class="fg"><label>Sex</label><select id="pt-sex"><option value="">?</option><option value="male">Male</option><option value="female">Female</option></select></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label>Weight (kg)</label><input type="number" id="pt-wt" placeholder="70" /></div>
-        <div class="fg"><label>Height (cm)</label><input type="number" id="pt-ht" placeholder="170" /></div>
-      </div>
-      <div class="fg"><label>SCr (µmol/L)</label><input type="number" id="pt-scr" placeholder="89" step="0.1" /></div>
-      <div id="crcl-live" style="display:none;margin-top:15px;">
-        <div class="mc" id="crcl-card">
-          <div class="mc-lbl">CrCl — Cockcroft-Gault</div>
-          <div class="mc-val" id="crcl-val">—</div>
-          <div class="mc-sub" id="crcl-cat">mL/min</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MONOGRAPH shortcuts -->
-    <div class="sidebar-panel" id="sb-monograph" style="display:none">
-      <div class="sbl">Quick Access</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Vancomycin')">Vancomycin</button>
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Meropenem')">Meropenem</button>
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Piperacillin-Tazobactam')">Pip-Tazo</button>
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Gentamicin')">Gentamicin</button>
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Linezolid')">Linezolid</button>
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Colistin')">Colistin</button>
-        <button class="btn btn-s" style="font-size:12px;padding:8px 12px;justify-content:flex-start;" onclick="qMono('Amikacin')">Amikacin</button>
-      </div>
-    </div>
-
-    <!-- ANTIBIOGRAM shortcuts -->
-    <div class="sidebar-panel" id="sb-abx" style="display:none">
-      <div class="sbl">Common Organisms</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;">
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('E. coli')">E. coli</button>
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('Klebsiella pneumoniae')">K. pneumoniae</button>
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('Pseudomonas aeruginosa')">P. aeruginosa</button>
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('Acinetobacter baumannii')">A. baumannii</button>
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('MRSA')">MRSA</button>
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('Enterococcus faecium')">E. faecium</button>
-        <button class="btn btn-s" style="font-size:11px;padding:6px 10px;" onclick="qOrg('Candida albicans')">C. albicans</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="main">
-    <!-- ══ ASK ══ -->
-    <div class="page active" id="page-ask">
-      <div class="ask-box">
-        <textarea id="ask-q" placeholder="Ask a clinical pharmacy question...&#10;e.g. 'What is the renal dose adjustment for vancomycin in a patient with CrCl 25 mL/min?'" rows="4"></textarea>
-        <div class="ask-footer">
-          <div class="ask-ctrl">
-            <select id="ask-om" style="width:auto;padding:12px;font-size:13px;">
-              <option value="hybrid">Hybrid</option><option value="short">Short</option><option value="verbatim">Verbatim</option>
-            </select>
-            <select id="ask-sm" style="width:auto;padding:12px;font-size:13px;">
-              <option value="off">No Citations</option><option value="required">Show Citations</option>
-            </select>
-          </div>
-          <button class="btn btn-p ask-btn" onclick="doAsk()">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/></svg>
-            Generate Answer
-          </button>
-        </div>
-      </div>
-      <div id="ask-result"></div>
-    </div>
-
-    <!-- ══ CASE ══ -->
-    <div class="page" id="page-case">
-      <div class="rcard" style="margin-bottom:18px;">
-        <div class="rcard-hd"><div class="rcard-title">Patient Case Input</div></div>
-        <div style="padding:18px;display:flex;flex-direction:column;gap:11px;">
-          <div class="fg"><label>Clinical Case</label>
-            <textarea id="case-text" class="case-ta" rows="12" placeholder="Paste the full clinical case here...
+    <textarea
+      class="case-textarea"
+      id="caseInput"
+      placeholder="Paste patient case here — include diagnosis, medications, labs, vitals, allergies, PMH, and any relevant clinical details...
 
 Example:
-65-year-old male, 82kg, 174cm, MRN 12345. Admitted to ICU with hospital-acquired pneumonia.
-PMH: CKD stage 3, T2DM, HTN. Home meds: Metformin 500mg BD, Amlodipine 10mg OD.
-Vitals: BP 102/64 mmHg, HR 118 bpm, T 38.9°C, SpO₂ 91% on 6L O₂.
-Labs: SCr 198 µmol/L, K 5.6 mmol/L, WBC 22.4, Hb 8.1, INR 1.9, Lactate 3.1.
+60M, 78kg, admitted to ICU with septic shock secondary to UTI.
+PMH: CKD stage 3, T2DM, HTN.
 Allergies: Penicillin (rash).
-Current meds: Vancomycin 1g IV q8h, Meropenem 2g IV q8h, Noradrenaline 0.15mcg/kg/min, Heparin 5000 units SC TDS."></textarea>
+Vitals: BP 88/52, HR 118, Temp 38.9°C, SpO2 94%.
+Labs: SCr 198 µmol/L, K 5.6 mEq/L, WBC 22.4, CRP 280, PCT 8.2, Lactate 4.1.
+Current medications: Meropenem 1g q8h IV, Vancomycin 1250mg q12h IV, Norepinephrine 0.15 mcg/kg/min, Pantoprazole 40mg IV daily, Insulin infusion, Heparin 5000u SC TID..."
+    ></textarea>
+
+    <div class="input-footer">
+      <div class="focus-field">
+        <span class="focus-label">Focus area:</span>
+        <input class="focus-input" id="focusInput" type="text" placeholder="e.g. renal dosing, antibiotic selection, anticoagulation..." />
+      </div>
+      <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          <path d="M11 8v6M8 11h6"/>
+        </svg>
+        Analyze Case
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-panel" id="loadingPanel">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Running Clinical Audit</div>
+    <div class="loading-sub">Performing medication review, safety checks, and evidence matching...</div>
+    <div class="loading-steps" id="loadingSteps"></div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-panel" id="errorPanel">
+    <div class="error-title">Analysis Error</div>
+    <div class="error-msg" id="errorMsg">An error occurred during analysis.</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-area" id="resultsArea">
+
+    <!-- Review header bar -->
+    <div class="review-header" id="reviewHeader">
+      <div>
+        <div class="review-title" id="reviewTitle">Pharmacist Clinical Review Report</div>
+        <div class="review-sub" id="reviewSub">Generated &mdash;</div>
+      </div>
+      <div class="review-badges" id="reviewBadges"></div>
+    </div>
+
+    <div class="results-grid">
+
+      <!-- SOAP NOTE -->
+      <div class="card card-full">
+        <div class="card-header">
+          <div class="card-header-icon icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
           </div>
-          <div class="fg"><label>Clinician Question (Optional)</label>
-            <input type="text" id="case-q" placeholder="e.g. Are the antibiotic doses appropriate for renal function?" />
-          </div>
-          <button class="btn btn-p" onclick="doCase()">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            Run Clinical Analysis
-          </button>
+          <span class="card-title">SOAP Note</span>
+          <span class="badge badge-teal" style="margin-left: auto; font-size:.68rem; padding:3px 10px;">Pharmacist Review</span>
+        </div>
+        <div class="card-body" id="soapContent">
+          <div class="empty-state">No data yet</div>
         </div>
       </div>
-      <div id="case-result"></div>
-    </div>
 
-    <!-- ══ MONOGRAPH ══ -->
-    <div class="page" id="page-monograph">
-      <div class="msearch" style="display:flex; gap:15px; margin-bottom:20px;">
-        <input type="text" id="mono-drug" placeholder="Drug name (e.g. Vancomycin, Meropenem, Linezolid)..." onkeydown="if(event.key==='Enter')doMono()" style="flex:2;" />
-        <input type="text" id="mono-ctx" placeholder="Patient context (optional)" style="flex:1;" />
-        <button class="btn btn-p" onclick="doMono()" style="width:auto; padding:15px 25px; flex-shrink:0;">Look Up</button>
-      </div>
-      <div id="mono-result"></div>
-    </div>
-
-    <!-- ══ ANTIBIOGRAM ══ -->
-    <div class="page" id="page-antibiogram">
-      <div class="abx-form" style="background:var(--surface); padding:25px; border-radius:var(--radius); box-shadow:var(--shadow-5d); margin-bottom:20px;">
-        <div class="frow" style="grid-template-columns:1fr 1fr 1fr;">
-          <div class="fg"><label>Organism</label><input id="abx-org" placeholder="e.g. E. coli, MRSA" /></div>
-          <div class="fg"><label>Antibiotic (optional)</label><input id="abx-drug" placeholder="e.g. Vancomycin" /></div>
-          <div class="fg"><label>Site of Infection</label><input id="abx-site" placeholder="e.g. UTI, pneumonia, BSI" /></div>
+      <!-- INTERVENTIONS -->
+      <div class="card card-full">
+        <div class="card-header">
+          <div class="card-header-icon icon-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <span class="card-title">Pharmacist Interventions</span>
+          <span class="card-count" id="interventionCount">0</span>
         </div>
-        <div class="fg"><label>Patient Context (optional)</label><input id="abx-ctx" placeholder="e.g. Immunocompromised, recent antibiotics, renal impairment" /></div>
-        <button class="btn btn-p" style="width:auto;padding:12px 28px;" onclick="doAbx()">Analyze Susceptibility</button>
+        <div class="card-body" id="interventionContent">
+          <div class="empty-state">No interventions identified</div>
+        </div>
       </div>
-      <div id="abx-result"></div>
-    </div>
-  </main>
-</div>
 
+      <!-- MEDICATION ADJUSTMENTS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon icon-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <span class="card-title">Medication Adjustments</span>
+          <span class="card-count" id="adjustmentCount">0</span>
+        </div>
+        <div class="card-body" id="adjustmentContent">
+          <div class="empty-state">No adjustments recommended</div>
+        </div>
+      </div>
+
+      <!-- CITATIONS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
+          <span class="card-title">Evidence &amp; Citations</span>
+          <span class="card-count" id="citationCount">0</span>
+        </div>
+        <div class="card-body" id="citationContent">
+          <div class="empty-state">No citations available</div>
+        </div>
+      </div>
+
+    </div><!-- /results-grid -->
+  </div><!-- /results-area -->
+
+  <div class="footer">ClinicalAudit v2.0 &nbsp;·&nbsp; For professional clinical use only &nbsp;·&nbsp; Always verify against current guidelines</div>
+</main>
+
+<!-- ══════════════════════════════════════════════ JS ══ -->
 <script>
-// ══════════════════════════════════════════════════════════
-// NAV
-// ══════════════════════════════════════════════════════════
-let mode = 'ask';
+// ─────────────────────────────────────────────────────
+// MODE SWITCHING
+// ─────────────────────────────────────────────────────
+let currentMode = 'case_analysis';
+const modeLabels = {
+  case_analysis: 'Case Input',
+  ask: 'Clinical Question',
+  monograph: 'Drug Name',
+  antibiogram: 'Organism / Infection'
+};
+const modePlaceholders = {
+  case_analysis: 'Paste patient case here — include diagnosis, medications, labs, vitals, allergies, PMH...',
+  ask: 'Ask a clinical or pharmacotherapy question...',
+  monograph: 'Enter drug name (e.g. Vancomycin, Meropenem, Warfarin)...',
+  antibiogram: 'Enter organism and infection site (e.g. E. coli, urinary tract infection, patient with CKD)...'
+};
 
-function go(m) {
-  mode = m;
-  document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + m).classList.add('active');
-  ['ask','case','monograph','abx'].forEach(id => {
-    const el = document.getElementById('sb-' + id);
-    if (el) el.style.display = 'none';
+document.querySelectorAll('.mode-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    document.getElementById('modeLabel').textContent = modeLabels[currentMode];
+    document.getElementById('caseInput').placeholder = modePlaceholders[currentMode];
+    document.getElementById('analyzeBtn').querySelector('svg + *') ||
+      (document.getElementById('analyzeBtn').lastChild.textContent =
+        currentMode === 'case_analysis' ? 'Analyze Case' : 'Submit');
+    hideResults();
   });
-  const sbMap = { ask:'ask', case:'case', monograph:'monograph', antibiogram:'abx' };
-  const sbEl = document.getElementById('sb-' + (sbMap[m] || m));
-  if (sbEl) sbEl.style.display = '';
-}
-
-// ══════════════════════════════════════════════════════════
-// LIVE CrCl CALCULATOR
-// ══════════════════════════════════════════════════════════
-['pt-age','pt-sex','pt-wt','pt-scr'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', liveCrCl);
 });
 
-function liveCrCl() {
-  const age = +document.getElementById('pt-age').value;
-  const sex = document.getElementById('pt-sex').value;
-  const wt  = +document.getElementById('pt-wt').value;
-  const scr = +document.getElementById('pt-scr').value; // µmol/L
-
-  if (!age || !sex || !wt || !scr) {
-    document.getElementById('crcl-live').style.display = 'none';
+// ─────────────────────────────────────────────────────
+// MAIN ANALYSIS
+// ─────────────────────────────────────────────────────
+async function runAnalysis() {
+  const input = document.getElementById('caseInput').value.trim();
+  if (!input) {
+    showError('Please enter case information before analyzing.');
     return;
   }
 
-  const sf  = sex === 'female' ? 0.85 : 1.0;
-  const scr_mgdl = scr / 88.42;
-  const val = Math.round(((140 - age) * wt * sf) / (72 * scr_mgdl) * 10) / 10;
+  hideResults();
+  hideError();
+  showLoading();
 
-  let cat, cls;
-  if (val >= 90)      { cat = 'Normal (≥90)';             cls = 'good'; }
-  else if (val >= 60) { cat = 'Mild impairment (60–89)';   cls = ''; }
-  else if (val >= 30) { cat = 'Moderate impairment (30–59)'; cls = 'warn'; }
-  else if (val >= 15) { cat = 'Severe impairment (15–29)'; cls = 'bad'; }
-  else                { cat = 'Kidney failure (<15)';      cls = 'bad'; }
+  const body = {
+    mode: currentMode,
+    case_text: input,
+    query: input,
+    focus_area: document.getElementById('focusInput').value.trim()
+  };
 
-  const card = document.getElementById('crcl-card');
-  card.className = 'mc ' + cls;
-  document.getElementById('crcl-val').textContent = val;
-  document.getElementById('crcl-cat').textContent = cat + ' mL/min';
-  document.getElementById('crcl-live').style.display = '';
-}
-
-// ══════════════════════════════════════════════════════════
-// API
-// ══════════════════════════════════════════════════════════
-async function api(payload, msg = 'ANALYZING...') {
-  const ep = document.getElementById('apiEP').value.trim() || '/api/ask';
-  load(msg);
   try {
-    const r = await fetch(ep, {
+    const res = await fetch('/functions/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(body)
     });
-    const d = await r.json();
-    unload();
-    return d;
-  } catch (e) {
-    unload();
-    return { ok: false, error: e.message };
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const json = await res.json();
+    hideLoading();
+
+    if (json.success === false) {
+      showError(json.error || 'Analysis failed.');
+      return;
+    }
+
+    if (currentMode === 'case_analysis') {
+      renderCaseAnalysis(json.data);
+    } else {
+      renderGenericResult(json);
+    }
+
+  } catch (err) {
+    hideLoading();
+    showError('Connection error: ' + err.message);
   }
 }
 
-// ══════════════════════════════════════════════════════════
-// ASK
-// ══════════════════════════════════════════════════════════
-async function doAsk() {
-  const q = document.getElementById('ask-q').value.trim();
-  if (!q) return;
-  const d = await api({
-    mode: 'ask', question: q,
-    output_mode: document.getElementById('ask-om').value,
-    source_mode: document.getElementById('ask-sm').value,
-    language: document.getElementById('lang').value
-  }, 'SEARCHING PROTOCOL...');
+// ─────────────────────────────────────────────────────
+// RENDER CASE ANALYSIS
+// ─────────────────────────────────────────────────────
+function renderCaseAnalysis(data) {
+  if (!data) { showError('No data returned.'); return; }
 
-  const c = document.getElementById('ask-result');
-  if (!d.ok || d.error) { c.innerHTML = errHtml(d.error); return; }
+  // Review header
+  const meta = data.case_metadata || {};
+  const ts = meta.review_timestamp ? new Date(meta.review_timestamp).toLocaleString() : 'Just now';
+  document.getElementById('reviewTitle').textContent = 'Pharmacist Clinical Review Report';
+  document.getElementById('reviewSub').innerHTML = `Generated &mdash; ${ts} &nbsp;·&nbsp; Engine v${meta.engine_version || '2.0'}`;
 
-  const ok = d.verdict === 'OK';
-  let html = `<div class="rcard">
-    <div class="rcard-hd">
-      <div class="rcard-title">Protocol Answer</div>
-      <div class="vbadge ${ok ? 'vok' : 'vnf'}">${ok ? '✓ FOUND' : '✗ NOT FOUND'}</div>
-    </div>
-    <div class="rbody md">${md(d.answer)}</div>
-  </div>`;
+  // Badges
+  const badges = document.getElementById('reviewBadges');
+  badges.innerHTML = '';
+  const setting = meta.care_setting || data.soap_note?.assessment?.clinical_context || '';
+  if (setting) addBadge(badges, setting, 'badge-dark');
 
-  if (d.citations?.length) {
-    html += sdiv('Evidence Sources (' + d.citations.length + ')');
-    html += '<div class="cit-list">' + d.citations.map(citHtml).join('') + '</div>';
-  }
-  c.innerHTML = html;
+  const criticals = meta.critical_alerts || 0;
+  const totalInt  = meta.total_interventions || 0;
+  if (criticals > 0) addBadge(badges, `${criticals} Critical Alert${criticals > 1 ? 's' : ''}`, 'badge-red');
+  if (totalInt > 0)  addBadge(badges, `${totalInt} Intervention${totalInt > 1 ? 's' : ''}`, 'badge-orange');
+
+  // Render sections
+  renderSOAP(data.soap_note);
+  renderInterventions(data.pharmacist_interventions || []);
+  renderAdjustments(data.medication_adjustments || []);
+  renderCitations(data.citations || []);
+
+  document.getElementById('resultsArea').classList.add('visible');
+  document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ══════════════════════════════════════════════════════════
-// CASE ANALYSIS
-// ══════════════════════════════════════════════════════════
-async function doCase() {
-  const ct = document.getElementById('case-text').value.trim();
-  const cq = document.getElementById('case-q').value.trim();
-  if (!ct) return;
+function addBadge(container, text, cls) {
+  const b = document.createElement('span');
+  b.className = `badge ${cls}`;
+  b.textContent = text;
+  container.appendChild(b);
+}
 
-  const d = await api({
-    mode: 'case', case_text: ct,
-    question: cq || undefined,
-    language: document.getElementById('lang').value
-  }, 'RUNNING CLINICAL ANALYSIS...');
-
-  const c = document.getElementById('case-result');
-  if (!d.ok || d.error) { c.innerHTML = errHtml(d.error); return; }
-
+// ─────────────────────────────────────────────────────
+// SOAP NOTE RENDERER
+// ─────────────────────────────────────────────────────
+function renderSOAP(soap) {
+  if (!soap) return;
+  const el = document.getElementById('soapContent');
   let html = '';
 
-  // ── Patient parameter tags ──
-  if (d.patient_parameters) {
-    const p = d.patient_parameters;
-    let tags = '';
-    if (p.age)     tags += `<span class="ptag"><b>${p.age}</b>Y</span>`;
-    if (p.sex)     tags += `<span class="ptag"><b>${p.sex}</b></span>`;
-    if (p.weight_kg) tags += `<span class="ptag"><b>${p.weight_kg}</b> kg</span>`;
-    if (p.height_cm) tags += `<span class="ptag"><b>${p.height_cm}</b> cm</span>`;
-    if (p.diagnosis) tags += `<span class="ptag">Dx <b>${p.diagnosis.substring(0,40)}</b></span>`;
-    (p.allergies||[]).forEach(a => tags += `<span class="ptag allergy">⚠ <b>${a}</b></span>`);
-    if (tags) html += `<div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:3px;">${tags}</div>`;
+  // ── SUBJECTIVE ──
+  const s = soap.subjective || {};
+  html += soapSection('S — Subjective');
+  if (s.patient_summary) html += `<p><strong>Patient:</strong> ${esc(s.patient_summary)}</p>`;
+  if (s.reason_for_admission) html += `<p><strong>Reason for Admission:</strong> ${esc(s.reason_for_admission)}</p>`;
+  if (s.allergies?.length) html += `<p><strong>Allergies:</strong> ${s.allergies.map(esc).join('; ')}</p>`;
+  if (s.pmh?.length) html += `<p><strong>PMH:</strong> ${s.pmh.map(esc).join('; ')}</p>`;
+  if (s.home_medications?.length) html += `<p><strong>Home Medications:</strong> ${s.home_medications.map(esc).join(', ')}</p>`;
+  if (s.social_history) html += `<p><strong>Social:</strong> ${esc(s.social_history)}</p>`;
+  html += closeSoapSection();
+
+  html += '<div class="sep"></div>';
+
+  // ── OBJECTIVE ──
+  const o = soap.objective || {};
+  html += soapSection('O — Objective');
+
+  // Vitals
+  const v = o.vitals || {};
+  const vitalPairs = [
+    ['BP', v.bp], ['HR', v.hr], ['RR', v.rr],
+    ['Temp', v.temp], ['SpO2', v.spo2],
+    ['Weight', v.weight], ['Height', v.height], ['BMI', v.bmi]
+  ].filter(([, val]) => val);
+
+  if (vitalPairs.length) {
+    html += `<p><strong>Vitals:</strong></p><div class="vitals-grid" style="margin:8px 0 12px">`;
+    vitalPairs.forEach(([k, val]) => {
+      html += `<div class="vital-box"><div class="vital-label">${k}</div><div class="vital-value">${esc(val)}</div></div>`;
+    });
+    html += '</div>';
+  } else {
+    html += '<p><strong>Vitals:</strong> Not provided</p>';
   }
 
-  // ── Metrics ──
-  const m = d.clinical_metrics || {};
-  if (Object.keys(m).length) {
-    html += sdiv('Calculated Metrics');
-    html += '<div class="metrics-grid">';
-    if (m.creatinine_clearance_ml_min !== undefined) {
-      const v = m.creatinine_clearance_ml_min;
-      const cls = v>=90?'good':v>=60?'':v>=30?'warn':'bad';
-      html += `<div class="mc ${cls}"><div class="mc-lbl">CrCl (Cockcroft-Gault)</div><div class="mc-val">${v}</div><div class="mc-sub">${m.renal_function_category||'mL/min'}</div></div>`;
-    }
-    if (m.ibw_kg)          html += `<div class="mc"><div class="mc-lbl">IBW</div><div class="mc-val">${m.ibw_kg}</div><div class="mc-sub">kg (Devine)</div></div>`;
-    if (m.adjusted_bw_kg)  html += `<div class="mc warn"><div class="mc-lbl">Adjusted BW</div><div class="mc-val">${m.adjusted_bw_kg}</div><div class="mc-sub">kg — use for dosing</div></div>`;
+  // Labs
+  const labs = o.labs || {};
+  if (labs.summary_flag === 'no_significant_abnormalities') {
+    html += '<p><strong>Labs:</strong> No clinically significant abnormalities detected.</p>';
+  } else {
+    html += '<p><strong>Labs:</strong></p><div class="labs-container" style="margin-top:8px">';
+
+    const LAB_ORDER = [
+      { key: 'renal',           title: 'Renal',                  fields: ['scr','bun_urea','crcl_calculated','renal_classification'] },
+      { key: 'cbc',             title: 'CBC',                    fields: ['hb','wbc','platelets','neutrophils','lymphocytes','hematocrit'] },
+      { key: 'electrolytes',    title: 'Electrolytes',           fields: ['sodium','potassium','chloride','bicarbonate','calcium','magnesium','phosphate'] },
+      { key: 'liver_function',  title: 'Liver Function',         fields: ['alt','ast','alp','ggt','total_bilirubin','albumin'] },
+      { key: 'coagulation',     title: 'Coagulation',            fields: ['inr','pt','aptt','fibrinogen','d_dimer'] },
+      { key: 'infection_sepsis',title: 'Infection / Sepsis',     fields: ['crp','procalcitonin','lactate','blood_cultures','urine_cultures'] },
+      { key: 'glucose_metabolic',title:'Glucose / Metabolic',    fields: ['glucose','hba1c','tsh'] },
+      { key: 'tdm_drug_monitoring', title: 'Drug Monitoring / TDM', fields: ['vancomycin','gentamicin_amikacin','digoxin','phenytoin','valproate','tacrolimus','cyclosporine','lithium'] },
+    ];
+
+    const FIELD_LABELS = {
+      scr: 'SCr', bun_urea: 'BUN / Urea', crcl_calculated: 'CrCl (Calc.)',
+      renal_classification: 'Renal Stage', hb: 'Hb', wbc: 'WBC',
+      platelets: 'Platelets', neutrophils: 'Neutrophils', lymphocytes: 'Lymphocytes',
+      hematocrit: 'Hematocrit', sodium: 'Na⁺', potassium: 'K⁺', chloride: 'Cl⁻',
+      bicarbonate: 'HCO₃⁻', calcium: 'Ca²⁺', magnesium: 'Mg²⁺', phosphate: 'Phos',
+      alt: 'ALT', ast: 'AST', alp: 'ALP', ggt: 'GGT',
+      total_bilirubin: 'Total Bili', albumin: 'Albumin',
+      inr: 'INR', pt: 'PT', aptt: 'aPTT', fibrinogen: 'Fibrinogen', d_dimer: 'D-Dimer',
+      crp: 'CRP', procalcitonin: 'PCT', lactate: 'Lactate',
+      blood_cultures: 'Blood Cx', urine_cultures: 'Urine Cx',
+      glucose: 'Glucose', hba1c: 'HbA1c', tsh: 'TSH',
+      vancomycin: 'Vancomycin', gentamicin_amikacin: 'Gent./Amikacin',
+      digoxin: 'Digoxin', phenytoin: 'Phenytoin', valproate: 'Valproate',
+      tacrolimus: 'Tacrolimus', cyclosporine: 'Cyclosporine', lithium: 'Lithium'
+    };
+
+    LAB_ORDER.forEach(group => {
+      const groupData = labs[group.key] || {};
+      const rows = group.fields
+        .map(f => ({ label: FIELD_LABELS[f] || f, val: groupData[f] }))
+        .filter(r => r.val && r.val !== 'null' && r.val !== null);
+      if (!rows.length) return;
+
+      html += `<div class="lab-group">
+        <div class="lab-group-title">${group.title}</div>
+        <div class="lab-rows">`;
+
+      rows.forEach(r => {
+        const isHigh = /\b(↑|HIGH|H\b|\bH$)/i.test(r.val);
+        const isLow  = /\b(↓|LOW|L\b|\bL$)/i.test(r.val);
+        const rowClass = isHigh || isLow ? 'abnormal' : 'normal';
+        const valClass = isHigh ? 'high' : isLow ? 'low' : 'normal-val';
+        html += `<div class="lab-row ${rowClass}">
+          <span class="lab-name">${r.label}</span>
+          <span class="lab-val ${valClass}">${esc(r.val)}</span>
+        </div>`;
+      });
+
+      html += '</div></div>';
+    });
+
     html += '</div>';
   }
 
-  // ── Lab panels ──
-  const labs = d.labs_classified || {};
-  const abnormal  = labs.abnormal  || [];
-  const border    = labs.borderline || [];
-  const drugLabs  = labs.drug_related || [];
-
-  if (abnormal.length) {
-    html += labPanel('Key Abnormal Labs', abnormal, 'red');
+  // Cultures / Micro
+  if (o.microbiology_summary) {
+    html += `<p style="margin-top:10px"><strong>Microbiology:</strong> ${esc(o.microbiology_summary)}</p>`;
   }
-  if (border.length) {
-    html += labPanel('Borderline Labs', border, 'amber');
+  html += closeSoapSection();
+
+  html += '<div class="sep"></div>';
+
+  // ── ASSESSMENT ──
+  const a = soap.assessment || {};
+  html += soapSection('A — Assessment');
+  if (a.active_diagnoses?.length) {
+    html += `<p><strong>Active Problems:</strong> ${a.active_diagnoses.map(esc).join(' &nbsp;·&nbsp; ')}</p>`;
   }
-  if (drugLabs.length) {
-    html += labPanel('Drug-Related Monitoring Labs', drugLabs, 'purple', true);
+  if (a.clinical_context) html += `<p>${esc(a.clinical_context)}</p>`;
+  if (a.renal_hepatic_summary) html += `<p><strong>Renal/Hepatic:</strong> ${esc(a.renal_hepatic_summary)}</p>`;
+  if (a.medication_related_assessment) html += `<p><strong>Medication Assessment:</strong> ${esc(a.medication_related_assessment)}</p>`;
+  html += closeSoapSection();
+
+  html += '<div class="sep"></div>';
+
+  // ── PLAN ──
+  const p = soap.plan || {};
+  html += soapSection('P — Plan');
+  if (p.current_medications_reviewed?.length) {
+    html += '<p><strong>Current Medications Reviewed:</strong></p><ul style="margin:4px 0 8px 16px; font-size:.8rem; color:var(--ink-2)">';
+    p.current_medications_reviewed.forEach(m => { html += `<li>${esc(m)}</li>`; });
+    html += '</ul>';
   }
-
-  // ── Tabbed clinical note ──
-  const tabs = [
-    { id:'soap',  label:'SOAP Note' },
-    { id:'dose',  label:'Dose Verification' },
-    { id:'alerts',label:'Clinical Alerts' },
-    { id:'sources',label:'Sources' },
-  ];
-
-  html += sdiv('Clinical Review');
-  html += '<div class="rcard"><div class="ctabs">';
-  tabs.forEach((t,i) => html += `<button class="ctab${i===0?' active':''}" onclick="cTab(this,'${t.id}')">${t.label}</button>`);
-  html += '</div>';
-
-  // SOAP tab
-  html += `<div class="ctp active" id="ctp-soap">${renderSoap(d.soap_note)}</div>`;
-
-  // Dose verification tab
-  html += `<div class="ctp" id="ctp-dose">`;
-  if (d.dose_verification?.length) {
-    html += `<div style="overflow-x:auto;"><table class="dose-table">
-      <thead><tr><th>Medication</th><th>Ordered Dose</th><th>Protocol Dose</th><th>Renal Adjustment</th><th>Verdict</th><th>Reference</th></tr></thead>
-      <tbody>`;
-    d.dose_verification.forEach(row => {
-      const vc = verdictCls(row.verdict);
-      html += `<tr><td>${row.drug||'—'}</td><td style="font-family:'JetBrains Mono',monospace">${row.ordered_dose||'—'}</td><td style="font-family:'JetBrains Mono',monospace">${row.protocol_dose||'—'}</td><td>${row.renal_adjustment||'N/A'}</td><td class="${vc}">${verdictSymbol(row.verdict)} ${row.verdict||'—'}</td><td style="font-size:11px;color:var(--dim)">${row.reference||'—'}</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-  } else {
-    html += `<div class="empty" style="padding:30px"><div class="empty-icon">✓</div><div class="empty-title">No Dose Issues Detected</div></div>`;
+  if (p.pharmacist_intervention_summary) {
+    html += `<p><strong>Pharmacist Intervention:</strong> ${esc(p.pharmacist_intervention_summary)}</p>`;
   }
-  html += `</div>`;
-
-  // Alerts tab
-  html += `<div class="ctp" id="ctp-alerts">`;
-  if (d.clinical_alerts?.length) {
-    html += `<div class="alert-list">${d.clinical_alerts.map(a => `<div class="alert-item"><span class="ai">⚠</span><span>${a}</span></div>`).join('')}</div>`;
-  } else {
-    html += `<div class="empty" style="padding:30px"><div class="empty-icon">✓</div><div class="empty-title">No Critical Alerts</div></div>`;
+  if (p.followup_plan?.length) {
+    html += '<p style="margin-top:6px"><strong>Follow-up:</strong></p><ul style="margin:4px 0 0 16px; font-size:.8rem; color:var(--ink-2)">';
+    p.followup_plan.forEach(f => { html += `<li>${esc(f)}</li>`; });
+    html += '</ul>';
   }
-  html += `</div>`;
+  html += closeSoapSection();
 
-  // Sources tab
-  html += `<div class="ctp" id="ctp-sources">`;
-  if (d.sources?.length) {
-    html += `<div style="padding:14px;"><div class="cit-list">${d.sources.map(citHtml).join('')}</div></div>`;
-  } else {
-    html += `<div class="empty" style="padding:30px"><div class="empty-icon">📄</div><div class="empty-title">No Sources Retrieved</div></div>`;
-  }
-  html += `</div>`;
-
-  html += `</div>`;  // close rcard
-
-  c.innerHTML = html;
+  el.innerHTML = html;
 }
 
-function cTab(btn, id) {
-  const p = btn.closest('.rcard');
-  p.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
-  p.querySelectorAll('.ctp').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  const tp = document.getElementById('ctp-' + id);
-  if (tp) tp.classList.add('active');
+function soapSection(label) {
+  return `<div class="soap-section"><div class="soap-label">${label}</div><div class="soap-content">`;
+}
+function closeSoapSection() {
+  return '</div></div>';
 }
 
-// ══════════════════════════════════════════════════════════
-// SOAP RENDERER — color-coded monospace output
-// ══════════════════════════════════════════════════════════
-function renderSoap(text) {
-  if (!text) return '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No SOAP note generated</div></div>';
+// ─────────────────────────────────────────────────────
+// INTERVENTIONS RENDERER
+// ─────────────────────────────────────────────────────
+function renderInterventions(list) {
+  const el = document.getElementById('interventionContent');
+  document.getElementById('interventionCount').textContent = list.length;
 
-  const lines = text.split('\n');
-  let out = '<div class="soap-wrap">';
+  if (!list.length) { el.innerHTML = '<div class="empty-state">No interventions identified for this case.</div>'; return; }
 
-  lines.forEach(raw => {
-    const line = raw
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Sort: CRITICAL → HIGH → MODERATE → LOW
+  const order = { CRITICAL: 0, HIGH: 1, MODERATE: 2, LOW: 3 };
+  list.sort((a, b) => (order[a.priority] ?? 9) - (order[b.priority] ?? 9));
 
-    // Section headers: S: O: A: P:
-    if (/^[SOAP]:$/.test(line.trim())) {
-      out += `<div class="soap-section-hd">${line}</div>`;
-      return;
-    }
-    // Separator lines
-    if (/^─{10,}/.test(line.trim())) {
-      out += `<div class="soap-separator">${line}</div>`;
-      return;
-    }
-    // Highlight ↑ and ↓ arrows
-    let colored = line
-      .replace(/(↑)/g, '<span class="soap-arrow-up">↑</span>')
-      .replace(/(↓)/g, '<span class="soap-arrow-dn">↓</span>')
-      // Verdict keywords
-      .replace(/\b(CORRECT)\b/g, '<span class="soap-verdict-correct">$1</span>')
-      .replace(/\b(ADJUST)\b/g,  '<span class="soap-verdict-adjust">$1</span>')
-      .replace(/\b(WRONG)\b/g,   '<span class="soap-verdict-wrong">$1</span>')
-      // Drug monitoring label
-      .replace(/(→\s+Monitor:[^<\n]+)/g, '<span class="soap-drug">$1</span>')
-      .replace(/(→\s+Renal dosing review[^<\n]*)/g, '<span class="soap-drug">$1</span>');
-
-    out += `<div class="soap-line">${colored}</div>`;
-  });
-
-  out += '</div>';
-  return out;
-}
-
-// ══════════════════════════════════════════════════════════
-// LAB PANEL RENDERER
-// ══════════════════════════════════════════════════════════
-function labPanel(title, labs, color, showDrugs = false) {
-  let html = `<div class="lab-section" style="margin-bottom:12px;">
-    <div class="lab-hd">
-      <div class="lab-hd-title ${color}">${title}</div>
-      <div class="lab-hd-count">${labs.length} value${labs.length!==1?'s':''}</div>
-    </div>
-    <div class="lab-list">`;
-
-  labs.forEach(l => {
-    const vc = l.isAbnormal
-      ? (l.status === 'high' ? 'high' : 'low')
-      : (l.status === 'borderline-high' ? 'bh' : 'bl');
-    const arrow = l.arrow === '↑' ? 'up' : l.arrow === '↓' ? 'dn' : '';
-    const drugStr = (l.drugRelated||[]).join(', ');
-
-    html += `<div class="lab-row">
-      <div class="lab-name">${l.label}</div>
-      <div class="lab-value ${vc}">${l.value}</div>
-      <div class="lab-arrow ${arrow}">${l.arrow||''}</div>
-      <div class="lab-unit">${l.unit}</div>
-      ${showDrugs && drugStr ? `<div class="lab-drugs">→ ${drugStr}</div>` : '<div></div>'}
+  let html = '<div class="intervention-list">';
+  list.forEach(item => {
+    html += `<div class="intervention-card ${esc(item.priority || 'MODERATE')}">
+      <div class="intervention-top">
+        <span class="priority-tag ${esc(item.priority || 'MODERATE')}">${esc(item.priority || 'MODERATE')}</span>
+        <div>
+          <div class="intervention-drug">${esc(item.drug_involved || 'N/A')}</div>
+          <div class="intervention-category">${esc(item.category || '')}</div>
+        </div>
+      </div>
+      <div class="intervention-body">
+        <div class="int-row"><span class="int-label">Problem</span><div class="int-text">${esc(item.problem_identified || '')}</div></div>
+        <div class="int-row" style="margin-top:6px"><span class="int-label">Recommendation</span><div class="int-text">${esc(item.recommendation || '')}</div></div>
+        ${item.rationale ? `<div class="int-row" style="margin-top:6px"><span class="int-label">Rationale</span><div class="int-text">${esc(item.rationale)}</div></div>` : ''}
+        ${item.supporting_citation ? `<div class="int-citation">📚 ${esc(item.supporting_citation)}</div>` : ''}
+      </div>
     </div>`;
   });
-
-  html += `</div></div>`;
-  return html;
+  html += '</div>';
+  el.innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════════════
-// MONOGRAPH
-// ══════════════════════════════════════════════════════════
-async function doMono() {
-  const drug = document.getElementById('mono-drug').value.trim();
-  if (!drug) return;
-  const d = await api({
-    mode: 'monograph', drug_name: drug,
-    patient_context: document.getElementById('mono-ctx').value.trim() || undefined
-  }, 'LOADING MONOGRAPH...');
-  const c = document.getElementById('mono-result');
-  if (!d.ok || d.error) { c.innerHTML = errHtml(d.error); return; }
-  let html = `<div class="rcard"><div class="rcard-hd"><div class="rcard-title">${drug.toUpperCase()} Monograph</div></div><div class="rbody md">${md(d.monograph)}</div></div>`;
-  if (d.sources?.length) {
-    html += sdiv('Sources') + '<div class="cit-list">' + d.sources.map(citHtml).join('') + '</div>';
+// ─────────────────────────────────────────────────────
+// ADJUSTMENTS RENDERER
+// ─────────────────────────────────────────────────────
+function renderAdjustments(list) {
+  const el = document.getElementById('adjustmentContent');
+  document.getElementById('adjustmentCount').textContent = list.length;
+
+  if (!list.length) { el.innerHTML = '<div class="empty-state">No medication adjustments recommended.</div>'; return; }
+
+  let html = '<div class="adjustment-list">';
+  list.forEach(item => {
+    const urgencyClass = `urgency-${(item.urgency || 'Routine').replace(' ', '\\ ')}`;
+    html += `<div class="adjustment-row">
+      <div>
+        <div class="adj-drug">${esc(item.drug_name || '')}</div>
+        <div class="adj-change">
+          ${item.ordered_as ? `<span class="adj-from">${esc(item.ordered_as)}</span><span class="adj-arrow">→</span>` : ''}
+          ${item.recommended_as ? `<span class="adj-to">${esc(item.recommended_as)}</span>` : ''}
+        </div>
+        <div class="adj-reason">${esc(item.reason || '')}${item.adjustment_type ? ` <em style="color:var(--ink-4)">[${esc(item.adjustment_type)}]</em>` : ''}</div>
+        ${item.citation ? `<div class="int-citation" style="margin-top:6px">📚 ${esc(item.citation)}</div>` : ''}
+      </div>
+      <span class="urgency-tag urgency-${esc(item.urgency || 'Routine')}">${esc(item.urgency || 'Routine')}</span>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────
+// CITATIONS RENDERER
+// ─────────────────────────────────────────────────────
+function renderCitations(list) {
+  const el = document.getElementById('citationContent');
+  document.getElementById('citationCount').textContent = list.length;
+
+  if (!list.length) { el.innerHTML = '<div class="empty-state">No citations available.</div>'; return; }
+
+  let html = '<div class="citation-list">';
+  list.forEach((c, i) => {
+    const meta = [c.guideline_body, c.year, c.recommendation_class].filter(Boolean).join(' · ');
+    html += `<div class="citation-row">
+      <div class="citation-num">${c.citation_id || i + 1}</div>
+      <div>
+        <div class="citation-source">${esc(c.source || 'Reference')}</div>
+        ${meta ? `<div class="citation-detail">${esc(meta)}</div>` : ''}
+        ${c.relevance ? `<div class="citation-relevance">${esc(c.relevance)}</div>` : ''}
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────
+// GENERIC RESULT (ask / monograph / antibiogram)
+// ─────────────────────────────────────────────────────
+function renderGenericResult(json) {
+  const data = json.data;
+  const el = document.getElementById('soapContent');
+
+  if (typeof data?.answer === 'string') {
+    el.innerHTML = `<div class="soap-content" style="white-space:pre-wrap">${esc(data.answer)}</div>`;
+  } else {
+    el.innerHTML = `<pre style="font-size:.78rem;color:var(--ink-2);white-space:pre-wrap;line-height:1.6">${esc(JSON.stringify(data, null, 2))}</pre>`;
   }
-  c.innerHTML = html;
+
+  document.getElementById('interventionContent').innerHTML = '<div class="empty-state">Not applicable for this mode.</div>';
+  document.getElementById('adjustmentContent').innerHTML   = '<div class="empty-state">Not applicable for this mode.</div>';
+  document.getElementById('citationContent').innerHTML     = '<div class="empty-state">Not applicable for this mode.</div>';
+
+  document.getElementById('reviewTitle').textContent = modeLabels[currentMode] + ' — Result';
+  document.getElementById('reviewSub').innerHTML = `Generated — ${new Date().toLocaleString()}`;
+  document.getElementById('reviewBadges').innerHTML = '';
+
+  document.getElementById('resultsArea').classList.add('visible');
+  document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function qMono(drug) { document.getElementById('mono-drug').value = drug; go('monograph'); doMono(); }
+// ─────────────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────────────
+const LOADING_STEPS = [
+  'Extracting patient data', 'Calculating CrCl & renal status',
+  'Classifying labs', 'Identifying diagnoses',
+  'Auditing medications', 'Checking safety alerts',
+  'Matching evidence', 'Generating report'
+];
 
-// ══════════════════════════════════════════════════════════
-// ANTIBIOGRAM
-// ══════════════════════════════════════════════════════════
-async function doAbx() {
-  const org  = document.getElementById('abx-org').value.trim();
-  const drug = document.getElementById('abx-drug').value.trim();
-  if (!org && !drug) return;
-  const d = await api({
-    mode: 'antibiogram',
-    organism: org || undefined,
-    antibiotic: drug || undefined,
-    site_of_infection: document.getElementById('abx-site').value.trim() || undefined,
-    patient_context: document.getElementById('abx-ctx').value.trim() || undefined
-  }, 'ANALYZING SUSCEPTIBILITY...');
-  const c = document.getElementById('abx-result');
-  if (!d.ok || d.error) { c.innerHTML = errHtml(d.error); return; }
-  const title = org ? `${org} Susceptibility Analysis` : `${drug} Coverage Analysis`;
-  let html = `<div class="rcard"><div class="rcard-hd"><div class="rcard-title">${title}</div></div><div class="rbody md">${md(d.analysis)}</div></div>`;
-  if (d.sources?.length) html += sdiv('Sources') + '<div class="cit-list">' + d.sources.map(citHtml).join('') + '</div>';
-  c.innerHTML = html;
+function showLoading() {
+  document.getElementById('loadingPanel').classList.add('visible');
+  document.getElementById('analyzeBtn').disabled = true;
+  const stepsEl = document.getElementById('loadingSteps');
+  stepsEl.innerHTML = '';
+  LOADING_STEPS.forEach((s, i) => {
+    const span = document.createElement('span');
+    span.className = 'loading-step';
+    span.textContent = s;
+    span.style.animationDelay = `${i * 0.35}s`;
+    stepsEl.appendChild(span);
+  });
 }
 
-function qOrg(o) { document.getElementById('abx-org').value = o; document.getElementById('abx-drug').value = ''; }
-
-// ══════════════════════════════════════════════════════════
-// SHARED RENDER HELPERS
-// ══════════════════════════════════════════════════════════
-function citHtml(c) {
-  const sc = c.score !== null && c.score !== undefined ? Math.round(c.score * 100) : null;
-  return `<div class="cit-item">
-    <div class="cit-id">${c.id || c.evidence_ids?.[0] || 'REF'}</div>
-    <div style="flex:1;min-width:0;">
-      <div class="cit-fn">${c.filename||'Unknown source'}</div>
-      <div class="cit-meta">${c.page?`p.${c.page}`:''}${c.section?` · ${c.section}`:''}${sc!==null?` · Relevance: ${sc}%`:''}</div>
-      ${c.excerpt?`<div class="cit-ex">${esc(c.excerpt.substring(0,200))}…</div>`:''}
-      ${sc!==null?`<div class="sbar"><div class="sfill" style="width:${sc}%"></div></div>`:''}
-    </div>
-  </div>`;
+function hideLoading() {
+  document.getElementById('loadingPanel').classList.remove('visible');
+  document.getElementById('analyzeBtn').disabled = false;
 }
 
-function sdiv(label) {
-  return `<div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-lbl">${label}</div><div class="sdiv-line"></div></div>`;
+function showError(msg) {
+  const p = document.getElementById('errorPanel');
+  document.getElementById('errorMsg').textContent = msg;
+  p.classList.add('visible');
 }
 
-function errHtml(msg) {
-  return `<div style="padding:12px 15px;border-radius:var(--rs);background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.2);color:var(--red);font-size:13px;">⚠ ${msg}</div>`;
+function hideError() { document.getElementById('errorPanel').classList.remove('visible'); }
+function hideResults() { document.getElementById('resultsArea').classList.remove('visible'); }
+
+function esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-function verdictCls(v) {
-  if (!v) return '';
-  const u = v.toUpperCase();
-  if (u.includes('CORRECT')) return 'verdict-correct';
-  if (u.includes('ADJUST'))  return 'verdict-adjust';
-  if (u.includes('WRONG'))   return 'verdict-wrong';
-  return 'verdict-nip';
-}
-
-function verdictSymbol(v) {
-  if (!v) return '';
-  const u = v.toUpperCase();
-  if (u.includes('CORRECT')) return '✓';
-  if (u.includes('ADJUST'))  return '⚠';
-  if (u.includes('WRONG'))   return '✗';
-  return '?';
-}
-
-// ══════════════════════════════════════════════════════════
-// MINIMAL MARKDOWN RENDERER
-// ══════════════════════════════════════════════════════════
-function md(text) {
-  if (!text) return '';
-  return esc(text)
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)+)/g, (_, hdr, body) => {
-      const hs = hdr.split('|').map(h=>h.trim()).filter(Boolean);
-      const rows = body.trim().split('\n').map(r => r.split('|').map(x=>x.trim()).filter(Boolean));
-      let t = '<table><thead><tr>' + hs.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>';
-      rows.forEach(r => { t += '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>'; });
-      return t + '</tbody></table>';
-    })
-    .replace(/^[•\-\*] (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>[^]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-}
-
-function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function load(msg)  { document.getElementById('ldtxt').textContent = msg; document.getElementById('ld').classList.add('on'); }
-function unload()   { document.getElementById('ld').classList.remove('on'); }
-
-// Keyboard shortcut: Ctrl+Enter to submit
-document.addEventListener('keydown', e => {
-  if (!e.ctrlKey || e.key !== 'Enter') return;
-  if (mode==='ask') doAsk();
-  else if (mode==='case') doCase();
-  else if (mode==='monograph') doMono();
-  else if (mode==='antibiogram') doAbx();
+// Allow Ctrl+Enter / Cmd+Enter to submit
+document.getElementById('caseInput').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runAnalysis();
 });
-
-// Initialize active tab
-go('ask');
 </script>
 </body>
 </html>
