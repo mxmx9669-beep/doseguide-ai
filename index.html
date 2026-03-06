@@ -560,7 +560,7 @@
       try {
         const payload = buildPayload(selectedMode, rawCase, q, selectedLanguage);
 
-        const res = await fetch("/functions/api/ask", {
+        const res = await fetch("/api/ask", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -791,3 +791,4 @@
   </script>
 </body>
 </html>
+
