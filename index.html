@@ -948,7 +948,7 @@ async function runAnalysis() {
   };
 
   try {
-    const res = await fetch('/functions/api/ask', {
+    const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -1338,3 +1338,4 @@ document.getElementById('caseInput').addEventListener('keydown', e => {
 </script>
 </body>
 </html>
+
