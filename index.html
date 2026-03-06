@@ -3,792 +3,989 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TheraGuard AI — Clinical Review</title>
+  <title>TheraGuard AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f4f8fb;
-      --panel: #ffffff;
-      --panel-2: #f8fbfd;
-      --text: #12212f;
-      --muted: #5f7284;
-      --line: #dbe5ec;
-      --primary: #124e78;
-      --primary-2: #1f6aa5;
-      --success-bg: #edf8f0;
-      --success-tx: #1f6a38;
-      --warn-bg: #fff7e8;
-      --warn-tx: #8a5a00;
-      --danger-bg: #fff0f0;
-      --danger-tx: #a12626;
-      --info-bg: #eef6ff;
-      --info-tx: #1b5e9a;
-      --shadow: 0 10px 30px rgba(16, 35, 52, 0.08);
-      --radius: 18px;
+      --bg:        #f0f4f8;
+      --bg2:       #e8eef5;
+      --surface:   #ffffff;
+      --surface2:  #f7fafd;
+      --surface3:  #edf2f7;
+      --border:    #d1dce8;
+      --border2:   #e2eaf2;
+      --text:      #1a2433;
+      --text2:     #2d3f54;
+      --muted:     #6b7f96;
+      --muted2:    #8fa3ba;
+      --accent:    #1e6fba;
+      --accent2:   #2581d8;
+      --accent-bg: #e8f2fc;
+      --green:     #1a8c4e;
+      --green-bg:  #e6f5ed;
+      --yellow:    #a36200;
+      --yellow-bg: #fff3e0;
+      --red:       #c0392b;
+      --red-bg:    #fdecea;
+      --orange:    #c05a10;
+      --orange-bg: #fef0e6;
+      --purple:    #6b3fa0;
+      --purple-bg: #f2ecfb;
+      --shadow-sm: 0 1px 3px rgba(30,50,80,.08), 0 1px 2px rgba(30,50,80,.05);
+      --shadow:    0 4px 12px rgba(30,50,80,.10), 0 2px 4px rgba(30,50,80,.06);
+      --shadow-lg: 0 8px 24px rgba(30,50,80,.12), 0 4px 8px rgba(30,50,80,.07);
+      --radius:    12px;
+      --mono:      'IBM Plex Mono', monospace;
+      --sans:      'IBM Plex Sans', sans-serif;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(31,106,165,.08), transparent 20%),
-        radial-gradient(circle at top left, rgba(18,78,120,.06), transparent 25%),
-        var(--bg);
+      font-family: var(--sans);
+      background: var(--bg);
       color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
     }
 
-    .app {
-      max-width: 1380px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
+    /* ── TOP BAR ────────────────────────────────── */
     .topbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 24px;
+      gap: 16px;
+      padding: 0 28px;
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
     }
 
-    .brand {
+    .logo {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
-    .brand-badge {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      color: #fff;
+    .logo-mark {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1e6fba 0%, #2581d8 100%);
       display: grid;
       place-items: center;
-      font-weight: 800;
-      font-size: 18px;
-      box-shadow: var(--shadow);
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(30,111,186,.3);
     }
 
-    .brand h1 {
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.1;
+    .logo-text {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -.3px;
+      color: var(--text);
     }
 
-    .brand p {
-      margin: 4px 0 0;
+    .logo-sub {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 11.5px;
     }
+
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
     .status-pill {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
       color: var(--muted);
-      font-size: 13px;
-      box-shadow: var(--shadow);
-      white-space: nowrap;
+      font-family: var(--mono);
+      box-shadow: var(--shadow-sm);
     }
 
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* ── MODE TABS ──────────────────────────────── */
+    .mode-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 28px;
+    }
+
+    .mode-tab {
+      padding: 0 20px;
+      height: 44px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: .15s;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-tab:hover { color: var(--text); }
+    .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    /* ── MAIN LAYOUT ────────────────────────────── */
     .layout {
       display: grid;
-      grid-template-columns: 420px 1fr;
-      gap: 22px;
-      align-items: start;
+      grid-template-columns: 380px 1fr;
+      min-height: calc(100vh - 104px);
     }
 
-    .panel {
-      background: var(--panel);
-      border: 1px solid rgba(219,229,236,.9);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .input-panel {
+    /* ── LEFT PANEL ─────────────────────────────── */
+    .left {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
       position: sticky;
-      top: 20px;
+      top: 104px;
+      height: calc(100vh - 104px);
+      overflow-y: auto;
+      box-shadow: 2px 0 8px rgba(30,50,80,.04);
     }
 
-    .section-title {
-      margin: 0 0 14px;
-      font-size: 16px;
+    .panel-label {
+      font-size: 10.5px;
       font-weight: 700;
-    }
-
-    .helper {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 14px;
-      line-height: 1.5;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted2);
+      font-family: var(--mono);
     }
 
     textarea, input, select {
       width: 100%;
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 14px;
-      padding: 12px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 10px 12px;
       font: inherit;
       color: var(--text);
       outline: none;
-      transition: .18s ease;
-    }
-
-    textarea {
-      min-height: 360px;
-      resize: vertical;
-      line-height: 1.55;
+      transition: border-color .15s, box-shadow .15s;
+      font-size: 13px;
     }
 
     textarea:focus, input:focus, select:focus {
-      border-color: var(--primary-2);
-      box-shadow: 0 0 0 4px rgba(31,106,165,.12);
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(37,129,216,.12);
+      background: var(--surface);
     }
 
-    .grid-2 {
+    textarea {
+      resize: vertical;
+      min-height: 260px;
+      line-height: 1.6;
+    }
+
+    select { cursor: pointer; }
+
+    .field-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .field { display: flex; flex-direction: column; }
+
+    .search-opts {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .field {
-      margin-bottom: 14px;
-    }
-
-    .actions {
-      display: flex;
       gap: 10px;
-      margin-top: 16px;
-      flex-wrap: wrap;
     }
 
-    button {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 16px;
+    /* ── BUTTONS ────────────────────────────────── */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
       font: inherit;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
-      transition: .18s ease;
+      transition: .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      background: linear-gradient(135deg, #1e6fba 0%, #2581d8 100%);
       color: #fff;
-      min-width: 150px;
-      box-shadow: 0 10px 20px rgba(18,78,120,.18);
+      box-shadow: 0 2px 8px rgba(30,111,186,.25);
     }
+    .btn-primary:hover { box-shadow: 0 4px 14px rgba(30,111,186,.35); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
-    .btn-primary:hover { transform: translateY(-1px); }
-
-    .btn-secondary {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
-
-    .results {
-      display: grid;
-      gap: 18px;
-    }
-
-    .card {
-      padding: 20px;
-    }
-
-    .card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .card-head h2 {
-      margin: 0;
-      font-size: 17px;
-    }
-
-    .card-sub {
+    .btn-ghost {
+      background: var(--surface2);
+      border: 1px solid var(--border);
       color: var(--muted);
-      font-size: 12px;
     }
+    .btn-ghost:hover { border-color: var(--muted2); color: var(--text); }
 
-    .placeholder {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.7;
-      padding: 6px 2px;
-    }
+    .btn-row { display: flex; gap: 8px; }
 
-    .soap-box {
-      white-space: pre-wrap;
-      line-height: 1.75;
-      font-size: 14px;
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 18px;
-    }
-
-    .list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .item {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px 16px;
-      background: #fff;
-    }
-
-    .item-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .item-title {
-      font-size: 14px;
-      font-weight: 800;
-      margin: 0;
-    }
-
-    .item p {
-      margin: 6px 0 0;
-      font-size: 14px;
-      line-height: 1.65;
-      color: var(--text);
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .2px;
-    }
-
-    .sev-critical, .sev-major {
-      background: var(--danger-bg);
-      color: var(--danger-tx);
-    }
-
-    .sev-moderate {
-      background: var(--warn-bg);
-      color: var(--warn-tx);
-    }
-
-    .sev-minor, .sev-info {
-      background: var(--info-bg);
-      color: var(--info-tx);
-    }
-
-    .verdict-correct {
-      background: var(--success-bg);
-      color: var(--success-tx);
-    }
-
-    .verdict-adjust, .verdict-monitor {
-      background: var(--warn-bg);
-      color: var(--warn-tx);
-    }
-
-    .verdict-stop, .verdict-wrong {
-      background: var(--danger-bg);
-      color: var(--danger-tx);
-    }
-
-    .verdict-not_in_protocol {
-      background: var(--info-bg);
-      color: var(--info-tx);
-    }
-
-    .citation {
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: #fff;
-    }
-
-    .citation-head {
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: var(--primary);
-    }
-
-    .citation-body {
-      font-size: 13px;
-      line-height: 1.65;
-      color: var(--text);
-      white-space: pre-wrap;
-    }
-
-    .citation-meta {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
+    /* ── LOADING ────────────────────────────────── */
     .loading {
       display: none;
       align-items: center;
       gap: 10px;
+      font-size: 12.5px;
       color: var(--muted);
-      font-size: 14px;
-      margin-top: 12px;
+      font-family: var(--mono);
     }
-
     .loading.show { display: flex; }
 
     .spinner {
-      width: 18px;
-      height: 18px;
+      width: 16px; height: 16px;
       border-radius: 50%;
-      border: 2px solid #d8e5ef;
-      border-top-color: var(--primary);
-      animation: spin 0.85s linear infinite;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .error-box {
       display: none;
-      margin-top: 14px;
-      background: var(--danger-bg);
-      color: var(--danger-tx);
-      border: 1px solid #f1cccc;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-size: 13px;
-      line-height: 1.6;
+      background: var(--red-bg);
+      border: 1px solid rgba(192,57,43,.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      color: var(--red);
+      line-height: 1.5;
     }
-
     .error-box.show { display: block; }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    /* ── RIGHT PANEL ────────────────────────────── */
+    .right {
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+      background: var(--bg);
     }
 
-    @media (max-width: 1100px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .input-panel {
-        position: static;
-      }
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--muted);
+      padding: 80px 0;
+      text-align: center;
     }
 
-    @media (max-width: 640px) {
-      .app { padding: 14px; }
-      .topbar { flex-direction: column; align-items: stretch; }
-      .grid-2 { grid-template-columns: 1fr; }
-      .brand h1 { font-size: 20px; }
+    .empty-icon { opacity: .35; }
+
+    .empty-state h3 { font-size: 16px; color: var(--text2); font-weight: 600; }
+    .empty-state p  { font-size: 13px; max-width: 360px; line-height: 1.7; color: var(--muted); }
+
+    /* ── RESULT CARDS ───────────────────────────── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border2);
+      background: var(--surface2);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+
+    .card-title .card-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .icon-soap    { background: #e8f2fc; }
+    .icon-interv  { background: #fdecea; }
+    .icon-adj     { background: #fff3e0; }
+    .icon-cite    { background: #e6f5ed; }
+    .icon-search  { background: #e8f2fc; }
+
+    .card-sub-text {
+      font-size: 11.5px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .card-count {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 9px;
+      font-weight: 600;
+    }
+
+    .card-body { padding: 16px 18px; }
+
+    /* ── SOAP ───────────────────────────────────── */
+    .soap-text {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      color: var(--text2);
+    }
+
+    .soap-section-label { color: var(--accent); font-weight: 700; }
+
+    /* ── ITEMS ──────────────────────────────────── */
+    .items-list { display: flex; flex-direction: column; gap: 9px; }
+
+    .item-card {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      padding: 13px 15px;
+      border-left: 3px solid var(--border);
+      transition: box-shadow .15s;
+    }
+    .item-card:hover { box-shadow: var(--shadow-sm); }
+
+    .item-card.sev-critical { border-left-color: var(--red); }
+    .item-card.sev-major    { border-left-color: var(--orange); }
+    .item-card.sev-moderate { border-left-color: var(--yellow); }
+    .item-card.sev-minor    { border-left-color: var(--purple); }
+
+    .item-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .item-problem {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+      flex: 1;
+      color: var(--text);
+    }
+
+    .badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      font-family: var(--mono);
+      border-radius: 5px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: .3px;
+    }
+
+    .badge-critical { background: var(--red-bg);    color: var(--red); }
+    .badge-major    { background: var(--orange-bg); color: var(--orange); }
+    .badge-moderate { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-minor    { background: var(--purple-bg); color: var(--purple); }
+
+    .badge-stop    { background: var(--red-bg);    color: var(--red); }
+    .badge-adjust  { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-monitor { background: var(--accent-bg); color: var(--accent); }
+    .badge-correct { background: var(--green-bg);  color: var(--green); }
+    .badge-default { background: var(--surface3);  color: var(--muted); }
+
+    .item-rec {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 6px;
+      line-height: 1.55;
+    }
+
+    .item-ref {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface3);
+      border-radius: 5px;
+      padding: 4px 8px;
+      width: fit-content;
+    }
+
+    .adj-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .adj-cell {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+    }
+
+    .adj-cell-label {
+      color: var(--muted2);
+      font-size: 10.5px;
+      font-family: var(--mono);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+
+    /* ── CITATION ───────────────────────────────── */
+    .citation-card {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      padding: 13px 15px;
+    }
+
+    .cite-file {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--accent);
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cite-meta { color: var(--muted); font-weight: 400; font-size: 11px; }
+    .cite-score { color: var(--green); font-weight: 600; font-size: 11px; }
+
+    .cite-excerpt {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    /* ── ANSWER BOX ─────────────────────────────── */
+    .answer-box {
+      font-size: 13.5px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      color: var(--text2);
+    }
+
+    /* ── SCROLLBAR ──────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .left { position: static; height: auto; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-badge">TG</div>
-        <div>
-          <h1>TheraGuard AI</h1>
-          <p>Clinical Medication Review & Pharmacist Audit Report</p>
-        </div>
-      </div>
-      <div class="status-pill">Final visible output only: SOAP • Interventions • Adjustments • Citations</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L3 6v4c0 3.5 2.9 6.8 7 8 4.1-1.2 7-4.5 7-8V6L10 2z" fill="white" fill-opacity=".9"/>
+        <path d="M8 10h4M10 8v4" stroke="#1e6fba" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
     </div>
-
-    <div class="layout">
-      <div class="panel input-panel">
-        <h2 class="section-title">Case Input</h2>
-        <div class="helper">
-          Paste the full clinical case, physician orders, vitals, labs, diagnoses, allergies, and medication list.
-        </div>
-
-        <div class="field">
-          <label for="caseText">Patient Case</label>
-          <textarea id="caseText" placeholder="Paste clinical case here..."></textarea>
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label for="mode">Mode</label>
-            <select id="mode">
-              <option value="case_analysis">Case Analysis</option>
-              <option value="ask">Ask</option>
-              <option value="monograph">Monograph</option>
-              <option value="antibiogram">Antibiogram</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="language">Language</label>
-            <select id="language">
-              <option value="en">English</option>
-              <option value="ar">Arabic</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="question">Optional Clinical Question</label>
-          <input id="question" type="text" placeholder="Optional focused question..." />
-        </div>
-
-        <div class="actions">
-          <button class="btn-primary" id="analyzeBtn">Analyze Case</button>
-          <button class="btn-secondary" id="clearBtn" type="button">Clear</button>
-        </div>
-
-        <div class="loading" id="loadingBox">
-          <div class="spinner"></div>
-          <div>Running internal clinical review...</div>
-        </div>
-
-        <div class="error-box" id="errorBox"></div>
-      </div>
-
-      <div class="results">
-        <div class="panel card">
-          <div class="card-head">
-            <div>
-              <h2>SOAP Note</h2>
-              <div class="card-sub">Final pharmacist-facing summary</div>
-            </div>
-          </div>
-          <div id="soapContainer" class="placeholder">
-            No analysis yet.
-          </div>
-        </div>
-
-        <div class="panel card">
-          <div class="card-head">
-            <div>
-              <h2>Pharmacist Interventions</h2>
-              <div class="card-sub">Prioritized medication-related findings</div>
-            </div>
-          </div>
-          <div id="interventionsContainer" class="placeholder">
-            No interventions to display.
-          </div>
-        </div>
-
-        <div class="panel card">
-          <div class="card-head">
-            <div>
-              <h2>Medication Adjustments</h2>
-              <div class="card-sub">Dose corrections, stop orders, monitoring, and recommendations</div>
-            </div>
-          </div>
-          <div id="adjustmentsContainer" class="placeholder">
-            No medication adjustments to display.
-          </div>
-        </div>
-
-        <div class="panel card">
-          <div class="card-head">
-            <div>
-              <h2>Evidence Citations</h2>
-              <div class="card-sub">Protocol and monograph support used in the final report</div>
-            </div>
-          </div>
-          <div id="citationsContainer" class="placeholder">
-            No citations to display.
-          </div>
-        </div>
-      </div>
+    <div>
+      <div class="logo-text">TheraGuard AI</div>
+      <div class="logo-sub">Clinical Pharmacist Decision Support</div>
     </div>
   </div>
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span id="statusPill">Ready</span>
+    </div>
+  </div>
+</div>
 
-  <script>
-    const analyzeBtn = document.getElementById("analyzeBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const caseText = document.getElementById("caseText");
-    const mode = document.getElementById("mode");
-    const language = document.getElementById("language");
-    const question = document.getElementById("question");
+<!-- MODE TABS -->
+<div class="mode-bar">
+  <div class="mode-tab active" data-mode="case" id="tab-case">
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="flex-shrink:0"><path d="M3 8h14M3 8V16a1 1 0 001 1h12a1 1 0 001-1V8M3 8l7-5 7 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 17v-5h4v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Case Analysis
+  </div>
+  <div class="mode-tab" data-mode="search" id="tab-search">
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="flex-shrink:0"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.6"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Protocol Search
+  </div>
+</div>
 
-    const soapContainer = document.getElementById("soapContainer");
-    const interventionsContainer = document.getElementById("interventionsContainer");
-    const adjustmentsContainer = document.getElementById("adjustmentsContainer");
-    const citationsContainer = document.getElementById("citationsContainer");
+<!-- LAYOUT -->
+<div class="layout">
 
-    const loadingBox = document.getElementById("loadingBox");
-    const errorBox = document.getElementById("errorBox");
+  <!-- LEFT INPUT PANEL -->
+  <div class="left" id="leftPanel">
 
-    analyzeBtn.addEventListener("click", runAnalysis);
-    clearBtn.addEventListener("click", clearAll);
+    <!-- CASE MODE -->
+    <div id="caseInputs">
+      <div class="panel-label">Patient Case</div>
+      <div class="field">
+        <textarea id="caseText" placeholder="Paste full clinical case here — include patient info, vitals, labs, current medications, diagnoses, allergies..."></textarea>
+      </div>
+      <div class="field">
+        <span class="field-label">Focused Clinical Question (optional)</span>
+        <input id="caseQuestion" type="text" placeholder="e.g. Is gentamicin dose appropriate?" />
+      </div>
+      <div class="field">
+        <span class="field-label">Output Language</span>
+        <select id="caseLang">
+          <option value="en">English</option>
+          <option value="ar">Arabic</option>
+        </select>
+      </div>
+    </div>
 
-    async function runAnalysis() {
-      const rawCase = caseText.value.trim();
-      const selectedMode = mode.value;
-      const selectedLanguage = language.value;
-      const q = question.value.trim();
-
-      hideError();
-      setLoading(true);
-      resetResults();
-
-      try {
-        const payload = buildPayload(selectedMode, rawCase, q, selectedLanguage);
-
-        const res = await fetch("/api/ask", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.ok === false) {
-          throw new Error(data.error || "Analysis failed.");
-        }
-
-        renderResponse(selectedMode, data);
-      } catch (err) {
-        showError(err.message || "Unexpected error.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function buildPayload(selectedMode, rawCase, q, selectedLanguage) {
-      if (selectedMode === "case_analysis") {
-        return {
-          mode: "case_analysis",
-          language: selectedLanguage,
-          case_text: rawCase,
-          question: q
-        };
-      }
-
-      if (selectedMode === "ask") {
-        return {
-          mode: "ask",
-          language: selectedLanguage,
-          question: q || rawCase,
-          output_mode: "hybrid",
-          source_mode: "required"
-        };
-      }
-
-      if (selectedMode === "monograph") {
-        return {
-          mode: "monograph",
-          language: selectedLanguage,
-          drug_name: q || rawCase
-        };
-      }
-
-      return {
-        mode: "antibiogram",
-        language: selectedLanguage,
-        organism: q || rawCase
-      };
-    }
-
-    function renderResponse(selectedMode, data) {
-      if (selectedMode === "case_analysis") {
-        renderSoap(data.soap_note);
-        renderInterventions(data.pharmacist_interventions || []);
-        renderAdjustments(data.medication_adjustments || []);
-        renderCitations(data.citations || []);
-        return;
-      }
-
-      // Fallback for other modes
-      renderSoap(data.answer || data.monograph || data.analysis || "No output.");
-      renderInterventions([]);
-      renderAdjustments([]);
-      renderCitations(data.citations || []);
-    }
-
-    function renderSoap(text) {
-      if (!text) {
-        soapContainer.className = "placeholder";
-        soapContainer.textContent = "No SOAP note generated.";
-        return;
-      }
-
-      soapContainer.className = "soap-box";
-      soapContainer.textContent = text;
-    }
-
-    function renderInterventions(items) {
-      if (!items.length) {
-        interventionsContainer.className = "placeholder";
-        interventionsContainer.textContent = "No interventions to display.";
-        return;
-      }
-
-      interventionsContainer.className = "list";
-      interventionsContainer.innerHTML = items.map(item => {
-        const sevClass = severityClass(item.severity);
-        return `
-          <div class="item">
-            <div class="item-top">
-              <h3 class="item-title">${escapeHtml(item.problem || "Intervention")}</h3>
-              <span class="badge ${sevClass}">${escapeHtml(item.severity || "Info")}</span>
-            </div>
-            <p><strong>Recommendation:</strong> ${escapeHtml(item.recommendation || "—")}</p>
-            <div class="meta"><strong>Reference:</strong> ${escapeHtml(item.reference || "—")}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function renderAdjustments(items) {
-      if (!items.length) {
-        adjustmentsContainer.className = "placeholder";
-        adjustmentsContainer.textContent = "No medication adjustments to display.";
-        return;
-      }
-
-      adjustmentsContainer.className = "list";
-      adjustmentsContainer.innerHTML = items.map(item => {
-        const verdictClass = verdictBadgeClass(item.verdict);
-        return `
-          <div class="item">
-            <div class="item-top">
-              <h3 class="item-title">${escapeHtml(item.drug || "Medication")}</h3>
-              <span class="badge ${verdictClass}">${escapeHtml(item.verdict || "REVIEW")}</span>
-            </div>
-            <p><strong>Ordered:</strong> ${escapeHtml(item.ordered || "—")}</p>
-            <p><strong>Recommended:</strong> ${escapeHtml(item.recommended || "—")}</p>
-            <p><strong>Reason:</strong> ${escapeHtml(item.reason || "—")}</p>
-            <div class="meta"><strong>Reference:</strong> ${escapeHtml(item.reference || "—")}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function renderCitations(items) {
-      if (!items.length) {
-        citationsContainer.className = "placeholder";
-        citationsContainer.textContent = "No citations to display.";
-        return;
-      }
-
-      citationsContainer.className = "list";
-      citationsContainer.innerHTML = items.map(item => `
-        <div class="citation">
-          <div class="citation-head">
-            ${escapeHtml(item.filename || "Source")}
-            ${item.page ? ` • Page ${escapeHtml(String(item.page))}` : ""}
-            ${item.section ? ` • ${escapeHtml(item.section)}` : ""}
-          </div>
-          <div class="citation-body">${escapeHtml(item.excerpt || "")}</div>
-          <div class="citation-meta">
-            ${item.score !== undefined && item.score !== null ? `Score: ${escapeHtml(String(item.score))}` : ""}
-          </div>
+    <!-- SEARCH MODE (hidden by default) -->
+    <div id="searchInputs" style="display:none;">
+      <div class="panel-label">Protocol / Drug Search</div>
+      <div class="field">
+        <span class="field-label">Question or Drug Name</span>
+        <textarea id="searchQuery" placeholder="e.g. vancomycin dose in renal impairment&#10;or: what is the INR target for AF?&#10;or: penicillin allergy alternative antibiotics" style="min-height:160px;"></textarea>
+      </div>
+      <div class="search-opts">
+        <div class="field">
+          <span class="field-label">Output Format</span>
+          <select id="outputMode">
+            <option value="hybrid">Detailed (Hybrid)</option>
+            <option value="short">Bullet Points</option>
+            <option value="verbatim">Verbatim Quote</option>
+          </select>
         </div>
-      `).join("");
+        <div class="field">
+          <span class="field-label">Source Requirement</span>
+          <select id="sourceMode">
+            <option value="required">Protocol Required</option>
+            <option value="off">Best Effort</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-label">Language</span>
+        <select id="searchLang">
+          <option value="en">English</option>
+          <option value="ar">Arabic</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="btn-row">
+      <button class="btn btn-primary" id="runBtn">
+        <svg id="runBtnSvg" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 2.5l11 5.5-11 5.5V2.5z" fill="white"/></svg>
+        <span id="runBtnText">Analyze Case</span>
+      </button>
+      <button class="btn btn-ghost" id="clearBtn">Clear</button>
+    </div>
+
+    <div class="loading" id="loadingBox">
+      <div class="spinner"></div>
+      <span id="loadingMsg">Running clinical audit...</span>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+  </div><!-- /left -->
+
+  <!-- RIGHT RESULTS PANEL -->
+  <div class="right" id="rightPanel">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect x="8" y="8" width="48" height="48" rx="12" fill="#e8eef5"/>
+        <path d="M32 20v24M20 32h24" stroke="#1e6fba" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+      <h3>No analysis yet</h3>
+      <p>Paste a clinical case or enter a protocol question on the left to begin the pharmacist review.</p>
+    </div>
+    <div id="results" style="display:none;"></div>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+/* ──────────────────────────────────────────────
+   STATE
+────────────────────────────────────────────── */
+let currentMode = "case";
+
+/* ──────────────────────────────────────────────
+   TABS
+────────────────────────────────────────────── */
+document.querySelectorAll(".mode-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    currentMode = tab.dataset.mode;
+    document.querySelectorAll(".mode-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+
+    document.getElementById("caseInputs").style.display   = currentMode === "case"   ? "contents" : "none";
+    document.getElementById("searchInputs").style.display = currentMode === "search" ? "contents" : "none";
+
+    document.getElementById("runBtnText").textContent  = currentMode === "case" ? "Analyze Case" : "Search Protocol";
+    clearResults();
+  });
+});
+
+/* ──────────────────────────────────────────────
+   BUTTONS
+────────────────────────────────────────────── */
+document.getElementById("runBtn").addEventListener("click", run);
+document.getElementById("clearBtn").addEventListener("click", () => {
+  document.getElementById("caseText").value    = "";
+  document.getElementById("caseQuestion").value = "";
+  document.getElementById("searchQuery").value  = "";
+  hideError();
+  clearResults();
+});
+
+/* ──────────────────────────────────────────────
+   MAIN RUN
+────────────────────────────────────────────── */
+async function run() {
+  hideError();
+  setLoading(true);
+  clearResults();
+
+  try {
+    let payload, loadMsg;
+
+    if (currentMode === "case") {
+      const caseText = document.getElementById("caseText").value.trim();
+      if (!caseText) throw new Error("Please paste a clinical case.");
+      payload  = {
+        mode: "case_analysis",
+        case_text: caseText,
+        question: document.getElementById("caseQuestion").value.trim(),
+        language: document.getElementById("caseLang").value,
+      };
+      loadMsg = "Running 9-layer clinical audit…";
+    } else {
+      const q = document.getElementById("searchQuery").value.trim();
+      if (!q) throw new Error("Please enter a question or drug name.");
+      payload = {
+        mode: "ask",
+        question: q,
+        output_mode: document.getElementById("outputMode").value,
+        source_mode: document.getElementById("sourceMode").value,
+        language: document.getElementById("searchLang").value,
+      };
+      loadMsg = "Searching protocols…";
     }
 
-    function resetResults() {
-      soapContainer.className = "placeholder";
-      soapContainer.textContent = "Waiting for results...";
+    document.getElementById("loadingMsg").textContent = loadMsg;
+    setStatus("Running…");
 
-      interventionsContainer.className = "placeholder";
-      interventionsContainer.textContent = "Waiting for results...";
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      adjustmentsContainer.className = "placeholder";
-      adjustmentsContainer.textContent = "Waiting for results...";
+    const data = await res.json();
+    if (!res.ok || data.ok === false) throw new Error(data.error || "Analysis failed.");
 
-      citationsContainer.className = "placeholder";
-      citationsContainer.textContent = "Waiting for results...";
-    }
+    if (currentMode === "case") renderCase(data);
+    else renderSearch(data);
 
-    function clearAll() {
-      caseText.value = "";
-      question.value = "";
-      hideError();
+    setStatus("Done");
+  } catch (err) {
+    showError(err.message || "Unexpected error.");
+    setStatus("Error");
+  } finally {
+    setLoading(false);
+  }
+}
 
-      soapContainer.className = "placeholder";
-      soapContainer.textContent = "No analysis yet.";
+/* ──────────────────────────────────────────────
+   RENDER: CASE ANALYSIS
+────────────────────────────────────────────── */
+function renderCase(data) {
+  const sections = [];
 
-      interventionsContainer.className = "placeholder";
-      interventionsContainer.textContent = "No interventions to display.";
+  // SOAP
+  if (data.soap_note) {
+    sections.push(makeCard({
+      iconKey: "soap",
+      title: "SOAP Note",
+      sub: "Pharmacist clinical summary",
+      body: renderSoap(data.soap_note),
+    }));
+  }
 
-      adjustmentsContainer.className = "placeholder";
-      adjustmentsContainer.textContent = "No medication adjustments to display.";
+  // Interventions
+  const interventions = data.pharmacist_interventions || [];
+  sections.push(makeCard({
+    iconKey: "interv",
+    title: "Pharmacist Interventions",
+    sub: "Prioritized medication safety findings",
+    count: interventions.length,
+    body: interventions.length
+      ? `<div class="items-list">${interventions.map(renderIntervention).join("")}</div>`
+      : `<div style="color:var(--green);font-size:13px;">✓ No significant interventions identified.</div>`,
+  }));
 
-      citationsContainer.className = "placeholder";
-      citationsContainer.textContent = "No citations to display.";
-    }
+  // Adjustments
+  const adjustments = data.medication_adjustments || [];
+  sections.push(makeCard({
+    iconKey: "adj",
+    title: "Medication Adjustments",
+    sub: "Drug-by-drug pharmacist verdict",
+    count: adjustments.length,
+    body: adjustments.length
+      ? `<div class="items-list">${adjustments.map(renderAdjustment).join("")}</div>`
+      : `<div style="color:var(--muted);font-size:13px;">No adjustments recorded.</div>`,
+  }));
 
-    function setLoading(isLoading) {
-      loadingBox.classList.toggle("show", isLoading);
-      analyzeBtn.disabled = isLoading;
-      analyzeBtn.textContent = isLoading ? "Analyzing..." : "Analyze Case";
-    }
+  // Citations
+  const citations = data.citations || [];
+  if (citations.length) {
+    sections.push(makeCard({
+      iconKey: "cite",
+      title: "Evidence Citations",
+      sub: "Protocol sources retrieved",
+      count: citations.length,
+      body: `<div class="items-list">${citations.map(renderCitation).join("")}</div>`,
+    }));
+  }
 
-    function showError(message) {
-      errorBox.textContent = message;
-      errorBox.classList.add("show");
-    }
+  showResults(sections.join(""));
+}
 
-    function hideError() {
-      errorBox.textContent = "";
-      errorBox.classList.remove("show");
-    }
+/* ──────────────────────────────────────────────
+   RENDER: PROTOCOL SEARCH
+────────────────────────────────────────────── */
+function renderSearch(data) {
+  const sections = [];
 
-    function severityClass(value) {
-      const v = String(value || "").toLowerCase();
-      if (v === "critical" || v === "major") return "sev-major";
-      if (v === "moderate") return "sev-moderate";
-      if (v === "minor") return "sev-minor";
-      return "sev-info";
-    }
+  if (data.answer) {
+    sections.push(makeCard({
+      iconKey: "search",
+      title: "Protocol Answer",
+      sub: data.verdict === "NOT_FOUND" ? "Not found in uploaded protocols" : "Retrieved from protocol files",
+      body: `<div class="answer-box">${escHtml(data.answer)}</div>`,
+    }));
+  }
 
-    function verdictBadgeClass(value) {
-      const v = String(value || "").toLowerCase();
-      if (v === "correct") return "verdict-correct";
-      if (v === "adjust") return "verdict-adjust";
-      if (v === "monitor") return "verdict-monitor";
-      if (v === "stop" || v === "wrong") return "verdict-stop";
-      return "verdict-not_in_protocol";
-    }
+  const citations = data.citations || [];
+  if (citations.length) {
+    sections.push(makeCard({
+      iconKey: "cite",
+      title: "Supporting Sources",
+      sub: "Matched protocol excerpts",
+      count: citations.length,
+      body: `<div class="items-list">${citations.map(renderCitation).join("")}</div>`,
+    }));
+  }
 
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-  </script>
+  showResults(sections.join(""));
+}
+
+/* ──────────────────────────────────────────────
+   RENDER HELPERS
+────────────────────────────────────────────── */
+function renderSoap(text) {
+  // Highlight S: O: A: P: labels
+  const highlighted = escHtml(text).replace(
+    /^(S:|O:|A:|P:|Vitals:|Labs:|Renal:|CBC:|Electrolytes:|Liver Function:|Coagulation:|Infection \/ Sepsis Profile:|Glucose \/ Metabolic:|Drug Monitoring \/ TDM:|Current Medications:|Pharmacist Intervention:|Follow-up Plan:)/gm,
+    '<span class="soap-section-label">$1</span>'
+  );
+  return `<div class="soap-text">${highlighted}</div>`;
+}
+
+function renderIntervention(item) {
+  const sev = String(item.severity || "").toLowerCase();
+  const cardCls = sev === "critical" ? "sev-critical"
+                : sev === "major"    ? "sev-major"
+                : sev === "moderate" ? "sev-moderate"
+                : "sev-minor";
+  const badgeCls = `badge-${sev || "minor"}`;
+  const ref = item.reference && item.reference !== "Pending evidence retrieval"
+            ? item.reference : null;
+
+  return `
+    <div class="item-card ${cardCls}">
+      <div class="item-top">
+        <div class="item-problem">${escHtml(item.problem || "")}</div>
+        <span class="badge ${badgeCls}">${escHtml(item.severity || "INFO")}</span>
+      </div>
+      <div class="item-rec">${escHtml(item.recommendation || "")}</div>
+      ${ref ? `<div class="item-ref"><svg width='11' height='11' viewBox='0 0 16 16' fill='none'><rect x='2' y='1' width='12' height='14' rx='2' stroke='currentColor' stroke-width='1.4'/><path d='M5 6h6M5 9h6M5 12h3' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/></svg>${escHtml(ref)}</div>` : ""}
+    </div>`;
+}
+
+function renderAdjustment(item) {
+  const v = String(item.verdict || "").toLowerCase();
+  const badgeCls = v === "stop"    ? "badge-stop"
+                 : v === "adjust"  ? "badge-adjust"
+                 : v === "monitor" ? "badge-monitor"
+                 : v === "correct" ? "badge-correct"
+                 : "badge-default";
+
+  const ref = item.reference && item.reference !== "Pending evidence retrieval"
+            ? item.reference : null;
+
+  return `
+    <div class="item-card">
+      <div class="item-top">
+        <div class="item-problem">${escHtml(item.drug || "Medication")}</div>
+        <span class="badge ${badgeCls}">${escHtml(item.verdict || "REVIEW")}</span>
+      </div>
+      <div class="adj-grid">
+        <div class="adj-cell">
+          <div class="adj-cell-label">Ordered</div>
+          ${escHtml(item.ordered || "—")}
+        </div>
+        <div class="adj-cell">
+          <div class="adj-cell-label">Recommended</div>
+          ${escHtml(item.recommended || "—")}
+        </div>
+      </div>
+      <div class="item-rec" style="color:var(--muted)">${escHtml(item.reason || "")}</div>
+      ${ref ? `<div class="item-ref"><svg width='11' height='11' viewBox='0 0 16 16' fill='none'><rect x='2' y='1' width='12' height='14' rx='2' stroke='currentColor' stroke-width='1.4'/><path d='M5 6h6M5 9h6M5 12h3' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/></svg>${escHtml(ref)}</div>` : ""}
+    </div>`;
+}
+
+function renderCitation(item) {
+  const score = item.score != null ? (item.score * 100).toFixed(1) + "%" : null;
+  const meta  = [item.page ? `p.${item.page}` : null, item.section || null].filter(Boolean).join(" · ");
+  return `
+    <div class="citation-card">
+      <div class="cite-file">
+        ${escHtml(item.filename || "Source")}
+        ${meta ? `<span style="color:var(--muted);font-weight:400">${escHtml(meta)}</span>` : ""}
+        ${score ? `<span class="cite-score">${score}</span>` : ""}
+      </div>
+      <div class="cite-excerpt">${escHtml((item.excerpt || "").substring(0, 300))}</div>
+    </div>`;
+}
+
+const CARD_ICONS = {
+  soap:   { cls:"icon-soap",   svg:`<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="#2581d8" stroke-width="1.6"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#2581d8" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+  interv: { cls:"icon-interv", svg:`<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M10 3l-3 4M10 3l3 4" stroke="#c0392b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="15" r="1.5" fill="#c0392b"/></svg>` },
+  adj:    { cls:"icon-adj",    svg:`<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="8" rx="2" stroke="#a36200" stroke-width="1.5"/><path d="M7 9V7a3 3 0 016 0v2" stroke="#a36200" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+  cite:   { cls:"icon-cite",   svg:`<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M4 4h12v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" stroke="#1a8c4e" stroke-width="1.5"/><path d="M8 4V2M12 4V2" stroke="#1a8c4e" stroke-width="1.5" stroke-linecap="round"/><path d="M7 10h6M7 13h4" stroke="#1a8c4e" stroke-width="1.4" stroke-linecap="round"/></svg>` },
+  search: { cls:"icon-search", svg:`<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="#2581d8" stroke-width="1.5"/><path d="M13 13l4 4" stroke="#2581d8" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+};
+
+function makeCard({ iconKey, title, sub, count, body }) {
+  const ic = CARD_ICONS[iconKey] || CARD_ICONS.cite;
+  return `
+    <div class="result-card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon ${ic.cls}">${ic.svg}</div>
+          ${escHtml(title)}
+          ${sub ? `<span class="card-sub-text">${escHtml(sub)}</span>` : ""}
+        </div>
+        ${count !== undefined ? `<div class="card-count">${count}</div>` : ""}
+      </div>
+      <div class="card-body">${body}</div>
+    </div>`;
+}
+
+/* ──────────────────────────────────────────────
+   UI STATE
+────────────────────────────────────────────── */
+function showResults(html) {
+  document.getElementById("emptyState").style.display = "none";
+  const r = document.getElementById("results");
+  r.style.display = "flex";
+  r.style.flexDirection = "column";
+  r.style.gap = "20px";
+  r.innerHTML = html;
+}
+
+function clearResults() {
+  document.getElementById("emptyState").style.display = "flex";
+  document.getElementById("results").style.display = "none";
+  document.getElementById("results").innerHTML = "";
+  setStatus("Ready");
+}
+
+function setLoading(on) {
+  document.getElementById("loadingBox").classList.toggle("show", on);
+  const btn = document.getElementById("runBtn");
+  btn.disabled = on;
+  document.getElementById("runBtnText").textContent = on
+    ? (currentMode === "case" ? "Analyzing…" : "Searching…")
+    : (currentMode === "case" ? "Analyze Case" : "Search Protocol");
+}
+
+function setStatus(text) {
+  document.getElementById("statusPill").textContent = text;
+}
+
+function showError(msg) {
+  const b = document.getElementById("errorBox");
+  b.textContent = msg;
+  b.classList.add("show");
+}
+
+function hideError() {
+  const b = document.getElementById("errorBox");
+  b.textContent = "";
+  b.classList.remove("show");
+}
+
+function escHtml(v) {
+  return String(v ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+</script>
 </body>
 </html>
-
